@@ -3,24 +3,26 @@ let Cube = (function(){
     const ENTITY_ID = 'id';
     const ENTITY_UUID = 'uuid';
 
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     class NormalizedData {
-        constructor(options){
-            Object.assign(this, options)
+        constructor(data, options){
+            Object.assign(this, data)
         }
     }
     class NormalizedDataNotSaved extends NormalizedData{
-        constructor(options){
-            super(options)
-            if (!options.id){
-                this.id = this.uuidv4()
+        constructor(data, options){
+            super(data, options)
+            if (!data.id){
+                this.id = uuidv4()
             }
         }
-        uuidv4() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
+
     }
     class Member{
         constructor(id){
@@ -28,13 +30,7 @@ let Cube = (function(){
                 debugger;
             }
             this[ENTITY_ID] = id;
-            this[ENTITY_UUID] = this.uuidv4()
-        }
-        uuidv4() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
+            this[ENTITY_UUID] = uuidv4()
         }
     }
 
@@ -62,10 +58,12 @@ let Cube = (function(){
 
     class Cube{
         constructor(entities, measurementsSchema){
-            this.ENTITY_ID = 'id';
-            this.ENTITY_UUID = 'uuid';
+            Object.defineProperties(this, {
+                ENTITY_ID: { writable: false, value: 'id' },
+                ENTITY_UUID: { writable: false, value: 'uuid' },
+                schema: { writable: false, value: measurementsSchema },
+            });
 
-            this.schema = measurementsSchema;
             this.measurements = new Measurements();
             this.normalizedData = entities.map( entity => new NormalizedData(entity) );
 
@@ -87,60 +85,60 @@ let Cube = (function(){
                         // определим подмножества для каждой зависимости
                         let entitiesParts;
                         entitiesParts = dependencyMeasure.map( measure => {
-                                // множество сущностей соответствующих измерению
-                                const measureId = measure[this.ENTITY_ID];
-                        const entitiesPart = data.filter( entity => {
+                            // множество сущностей соответствующих измерению
+                            const measureId = measure[this.ENTITY_ID];
+                            const entitiesPart = data.filter( entity => {
                                 let isPart = true;
-                        let idName = this.genericId(dependencyName);
-                        isPart = entity[idName] == measureId;
-                        return isPart;
-                    });
-                        return entitiesPart;
-                    });
+                                let idName = this.genericId(dependencyName);
+                                isPart = entity[idName] == measureId;
+                                return isPart;
+                            });
+                            return entitiesPart;
+                        });
                         return entitiesParts;
                     };
 
                     let parts = [this.normalizedData];
                     dependency.forEach( dependencyName => {
                         let newParts = [];
-                    parts.forEach( partData => {
-                        const entitiesParts = dismember(dependencyName, partData)
-                        entitiesParts.forEach( part => {
-                        newParts.push(part);
-                })
-                });
-                    parts = newParts;
-                });
+                        parts.forEach( partData => {
+                            const entitiesParts = dismember(dependencyName, partData)
+                            entitiesParts.forEach( part => {
+                                newParts.push(part);
+                            })
+                        });
+                        parts = newParts;
+                    });
 
                     entitiesParts = parts;
                 } else {
                     const dependencyMeasure = this.measurements[dependency];
 
                     entitiesParts = dependencyMeasure.map( measure => {
-                            // множество сущностей соответствующих измерению
-                            const measureId = measure[this.ENTITY_ID];
-                    const entitiesPart = this.normalizedData.filter( entity => {
+                        // множество сущностей соответствующих измерению
+                        const measureId = measure[this.ENTITY_ID];
+                        const entitiesPart = this.normalizedData.filter( entity => {
                             let isPart = true;
-                    let idName = this.genericId(dependency);
-                    isPart = entity[idName] == measureId;
-                    return isPart;
-                });
-                    return entitiesPart;
-                });
+                            let idName = this.genericId(dependency);
+                            isPart = entity[idName] == measureId;
+                            return isPart;
+                        });
+                        return entitiesPart;
+                    });
                 }
 
                 // для каждого подмножества определим свои меры
                 let countId = 0;
                 const measures = entitiesParts.map( entitiesPart => {
-                        const measure = this.makeMeasureFrom(entitiesPart, keyProps, countId, name, otherProps);
-                countId = countId + measure.length;
-                return measure;
-            });
+                    const measure = this.makeMeasureFrom(entitiesPart, keyProps, countId, name, otherProps);
+                    countId = countId + measure.length;
+                    return measure;
+                });
 
                 // затем меры объединяем, таким образум образуя срез
                 let total = [];
                 measures.forEach( measure => {
-                        total = total.concat(measure);
+                    total = total.concat(measure);
                 });
                 const totalUniq = _.uniq(total, (item)=>{
                     return item[this.ENTITY_ID]
@@ -154,73 +152,17 @@ let Cube = (function(){
             this.measurements[name] = measure;
         });
         }
-        genericId(entityName) {
-            return entityName + '_' + this.ENTITY_ID;
+        /**
+         *
+         * @public
+         * */
+        getList(options = Object){
+            return this.getListAnalize(options, true)
         }
-        reduceId(array){
-            if (array.length){
-                return array.reduce( (acc, curValue) => {
-                        return acc[this.ENTITY_ID] > curValue[this.ENTITY_ID] ? acc : curValue;
-            }, 0).id + 1
-            } else {
-                return 1;
-            }
-        }
-        makeMeasureFrom(entities, keyProps, startFrom = 0, measurement, otherProps){
-            // соотношение созданных id к ключам
-            const cache = {};
-            const DIVIDER = ',';
-            const mesure = [];
-
-            // создания групп по уникальным ключам
-            entities.forEach((entity)=>{
-
-                // собрать ключ на основе ключевых значений
-                const key = keyProps.map( prop => {
-                        return entity[prop]
-                    }).join(DIVIDER);
-
-            // полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
-            const totalProps = [].concat(keyProps, otherProps);
-
-            // если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-            if (! (key in cache) ){
-                const id = ++startFrom;
-                cache[key] = id;
-
-                // создать подсущность
-                const member = new Member(id);
-
-                // запись по ключевым параметрам
-                totalProps.forEach( (prop) => {
-                    // исключить идентификатор самой сущности
-                    if (prop !== this.ENTITY_ID){
-                    member[prop] = entity[prop];
-                }
-            });
-
-                mesure.push(member);
-            }
-
-            // удалаять данные из нормальной формы
-            const entityClone = this.normalizedData.find(entityClone => {
-                return entityClone[this.ENTITY_ID] == entity[this.ENTITY_ID] ? entityClone : false;
-            });
-
-            totalProps.forEach( prop => {
-                if ( prop !== this.ENTITY_ID ){
-                    delete entityClone[prop];
-                }
-            });
-
-            // оставить в нормальной форме ссылку на id под сущности
-            const idName = this.genericId(measurement);
-            entityClone[idName] = cache[key];
-            return key;
-        });
-
-            return mesure;
-        }
+        /**
+         *
+         * @public
+         * */
         unique(measurementName, deps){
             const members = this.measurements[measurementName];
             let data = this.normalizedData;
@@ -250,6 +192,89 @@ let Cube = (function(){
             });
             return result;
         }
+        /**
+         * A way to create a name for a property in which a unique identifier will be stored
+         * @private
+         * */
+        genericId(entityName) {
+            return entityName + '_' + this.ENTITY_ID;
+        }
+        /**
+         * Method of generating a unique identifier within the selected space
+         * @private
+         * */
+        reduceId(array){
+            if (array.length){
+                return array.reduce( (acc, curValue) => {
+                    return acc[this.ENTITY_ID] > curValue[this.ENTITY_ID] ? acc : curValue;
+                }, 0).id + 1
+            } else {
+                return 1;
+            }
+        }
+        /**
+         *
+         * @private
+         * */
+        makeMeasureFrom(entities, keyProps, startFrom = 0, measurement, otherProps){
+            // соотношение созданных id к ключам
+            const cache = {};
+            const DIVIDER = ',';
+            const mesure = [];
+
+            // создания групп по уникальным ключам
+            entities.forEach((entity)=>{
+
+                // собрать ключ на основе ключевых значений
+                const key = keyProps.map( prop => {
+                    return entity[prop]
+                }).join(DIVIDER);
+
+                // полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
+                const totalProps = [].concat(keyProps, otherProps);
+
+                // если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
+                if (! (key in cache) ){
+                    const id = ++startFrom;
+                    cache[key] = id;
+
+                    // создать подсущность
+                    const member = new Member(id);
+
+                    // запись по ключевым параметрам
+                    totalProps.forEach( (prop) => {
+                        // исключить идентификатор самой сущности
+                        if (prop !== this.ENTITY_ID){
+                            member[prop] = entity[prop];
+                        }
+                    });
+
+                    mesure.push(member);
+                }
+
+                // удалаять данные из нормальной формы
+                const entityClone = this.normalizedData.find(entityClone => {
+                    return entityClone[this.ENTITY_ID] == entity[this.ENTITY_ID] ? entityClone : false;
+                });
+
+                totalProps.forEach( prop => {
+                    if ( prop !== this.ENTITY_ID ){
+                        delete entityClone[prop];
+                    }
+                });
+
+                // оставить в нормальной форме ссылку на id под сущности
+                const idName = this.genericId(measurement);
+                entityClone[idName] = cache[key];
+                return key;
+            });
+
+            return mesure;
+        }
+        /**
+         *
+         * @private
+         * */
         createNormalizeData(obj){
             const options = {};
             Object.keys(obj).forEach( key => {
@@ -258,6 +283,10 @@ let Cube = (function(){
             const newNormaliseData = new NormalizedDataNotSaved(options);
             this.normalizedData.push(newNormaliseData);
         }
+        /**
+         *
+         * @private
+         * */
         getListAnalize(Constructor, forSave = false){
             const list = [];
 
@@ -286,9 +315,10 @@ let Cube = (function(){
 
             return list;
         }
-        getList(options = Object){
-            return this.getListAnalize(options, true)
-        }
+        /**
+         *
+         * @private
+         * */
         removeSubModel(normalizeData, name){
             // подчистить суб-модельку
             const filtered = this.measurements[name].filter(rate => {
@@ -301,6 +331,10 @@ let Cube = (function(){
                 this.measurements[name].splice(index, 1);
             })
         }
+        /**
+         *
+         * @private
+         * */
         removeSubModelDepend(subModelName, subModel, dependencies){
             // подчистить суб-модельку
             const index = this.measurements[subModelName].indexOf(subModel);
@@ -324,6 +358,10 @@ let Cube = (function(){
             });
             this.normalize();
         }
+        /**
+         *
+         * @private
+         * */
         createMember(name, options = {}){
             const measurement = this.schema.find((schema)=>{
                 return schema.name === name;
@@ -341,7 +379,8 @@ let Cube = (function(){
             return member;
         }
         /**
-         * Удалить подсущности, ссылки на которых ни у одной модели не осталось
+         * Remove subentity, links to which none of the model does not remain
+         * @private
          * */
         normalize(){
             const names = this.schema.map( item => item.name );
