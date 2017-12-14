@@ -16,7 +16,7 @@ let schema = [
     { name: 'companies', keyProps: ['company']},
     { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
     { name: 'prices', keyProps: ['price'], dependency: 'cities' },
-    { name: 'counts', keyProps: ['count'], dependency: ['cities', 'companies']},
+    { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
 ]
 
 // We send it all to the constructor
@@ -60,3 +60,18 @@ Now cube will be:
         { id: 4, cities_id: 3, companies: 1, age_id: 1, counts_id: 4, price_id: 3 },
     ]
 }
+```
+How get list back?
+
+```javascript
+cube.getList()
+
+```
+```js
+[
+    { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '$20'},
+    { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '$10'},
+    { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '$10'},
+    { id: 4, city: 'Moscou', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '$20'},
+]
+```

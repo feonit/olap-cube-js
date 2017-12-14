@@ -48,11 +48,24 @@ let Cube = (function(){
 
     class Measurements{}
 
+    const _ = {};
+
+    _.uniq = function (items, fn) {
+        const hash = {};
+        items.forEach((item)=>{
+            let key = fn ? fn(item) : item;
+            hash[key] = item;
+        });
+        const uniq = Object.keys(hash).map(key => hash[key]);
+        return uniq;
+    };
+
     class Cube{
         constructor(entities, measurementsSchema){
             this.ENTITY_ID = 'id';
             this.ENTITY_UUID = 'uuid';
 
+            this.schema = measurementsSchema;
             this.measurements = new Measurements();
             this.normalizedData = entities.map( entity => new NormalizedData(entity) );
 
@@ -127,11 +140,11 @@ let Cube = (function(){
                 // затем меры объединяем, таким образум образуя срез
                 let total = [];
                 measures.forEach( measure => {
-                    total = total.concat(measure);
-            });
+                        total = total.concat(measure);
+                });
                 const totalUniq = _.uniq(total, (item)=>{
-                        return item[this.ENTITY_ID]
-                    });
+                    return item[this.ENTITY_ID]
+                });
 
                 measure = totalUniq;
             } else {
@@ -191,14 +204,14 @@ let Cube = (function(){
 
             // удалаять данные из нормальной формы
             const entityClone = this.normalizedData.find(entityClone => {
-                    return entityClone[this.ENTITY_ID] == entity[this.ENTITY_ID] ? entityClone : false;
-        });
+                return entityClone[this.ENTITY_ID] == entity[this.ENTITY_ID] ? entityClone : false;
+            });
 
             totalProps.forEach( prop => {
                 if ( prop !== this.ENTITY_ID ){
-                delete entityClone[prop];
-            }
-        });
+                    delete entityClone[prop];
+                }
+            });
 
             // оставить в нормальной форме ссылку на id под сущности
             const idName = this.genericId(measurement);
@@ -215,26 +228,26 @@ let Cube = (function(){
             if (deps){
                 Object.keys(deps).forEach( key => {
                     const measurement = key;
-                const etalonEntity = deps[key];
-                data = data.filter((entity)=>{
+                    const etalonEntity = deps[key];
+                    data = data.filter((entity)=>{
                         return entity[this.genericId(measurement)] == etalonEntity[this.ENTITY_ID];
-            })
-            })
+                    })
+                })
             }
 
             const measurementIdName = this.genericId(measurementName);
             const map = data.map( data => {
-                    return data[measurementIdName];
-        });
+                return data[measurementIdName];
+            });
             const uniq = _.uniq(map);
             const result = [];
 
             // фильтрация без потери порядка в массиве
             members.forEach( member => {
                 if (uniq.indexOf(member[this.ENTITY_ID]) !== -1){
-                result.push(member)
-            }
-        });
+                    result.push(member)
+                }
+            });
             return result;
         }
         createNormalizeData(obj){
@@ -251,42 +264,42 @@ let Cube = (function(){
             this.normalizedData.forEach( entity => {
                 const newEntity = Object.assign(new Constructor(), entity);
 
-            if (forSave && (entity instanceof NormalizedDataNotSaved)){
-                delete newEntity[this.ENTITY_ID];
-            }
+                if (forSave && (entity instanceof NormalizedDataNotSaved)){
+                    delete newEntity[this.ENTITY_ID];
+                }
 
-            this.schema.forEach( measurement => {
-                const subEntityIdName = this.genericId(measurement.name);
-            const subEntityId = entity[subEntityIdName];
-            const subEntity = this.measurements[measurement.name].find( item => {
-                    return  item[this.ENTITY_ID] === subEntityId;
-        });
-            const subEntityCopy = Object.assign({}, subEntity);
-            delete subEntityCopy[this.ENTITY_UUID];
-            delete subEntityCopy[this.ENTITY_ID];
-            delete newEntity[subEntityIdName];
-            Object.assign(newEntity, subEntityCopy);
-        });
+                this.schema.forEach( measurement => {
+                    const subEntityIdName = this.genericId(measurement.name);
+                    const subEntityId = entity[subEntityIdName];
+                    const subEntity = this.measurements[measurement.name].find( item => {
+                            return  item[this.ENTITY_ID] === subEntityId;
+                    });
+                    const subEntityCopy = Object.assign({}, subEntity);
+                    delete subEntityCopy[this.ENTITY_UUID];
+                    delete subEntityCopy[this.ENTITY_ID];
+                    delete newEntity[subEntityIdName];
+                    Object.assign(newEntity, subEntityCopy);
+                });
 
-            list.push(newEntity);
-        });
+                list.push(newEntity);
+            });
 
             return list;
         }
-        getList(options){
+        getList(options = Object){
             return this.getListAnalize(options, true)
         }
         removeSubModel(normalizeData, name){
             // подчистить суб-модельку
             const filtered = this.measurements[name].filter(rate => {
-                    return rate[this.ENTITY_ID] == normalizeData[this.genericId(name)]
-                });
+                return rate[this.ENTITY_ID] == normalizeData[this.genericId(name)]
+            });
 
             // и подчистить суб-модельку
             filtered.forEach( data => {
                 const index = this.measurements[name].indexOf(data);
-            this.measurements[name].splice(index, 1);
-        })
+                this.measurements[name].splice(index, 1);
+            })
         }
         removeSubModelDepend(subModelName, subModel, dependencies){
             // подчистить суб-модельку
@@ -298,27 +311,27 @@ let Cube = (function(){
 
             // подчистить нормальную форму
             const filterData = this.normalizedData.filter(data => {
-                    return data[this.genericId(subModelName)] == subModel[this.ENTITY_ID];
-        });
+                return data[this.genericId(subModelName)] == subModel[this.ENTITY_ID];
+            });
 
             filterData.forEach( data => {
                 const index = this.normalizedData.indexOf(data);
-            this.normalizedData.splice(index, 1);
+                this.normalizedData.splice(index, 1);
 
-            dependencies.forEach( depName => {
-                this.removeSubModel(data, depName);
-        });
-        });
+                dependencies.forEach( depName => {
+                    this.removeSubModel(data, depName);
+                });
+            });
             this.normalize();
         }
         createMember(name, options = {}){
             const measurement = this.schema.find((schema)=>{
-                    return schema.name === name;
-        });
+                return schema.name === name;
+            });
             const memberOptions = {
                     ...options,
                 id: this.reduceId(this.measurements[name]),
-        };
+            };
             measurement.keyProps.forEach( propName => {
                 memberOptions[propName] = null
             });
@@ -335,20 +348,20 @@ let Cube = (function(){
             const report = [];
             names.forEach( name => {
                 if (this.measurements[name].length){
-                const copy = [].concat(this.measurements[name]);
-                // чтобы splice корректно отработал
-                copy.forEach( (member, index) => {
-                    const idName = this.genericId(name);
-                const findLink = this.normalizedData.find( data => {
-                        return data[idName] == member[this.ENTITY_ID]
-                    });
-                if (!findLink){
-                    this.measurements[name].splice(index - (copy.length - this.measurements[name].length), 1);
-                    report.push(member)
+                    const copy = [].concat(this.measurements[name]);
+                    // чтобы splice корректно отработал
+                    copy.forEach( (member, index) => {
+                        const idName = this.genericId(name);
+                        const findLink = this.normalizedData.find( data => {
+                            return data[idName] == member[this.ENTITY_ID]
+                        });
+                        if (!findLink){
+                            this.measurements[name].splice(index - (copy.length - this.measurements[name].length), 1);
+                            report.push(member)
+                        }
+                    })
                 }
-            })
-            }
-        });
+            });
             if (report.length){
                 console.log('битые ссылки:', report)
             }
