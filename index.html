@@ -26,6 +26,85 @@
 
     let cube = new Cube(entities, schema);
 
+//    class Schema{
+//        constructor(schema){
+//            this.schema = schema;
+//        }
+//
+//        getColumns(){
+//            return ['']
+//        }
+//    }
+
+//    mySchema = new Schema(schema);
+
+    const AdditionalCube = {
+
+        mesurments: {
+            x: [1,2,3],
+            y: [1,2,3],
+            z: [1,2,3],
+        },
+
+        addColumn(name, options){
+            const names = this.getAllMesurmentsNamesExceptOne(name);
+            const mesurments = {};
+
+            names.forEach( name => {
+                mesurments[name] = this.mesurments[name];
+            });
+
+            mesurments[name] = [options];
+
+            this.forEachByMesurments(mesurments, (cellOptions) => {
+                this.createCell(cellOptions);
+            })
+        },
+        getAllMesurmentsNames(){
+            return ['x', 'y', 'z']
+        },
+
+        getAllMesurmentsNamesExceptOne(oneName){
+            const allMesurmentsNames = this.getAllMesurmentsNames();
+            let allMesurmentsNamesExceptOne = null;
+            const index = allMesurmentsNames.indexOf(oneName);
+            if (index => -1){
+                allMesurmentsNames.splice(index, 1);
+                allMesurmentsNamesExceptOne = allMesurmentsNames;
+            }
+            return allMesurmentsNamesExceptOne;
+        },
+
+        forEachByMesurments(mesurments, cb){
+            const cellOptions = {};
+            const keys = Object.keys(mesurments);
+            const mesurmentsLength = keys.length;
+
+            const reqursiveForEach = (cellOptions, index) => {
+
+                if (index !== mesurmentsLength){
+                    const mesurement = mesurments[keys[index]];
+
+                    mesurement.forEach( member => {
+                        cellOptions[keys[index]] = member;
+                        reqursiveForEach(cellOptions, index + 1)
+                    })
+
+                } else {
+                    cb(cellOptions)
+                }
+            };
+
+            reqursiveForEach(cellOptions, 0);
+
+        },
+
+        createCell(cellOptions){
+            console.log(cellOptions)
+        }
+    }
+
+    AdditionalCube.addColumn('x', 4)
 </script>
 
 </body>
