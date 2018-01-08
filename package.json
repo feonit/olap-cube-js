@@ -1,0 +1,32 @@
+{
+  "name": "olap-cube",
+  "version": "1.0.0",
+  "description": "How Cube is work? ```javascript",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "http-server": "^0.10.0",
+    "webpack": "^3.10.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node_modules/.bin/webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/feonit/olap-cube.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/feonit/olap-cube/issues"
+  },
+  "homepage": "https://github.com/feonit/olap-cube#readme"
+}

@@ -39,14 +39,14 @@ Now cube will be:
             { id: 2, company: 'SkyLine' },
         ],
         age: [
-            { id: 1, minAgePlane: '1 year', minAgePlane: '5 year' },
-            { id: 1, minAgePlane: '5 year', minAgePlane: '10 year' },
+            { id: 1, minAgePlane: '1 year', maxAgePlane: '5 year' },
+            { id: 2, minAgePlane: '5 year', maxAgePlane: '10 year' },
         ],
         prices: [
-            { id: 1, price: '$20' },
-            { id: 2, price: '$10' },
-            { id: 3, price: '$20' },
-            { id: 4, price: '$25' },
+            { id: 1, price: '20$' },
+            { id: 2, price: '10$' },
+            { id: 3, price: '20$' },
+            { id: 4, price: '25$' },
         ],
         counts: [
             { id: 1, planesCount: 1 },
@@ -57,11 +57,11 @@ Now cube will be:
         ]
     },
     normalizedData: [
-        { id: 1, cities_id: 1, companies_id: 1, age_id: 1, price_id: 1, counts_id: 1 },
-        { id: 2, cities_id: 2, companies_id: 2, age_id: 2, price_id: 2, counts_id: 2 },
-        { id: 3, cities_id: 2, companies_id: 1, age_id: 2, price_id: 2, counts_id: 3 },
-        { id: 4, cities_id: 3, companies_id: 1, age_id: 1, price_id: 3, counts_id: 4 },
-        { id: 5, cities_id: 3, companies_id: 2, age_id: 1, price_id: 4, counts_id: 5 },
+        { id: 1, cities_id: 1, companies_id: 1, age_id: 1, prices_id: 1, counts_id: 1 },
+        { id: 2, cities_id: 2, companies_id: 2, age_id: 2, prices_id: 2, counts_id: 3 },
+        { id: 3, cities_id: 2, companies_id: 1, age_id: 2, prices_id: 2, counts_id: 2 },
+        { id: 4, cities_id: 3, companies_id: 1, age_id: 1, prices_id: 3, counts_id: 4 },
+        { id: 5, cities_id: 3, companies_id: 2, age_id: 1, prices_id: 4, counts_id: 5 },
     ]
 }
 ```
