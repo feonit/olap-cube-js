@@ -4,21 +4,23 @@ import _ from './_.js';
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
 import CreatedMember from './CreatedMember.js';
+import Schema from './Schema.js';
+
+class Measurements{}
 
 class Cube{
     constructor(entities, measurementsSchema){
-        Object.defineProperty(this, 'schema', { value: measurementsSchema });
-
-        class Measurements{}
-
-        this.measurements = new Measurements();
+        const schema = new Schema(measurementsSchema);
+        Object.defineProperty(this, 'schema', { value: schema });
+        Object.defineProperty(this, 'entities', { value: entities });
         this.normalizedData = entities.map( entity => new NormalizedData(entity) );
+        this.measurements = this.getMembersGroupsByMeasurementsFromSchema(entities, this.schema.createIterator())
+    }
+    getMembersGroupsByMeasurementsFromSchema(entities, iterator){
+        const measurements = new Measurements();
 
-        measurementsSchema.forEach( (measurement) => {
+        const handleMeasurement = (measurement) => {
             const {name, dependency, keyProps, otherProps = []} = measurement;
-            if (!name || !keyProps){
-                throw Error('need \"name\" and \"keyProps\" params')
-            }
             let measure;
             if (dependency){
                 // определим подмножества для каждой зависимости
@@ -27,7 +29,7 @@ class Cube{
                 if (Array.isArray(dependency)){
 
                     const dismember = (dependencyName, data) => {
-                        const dependencyMeasure = this.measurements[dependencyName];
+                        const dependencyMeasure = measurements[dependencyName];
 
                         // определим подмножества для каждой зависимости
                         let entitiesParts;
@@ -59,7 +61,7 @@ class Cube{
 
                     entitiesParts = parts;
                 } else {
-                    const dependencyMeasure = this.measurements[dependency];
+                    const dependencyMeasure = measurements[dependency];
 
                     entitiesParts = dependencyMeasure.map( measure => {
                         // множество сущностей соответствующих измерению
@@ -95,9 +97,15 @@ class Cube{
             } else {
                 measure = this.makeMeasureFrom(entities, keyProps, 0, name, otherProps);
             }
+            measurements[name] = measure;
+        };
 
-            this.measurements[name] = measure;
-        });
+        let next;
+        while ( !(next = iterator.next()) || !next.done){
+            handleMeasurement(next.value)
+        }
+
+        return measurements;
     }
     /**
      *
@@ -244,7 +252,7 @@ class Cube{
                 delete newEntity[ENTITY_ID];
             }
 
-            this.schema.forEach( measurement => {
+            const handleMeasurement = measurement => {
                 const subEntityIdName = this.genericId(measurement.name);
                 const subEntityId = entity[subEntityIdName];
                 const subEntity = this.measurements[measurement.name].find( item => {
@@ -254,7 +262,13 @@ class Cube{
                 delete subEntityCopy[ENTITY_ID];
                 delete newEntity[subEntityIdName];
                 Object.assign(newEntity, subEntityCopy);
-            });
+            }
+
+            const iterator = this.schema.createIterator();
+            let next;
+            while ( !(next = iterator.next()) || !next.done){
+                handleMeasurement(next.value)
+            }
 
             list.push(newEntity);
         });
@@ -309,9 +323,7 @@ class Cube{
      * @private
      * */
     createMember(name, options = {}){
-        const measurement = this.schema.find((schema)=>{
-            return schema.name === name;
-        });
+        const measurement = this.schema.getMeasurement(name);
         const memberOptions = Object.assign({}, options, {
             id: this.reduceId(this.measurements[name]),
         });
@@ -328,7 +340,7 @@ class Cube{
      * @private
      * */
     normalize(){
-        const names = this.schema.map( item => item.name );
+        const names = this.schema.getMeasurementsNames();
         const report = [];
         names.forEach( name => {
             if (this.measurements[name].length){
@@ -359,7 +371,7 @@ class Cube{
             result[name] = member;
 
             // check dep
-            let dependency = this.getDependencyOf(name);
+            let dependency = this.schema.getDependencyOf(name);
             if (dependency){
                 reqursive(dependency.name)
             }
@@ -422,13 +434,7 @@ class Cube{
     }
 
     getCellName(){
-        return this.schema.find( schema => Array.isArray(schema.dependency)).name;
-    }
-
-    getDependencyOf(name){
-        return this.schema.find( schemaItem => {
-            return schemaItem.dependency === name;
-        });
+        return this.schema.getMesureName();
     }
 
     getColumnMeasurements(){

@@ -117,27 +117,30 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__const_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Member_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__CreatedMember_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Schema_js__ = __webpack_require__(7);
 
 
 
 
 
 
+
+
+class Measurements {}
 
 class Cube {
     constructor(entities, measurementsSchema) {
-        Object.defineProperty(this, 'schema', { value: measurementsSchema });
-
-        class Measurements {}
-
-        this.measurements = new Measurements();
+        const schema = new __WEBPACK_IMPORTED_MODULE_6__Schema_js__["a" /* default */](measurementsSchema);
+        Object.defineProperty(this, 'schema', { value: schema });
+        Object.defineProperty(this, 'entities', { value: entities });
         this.normalizedData = entities.map(entity => new __WEBPACK_IMPORTED_MODULE_0__NormalizedData_js__["a" /* default */](entity));
+        this.measurements = this.getMembersGroupsByMeasurementsFromSchema(entities, this.schema.createIterator());
+    }
+    getMembersGroupsByMeasurementsFromSchema(entities, iterator) {
+        const measurements = new Measurements();
 
-        measurementsSchema.forEach(measurement => {
+        const handleMeasurement = measurement => {
             const { name, dependency, keyProps, otherProps = [] } = measurement;
-            if (!name || !keyProps) {
-                throw Error('need \"name\" and \"keyProps\" params');
-            }
             let measure;
             if (dependency) {
                 // определим подмножества для каждой зависимости
@@ -146,7 +149,7 @@ class Cube {
                 if (Array.isArray(dependency)) {
 
                     const dismember = (dependencyName, data) => {
-                        const dependencyMeasure = this.measurements[dependencyName];
+                        const dependencyMeasure = measurements[dependencyName];
 
                         // определим подмножества для каждой зависимости
                         let entitiesParts;
@@ -178,7 +181,7 @@ class Cube {
 
                     entitiesParts = parts;
                 } else {
-                    const dependencyMeasure = this.measurements[dependency];
+                    const dependencyMeasure = measurements[dependency];
 
                     entitiesParts = dependencyMeasure.map(measure => {
                         // множество сущностей соответствующих измерению
@@ -214,9 +217,15 @@ class Cube {
             } else {
                 measure = this.makeMeasureFrom(entities, keyProps, 0, name, otherProps);
             }
+            measurements[name] = measure;
+        };
 
-            this.measurements[name] = measure;
-        });
+        let next;
+        while (!(next = iterator.next()) || !next.done) {
+            handleMeasurement(next.value);
+        }
+
+        return measurements;
     }
     /**
      *
@@ -363,7 +372,7 @@ class Cube {
                 delete newEntity[__WEBPACK_IMPORTED_MODULE_3__const_js__["a" /* ENTITY_ID */]];
             }
 
-            this.schema.forEach(measurement => {
+            const handleMeasurement = measurement => {
                 const subEntityIdName = this.genericId(measurement.name);
                 const subEntityId = entity[subEntityIdName];
                 const subEntity = this.measurements[measurement.name].find(item => {
@@ -373,7 +382,13 @@ class Cube {
                 delete subEntityCopy[__WEBPACK_IMPORTED_MODULE_3__const_js__["a" /* ENTITY_ID */]];
                 delete newEntity[subEntityIdName];
                 Object.assign(newEntity, subEntityCopy);
-            });
+            };
+
+            const iterator = this.schema.createIterator();
+            let next;
+            while (!(next = iterator.next()) || !next.done) {
+                handleMeasurement(next.value);
+            }
 
             list.push(newEntity);
         });
@@ -428,9 +443,7 @@ class Cube {
      * @private
      * */
     createMember(name, options = {}) {
-        const measurement = this.schema.find(schema => {
-            return schema.name === name;
-        });
+        const measurement = this.schema.getMeasurement(name);
         const memberOptions = Object.assign({}, options, {
             id: this.reduceId(this.measurements[name])
         });
@@ -447,7 +460,7 @@ class Cube {
      * @private
      * */
     normalize() {
-        const names = this.schema.map(item => item.name);
+        const names = this.schema.getMeasurementsNames();
         const report = [];
         names.forEach(name => {
             if (this.measurements[name].length) {
@@ -478,7 +491,7 @@ class Cube {
             result[name] = member;
 
             // check dep
-            let dependency = this.getDependencyOf(name);
+            let dependency = this.schema.getDependencyOf(name);
             if (dependency) {
                 reqursive(dependency.name);
             }
@@ -540,13 +553,7 @@ class Cube {
     }
 
     getCellName() {
-        return this.schema.find(schema => Array.isArray(schema.dependency)).name;
-    }
-
-    getDependencyOf(name) {
-        return this.schema.find(schemaItem => {
-            return schemaItem.dependency === name;
-        });
+        return this.schema.getMesureName();
     }
 
     getColumnMeasurements() {
@@ -622,6 +629,72 @@ class CreatedMember extends __WEBPACK_IMPORTED_MODULE_0__Member_js__["a" /* defa
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = CreatedMember;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SchemaMeasurement_js__ = __webpack_require__(8);
+
+
+class Schema {
+    constructor(schema) {
+        this.schema = schema.map(i => new __WEBPACK_IMPORTED_MODULE_0__SchemaMeasurement_js__["a" /* default */](i));
+    }
+    createIterator() {
+        let i = 0;
+        let schema = this.schema;
+
+        return {
+            next: () => {
+                let done = i >= schema.length;
+                let value = !done ? schema[i++] : void 0;
+                return {
+                    done,
+                    value
+                };
+            }
+        };
+    }
+    getMeasurement(name) {
+        return this.schema.find(schema => {
+            return schema.name === name;
+        });
+    }
+    getMeasurementsNames() {
+        return this.schema.map(item => item.name);
+    }
+    getMesureName() {
+        return this.schema.find(schema => Array.isArray(schema.dependency)).name;
+    }
+    getDependencyOf(name) {
+        return this.schema.find(schemaItem => {
+            return schemaItem.dependency === name;
+        });
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Schema;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class SchemaMeasurement {
+    constructor({ name, keyProps, dependency = null, otherProps = null }) {
+        if (!name || !keyProps || !keyProps.length) {
+            throw Error("Bad measurement description at schema, params 'name' and 'keyProps' is required");
+        }
+        this.name = name;
+        this.dependency = dependency;
+        this.keyProps = keyProps;
+        this.otherProps = otherProps;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = SchemaMeasurement;
 
 
 /***/ })
