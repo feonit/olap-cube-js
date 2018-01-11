@@ -19,20 +19,25 @@ export default class Schema{
             }
         }
     }
-    getMeasurement(name){
-        return this.schema.find((schema)=>{
-            return schema.name === name;
-        })
-    }
-    getMeasurementsNames(){
-        return this.schema.map( item => item.name )
-    }
-    getMesureName(){
-        return this.schema.find( schema => Array.isArray(schema.dependency)).name
-    }
-    getDependencyOf(name){
-        return this.schema.find( schemaItem => {
-            return schemaItem.dependency === name;
+    getByName(name){
+        return this.schema.find( schemaMeasurement =>{
+            return schemaMeasurement.name === name;
         });
+    }
+    getByDependency(name){
+        return this.schema.find( schemaMeasurement => {
+            return schemaMeasurement.dependency === name;
+        });
+    }
+    getNames(){
+        return this.schema.map( schemaMeasurement => schemaMeasurement.name );
+    }
+    getMeasure(){
+        return this.schema.find( schemaMeasurement => Array.isArray(schemaMeasurement.dependency));
+    }
+    getColumns(){
+        return this.schema.filter( schemaMeasurement => {
+            return !schemaMeasurement.dependency;
+        })
     }
 }

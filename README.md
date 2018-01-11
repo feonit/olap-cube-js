@@ -1,9 +1,11 @@
+[![Build Status](https://travis-ci.org/feonit/olap-cube.svg?branch=master)](https://travis-ci.org/feonit/olap-cube)
+
 ## Quick Start
 How Cube is work?
 ```javascript
 
 // This is an array of data from server
-let entities = [
+let dataArray = [
     { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
     { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
     { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
@@ -11,7 +13,7 @@ let entities = [
     { id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
 ]
 
-// This is the data scheme we need to obtain
+// This is the data schema we need to obtain
 let schema = [
     { name: 'cities', keyProps: ['city']},
     { name: 'companies', keyProps: ['company']},
@@ -21,7 +23,7 @@ let schema = [
 ]
 
 // We send it all to the constructor
-let cube = new Cube(entities, schema);
+let cube = new Cube(dataArray, schema);
 
 ```
 Now cube will be:
@@ -56,7 +58,7 @@ Now cube will be:
             { id: 5, planesCount: 2 },
         ]
     },
-    normalizedData: [
+    normalizedDataArray: [
         { id: 1, cities_id: 1, companies_id: 1, age_id: 1, prices_id: 1, counts_id: 1 },
         { id: 2, cities_id: 2, companies_id: 2, age_id: 2, prices_id: 2, counts_id: 3 },
         { id: 3, cities_id: 2, companies_id: 1, age_id: 2, prices_id: 2, counts_id: 2 },
@@ -68,7 +70,7 @@ Now cube will be:
 How get list back:
 
 ```javascript
-cube.getList()
+cube.getDataArray()
 
 ```
 ```js

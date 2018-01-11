@@ -29,7 +29,7 @@ const etalon = {
             { id: 5, planesCount: 2 },
         ]
     },
-    normalizedData: [
+    normalizedDataArray: [
         { id: 1, cities_id: 1, companies_id: 1, age_id: 1, prices_id: 1, counts_id: 1 },
         { id: 2, cities_id: 2, companies_id: 2, age_id: 2, prices_id: 2, counts_id: 3 },
         { id: 3, cities_id: 2, companies_id: 1, age_id: 2, prices_id: 2, counts_id: 2 },
@@ -40,31 +40,34 @@ const etalon = {
 
 describe('common work', function(){
 
-    it('check etalon data', () => {
-        let entities = [
-            { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-            { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-            { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-            { id: 4, city: 'Moscow', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-            { id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
-        ]
+    let arrayData = [
+        { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
+        { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
+        { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
+        { id: 4, city: 'Moscow', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
+        { id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
+    ]
 
-        let schema = [
-            { name: 'cities', keyProps: ['city']},
-            { name: 'companies', keyProps: ['company']},
-            { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
-            { name: 'prices', keyProps: ['price'], dependency: 'cities' },
-            { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
-        ]
+    let schema = [
+        { name: 'cities', keyProps: ['city']},
+        { name: 'companies', keyProps: ['company']},
+        { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
+        { name: 'prices', keyProps: ['price'], dependency: 'cities' },
+        { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
+    ]
 
-        let cube = new Cube(entities, schema);
-
+    it('must be equal etalon and expected cube data', () => {
+        let cube = new Cube(arrayData, schema);
         cube = JSON.parse(JSON.stringify(cube));
-
         let isEqual = _.isEqual(cube, etalon);
-
         expect(isEqual).toBe(true)
     })
 
+    it('shold return same array of data', () => {
+        let cube = new Cube(arrayData, schema);
+        let data = JSON.parse(JSON.stringify(cube.getDataArray()));
+        let isEqual = _.isEqual(arrayData, data);
+        expect(isEqual).toBe(true)
+    })
 
 })
