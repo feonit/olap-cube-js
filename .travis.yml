@@ -1,5 +1,5 @@
 language: node_js
-rvm:
- - 2.2
- - jruby
- - rbx-3
+
+sudo: enabled
+
+os: osx
