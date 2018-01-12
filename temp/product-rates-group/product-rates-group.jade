@@ -1,0 +1,299 @@
+h4 Ставки
+br
+
+.rates-table
+    .scroll-space
+        table
+            tbody
+                tr(
+                ng-repeat="currency in $ctrl.ratesTable.getCurrencies()"
+                )
+                    td(colspan="5")
+                        table.table-full-width.first-inside-table
+                            thead
+                            tbody(
+                            ng-repeat="variation in $ctrl.ratesTable.getVariations(currency)"
+                            )
+                                tr.btn-remove-hover-place(
+                                ng-if="!$first"
+                                )
+                                    td.correct-cell
+                                        h5.capitalize-first-letter {{ $ctrl.getVariationNameFromDictionary(variation) }}
+                                    td.correct-cell
+                                        input.form-control.correct-factor-input(
+                                        ng-init="rate_variation_delta_saved=variation.rate_variation_delta"
+                                        placeholder='п.п.'
+                                        ng-model="variation.rate_variation_delta"
+                                        )
+                                    td.correct-cell
+                                        span.btn-remove-container.btn-remove-container__display
+                                            button.btn.btn-success(
+                                            ng-disabled="rate_variation_delta_saved==variation.rate_variation_delta || !$ctrl.isDisabledUpdateVariation(currency)"
+                                            ng-click='$ctrl.onRecalculateVariation(variation, currency, rate_variation_delta_saved); rate_variation_delta_saved=variation.rate_variation_delta'
+                                            title="Пересчитать"
+                                            )
+                                                span.glyphicon.glyphicon-scale
+                                                = " "
+                                                | Пересчитать
+
+                                            span.glyphicon.glyphicon-remove.btn-remove(
+                                            ng-click='$ctrl.onRemoveVariation(variation)'
+                                            title="Удалить корректировку"
+                                            )
+
+
+                                tr(
+                                ng-repeat="amount in $ctrl.ratesTable.getAmounts(variation, currency)"
+                                )
+                                    td(colspan="5")
+                                        table.table-full-width
+                                            thead
+                                                tr.table-columns(
+                                                ng-if="$parent.$parent.$index == 0 && $parent.$index == 0 && $index == 0"
+                                                )
+                                                    td.base-column-cell
+                                                        div.base-column.base-column-left
+                                                            strong Сумма
+                                                    td.base-column-cell
+                                                        div.base-column.base-column-left
+                                                            strong Первоначальный взнос
+                                                    td.base-column-cell
+                                                        div.base-column.base-column-left
+                                                            strong Кредит/Залог
+
+                                                    td.base-column-cell.base-column-cell-period.btn-remove-hover-place(
+                                                    ng-repeat="period in $ctrl.ratesTable.getPeriods()"
+                                                    )
+                                                        div.base-column.base-column-right
+                                                            form(ng-if="$last")
+                                                                button.btn.btn-success.btn-add-period(
+                                                                ng-disabled="!$ctrl.isPossibleOfAddNewPeriod($ctrl.ratesTable.getPeriods())"
+                                                                ng-if="$ctrl.ratesTable.getPeriods().length < $ctrl.MAX_PERIODS"
+                                                                ng-click='$ctrl.onAddPeriod()'
+                                                                title="Добавить срок"
+                                                                )
+                                                                    span.glyphicon.glyphicon-plus
+                                                                    = " "
+                                                                    | Срок
+                                                            form.btn-remove-container.btn-remove-container__display
+                                                                label От
+                                                                    input.form-control.period-input(
+                                                                    placeholder='от'
+                                                                    ng-model="period.period_from_notation"
+                                                                    )
+                                                                label До
+                                                                    input.form-control.period-input(
+                                                                    placeholder='до'
+                                                                    ng-model="period.period_to_notation"
+                                                                    )
+                                                                span.glyphicon.glyphicon-remove.btn-remove.btn-remove__right(
+                                                                ng-disabled="$ctrl.ratesTable.getPeriods().length===1"
+                                                                ng-click='$ctrl.onRemovePeriod(period)'
+                                                                title="Удалить срок"
+                                                                )
+
+
+                                                tr.currency-row(
+                                                ng-if="$parent.$index == 0 && $index == 0"
+                                                )
+                                                    td(
+                                                    colspan="{{ [1,2,3].concat($ctrl.ratesTable.getPeriods()).length }}"
+                                                    )
+                                                        div.btn-remove-hover-place.btn-remove-container
+                                                            h4.currency-title {{ $ctrl.getCurrencyNameFromDictionary(currency) }}
+                                                            span.glyphicon.glyphicon-remove.btn-remove.btn-remove__right(
+                                                            ng-click='$ctrl.onRemoveCurrency(currency)'
+                                                            title="Удалить валюту"
+                                                            )
+                                                tr(
+                                                ng-if="$parent.$index == 0 && $index == 0"
+                                                )
+                                                    td.correct-cell
+                                                        h5 Фиксированные ставки
+
+                                            tbody
+                                                tr.btn-remove-hover-place(
+                                                ng-repeat="initialCollateral in $ctrl.ratesTable.getInitialCollateral(amount, variation, currency)"
+                                                )
+                                                    td.table-cell
+                                                        form.double-input.btn-remove-container(ng-show="$first")
+                                                            input.form-control.input-style(
+                                                            placeholder='от',
+                                                            ng-model="amount.amount_from"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            =' — '
+                                                            input.form-control.input-style(
+                                                            placeholder='до',
+                                                            ng-model="amount.amount_to"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            span.glyphicon.glyphicon-remove.btn-remove(
+                                                            ng-show="$first"
+                                                            ng-click='$ctrl.onRemoveAmount(amount); $ctrl.onBaseRatesChanged(currency)'
+                                                            title="Удалить сумму"
+                                                            )
+                                                    td.table-cell
+                                                        form.double-input
+                                                            input.form-control.input-style(
+                                                            placeholder='от'
+                                                            ng-model="initialCollateral.initial_fee_from"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            =' — '
+                                                            input.form-control.input-style(
+                                                            placeholder='до'
+                                                            ng-model="initialCollateral.initial_fee_to"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                    td.table-cell.table-cell-border-right
+                                                        form.double-input
+                                                            input.form-control.input-style(
+                                                            placeholder='от'
+                                                            ng-model="initialCollateral.collateral_ratio_from"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            =' — '
+                                                            input.form-control.input-style(
+                                                            placeholder='до'
+                                                            ng-model="initialCollateral.collateral_ratio_to"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                    td.table-cell(
+                                                    ng-repeat="rate in $ctrl.ratesTable.getRates(initialCollateral, amount, variation, currency)"
+                                                    )
+                                                        form.double-input.btn-remove-container
+                                                            input.form-control.input-style(
+                                                            placeholder='от'
+                                                            ng-model="rate.rate_min"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            =' — '
+                                                            input.form-control.input-style(
+                                                            placeholder='до'
+                                                            ng-model="rate.rate_max"
+                                                            ng-change="$ctrl.onBaseRatesChanged(currency)"
+                                                            )
+                                                            span.glyphicon.glyphicon-remove.btn-remove(
+                                                            ng-if="$last"
+                                                            ng-click='$ctrl.onRemoveInitialCollateral(initialCollateral); $ctrl.onBaseRatesChanged(currency)'
+                                                            title="Удалить вариант"
+                                                            )
+
+                                            tfoot(
+                                            ng-if="$parent.$index===0"
+                                            )
+                                                tr
+                                                    td.text-align-center.correct-cell
+                                                        button.btn.btn-success(
+                                                        ng-class="{'btn-hide': !$last}"
+                                                        ng-click='$ctrl.onAddAmount(variation, currency); $ctrl.onBaseRatesChanged(currency)'
+                                                        )
+                                                            span.glyphicon.glyphicon-plus
+                                                            = " "
+                                                            | Добавить сумму
+                                                    td.text-align-center.correct-cell
+                                                        button.btn.btn-success(
+                                                        ng-click='$ctrl.onAddInitialCollateral(amount, variation, currency); $ctrl.onBaseRatesChanged(currency)'
+                                                        )
+                                                            span.glyphicon.glyphicon-plus
+                                                            = " "
+                                                            | Добавить вариант
+
+                                tr(ng-if="$first")
+                                    td.correct-cell(ng-init="specialRate = $ctrl.findRateSpecialByCurrency(currency)")
+                                        strong Начальный период:
+                                        form.double-input
+                                            input.form-control.correct-factor-input.input-style(
+                                            placeholder="y m d"
+                                            ng-model="specialRate.period_from_notation"
+                                            )
+                                            =' — '
+                                            input.form-control.correct-factor-input.input-style(
+                                            placeholder="y m d"
+                                            ng-model="specialRate.period_to_notation"
+                                            )
+                                    td.correct-cell
+                                        strong Ставка, %:
+                                        form.double-input
+                                            input.form-control.correct-factor-input.input-style(
+                                            placeholder="От"
+                                            ng-model="specialRate.rate_min"
+                                            )
+                                            =' — '
+                                            input.form-control.correct-factor-input.input-style(
+                                            placeholder="До"
+                                            ng-model="specialRate.rate_max"
+                                            )
+                                tr.correct-row(ng-if="$first")
+                                    td.correct-cell(
+                                    width="400"
+                                    )
+                                        h5 Корректировка таблицы ставок
+                                        select.form-control(
+                                        ng-model='$ctrl.getSelectedVariationByCurrency(currency).rate_variation_id'
+                                        )
+                                            option(value="" disabled selected)
+                                                | Выберите корректировку
+                                            option(ng-repeat="item in $ctrl.getMapRateVariationWithDisabledProp(currency)" value="{{item.id}}" ng-disabled="item.disabled")
+                                                | {{item.name}}
+
+                                    td.correct-cell
+                                        input.form-control.correct-factor-input(
+                                        placeholder='п.п.'
+                                        ng-model="$ctrl.getSelectedVariationByCurrency(currency).rate_variation_delta"
+                                        )
+
+                                    td.correct-cell(
+                                    colspan="2"
+                                    )
+                                        button.btn.btn-success(
+                                        ng-disabled="!$ctrl.getSelectedVariationByCurrency(currency).rate_variation_id || !$ctrl.getSelectedVariationByCurrency(currency).rate_variation_delta"
+                                        ng-click="$ctrl.onAddVariation(currency);"
+                                        )
+                                            span.glyphicon.glyphicon-plus
+                                            = " "
+                                            | Добавить корректировку
+                                    td.correct-cell
+                                        form
+                                            button.btn.btn-primary.pull-right(
+                                            ng-click="$ctrl.onUpdateVariation(currency); $ctrl.onBaseRatesChanged(currency, true)"
+                                            ng-disabled="$ctrl.isDisabledUpdateVariation(currency)"
+                                            )
+                                                span.glyphicon.glyphicon-scale
+                                                = " "
+                                                | Обновить корректировки
+
+
+
+            tfoot
+                tr
+                    td.currency-select-container
+                        select.form-control(
+                        ng-model='$ctrl.selectedCurrency'
+                        )
+                            option(value="" disabled selected)
+                                | Выберите валюту
+                            option(
+                            ng-repeat="item in $ctrl.mapCurrencyWithDisabledProp"
+                            value="{{item.code}}"
+                            ng-disabled="item.disabled"
+                            )
+                                | {{item.name}}
+
+                    td
+                        button.btn.btn-success.btn-add-currency(
+                        ng-disabled="!$ctrl.selectedCurrency"
+                        ng-click='$ctrl.onAddCurrency()'
+                        )
+                            span.glyphicon.glyphicon-plus
+                            = " "
+                            | Добавить валюту
+                tr
+                    td.rate-comment-cell(colspan=2)
+                        span.rate-comment Комментарий к ставкам:
+                        input.form-control.rate-comment-input(
+                        style="display: inline-block;"
+                        placeholder="Введите комментарий"
+                        ng-model="$ctrl.productVariant.rate_comment"
+                        )
