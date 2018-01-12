@@ -1,5 +1,5 @@
 export default class SchemaMeasurement {
-    constructor({name, keyProps, dependency = null, otherProps = null}){
+    constructor({name, keyProps, dependency = null, otherProps = []}){
         if (!name || !keyProps || !keyProps.length){
             throw Error("Bad measurement description at schema, params 'name' and 'keyProps' is required");
         }

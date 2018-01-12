@@ -59,15 +59,25 @@ describe('common work', function(){
     it('must be equal etalon and expected cube data', () => {
         let cube = new Cube(arrayData, schema);
         cube = JSON.parse(JSON.stringify(cube));
-        let isEqual = _.isEqual(cube, etalon);
-        expect(isEqual).toBe(true)
+        expect(_.isEqual(cube, etalon)).toBe(true)
     })
 
     it('shold return same array of data', () => {
         let cube = new Cube(arrayData, schema);
         let data = JSON.parse(JSON.stringify(cube.getDataArray()));
-        let isEqual = _.isEqual(arrayData, data);
-        expect(isEqual).toBe(true)
+        expect(_.isEqual(arrayData, data)).toBe(true)
+    })
+
+    it('shold return unique data', () => {
+        let cube = new Cube(arrayData, schema);
+        const res = cube.unique('prices');
+        const expection = [
+            { id: 1, price: "20$" },
+            { id: 2, price: "10$" },
+            { id: 3, price: "20$" },
+            { id: 4, price: "25$" },
+        ];
+        expect(_.isEqual(JSON.parse(JSON.stringify(res)), expection)).toBe(true)
     })
 
 })
