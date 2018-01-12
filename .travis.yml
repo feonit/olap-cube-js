@@ -3,3 +3,13 @@ language: node_js
 sudo: enabled
 
 os: osx
+
+install:
+  - npm install
+
+script:
+ - npm run build
+
+git:
+  depth: 5
+  submodules: false
