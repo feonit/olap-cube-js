@@ -5,6 +5,7 @@
 </div>
 
 [![Build Status](https://travis-ci.org/feonit/olap-cube.svg?branch=master)](https://travis-ci.org/feonit/olap-cube)
+[![codecov](https://codecov.io/gh/feonit/olap-cube/branch/master/graph/badge.svg)](https://codecov.io/gh/feonit/olap-cube)
 
 ## Quick Start
 How Cube is work?

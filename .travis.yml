@@ -1,12 +1,17 @@
 language: node_js
 
+sudo: enabled
+
 os: osx
 
 install:
   - npm install
+  - npm install -g codecov
 
 script:
- - npm run test
+ - npm run build:spec
+ - istanbul cover node_modules\jasmine\bin\jasmine.js --reporter lcovonly -- -R spec
+ - codecov
  - npm run build
 
 git:
