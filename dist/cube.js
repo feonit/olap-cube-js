@@ -72,18 +72,9 @@ var Cube =
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var NormalizedData = function NormalizedData(data, options) {
-    _classCallCheck(this, NormalizedData);
-
-    Object.assign(this, data);
-};
-
-exports.default = NormalizedData;
+var ENTITY_ID = exports.ENTITY_ID = 'id';
 
 /***/ }),
 /* 1 */
@@ -93,9 +84,23 @@ exports.default = NormalizedData;
 
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
-var ENTITY_ID = exports.ENTITY_ID = 'id';
+
+var _const = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var NormalizedData = function NormalizedData(data, options) {
+    _classCallCheck(this, NormalizedData);
+
+    Object.assign(this, data);
+    if (!this[_const.ENTITY_ID]) {
+        throw "data must have id parameter";
+    }
+};
+
+exports.default = NormalizedData;
 
 /***/ }),
 /* 2 */
@@ -108,7 +113,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _const = __webpack_require__(1);
+var _const = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -136,7 +141,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _NormalizedData = __webpack_require__(0);
+var _NormalizedData = __webpack_require__(1);
 
 var _NormalizedData2 = _interopRequireDefault(_NormalizedData);
 
@@ -148,7 +153,7 @@ var _2 = __webpack_require__(5);
 
 var _3 = _interopRequireDefault(_2);
 
-var _const = __webpack_require__(1);
+var _const = __webpack_require__(0);
 
 var _Member = __webpack_require__(2);
 
@@ -294,7 +299,7 @@ var Cube = function () {
                         if (index + 1 === measurementsLength) {
                             // create cell
                             var measureName = _this2.schema.getMeasure().name;
-                            var measure = _this2._createMember();
+                            var measure = _this2._createMember(measureName);
                             var _options = Object.assign({}, cellOptions, _defineProperty({}, measureName, measure));
                             _this2._createNormalizeData(_options);
                         }
@@ -396,7 +401,18 @@ var Cube = function () {
                     // определим подмножества для каждой зависимости
                     var entitiesParts = [];
 
-                    if (Array.isArray(dependency)) {
+                    var dependencyNames = void 0;
+                    var dependencyName = void 0;
+
+                    //todo ref
+                    var analize = _this4.schema.getDependencyNames(dependency);
+                    if (Array.isArray(analize)) {
+                        dependencyNames = analize;
+                    } else {
+                        dependencyName = analize;
+                    }
+
+                    if (dependencyNames) {
 
                         var dismember = function dismember(dependencyName, data) {
                             var dependencyMeasure = measurements[dependencyName];
@@ -418,7 +434,7 @@ var Cube = function () {
                         };
 
                         var parts = [_this4.normalizedDataArray];
-                        dependency.forEach(function (dependencyName) {
+                        dependencyNames.forEach(function (dependencyName) {
                             var newParts = [];
                             parts.forEach(function (partData) {
                                 var entitiesParts = dismember(dependencyName, partData);
@@ -431,14 +447,14 @@ var Cube = function () {
 
                         entitiesParts = parts;
                     } else {
-                        var dependencyMeasure = measurements[dependency];
+                        var dependencyMeasure = measurements[dependencyName];
 
                         entitiesParts = dependencyMeasure.map(function (measure) {
                             // множество сущностей соответствующих измерению
                             var measureId = measure[_const.ENTITY_ID];
                             var entitiesPart = _this4.normalizedDataArray.filter(function (data) {
                                 var isPart = true;
-                                var idName = Cube.genericId(dependency);
+                                var idName = Cube.genericId(dependencyName);
                                 isPart = data[idName] == measureId;
                                 return isPart;
                             });
@@ -637,6 +653,25 @@ var Cube = function () {
             }
         }
         /**
+         * Full size of cube
+         * */
+
+    }, {
+        key: '_getSize',
+        value: function _getSize() {
+            var _this8 = this;
+
+            return this.schema.getColumns().reduce(function (accumulate, current) {
+                var unique = _this8.unique(current.name);
+                return accumulate * unique.length;
+            }, 1);
+        }
+    }, {
+        key: '_fillToFullSize',
+        value: function _fillToFullSize() {}
+        //todo
+
+        /**
          *
          * @private
          * */
@@ -644,7 +679,7 @@ var Cube = function () {
     }, {
         key: '_createMemberDependency',
         value: function _createMemberDependency(name) {
-            var _this8 = this;
+            var _this9 = this;
 
             var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -653,11 +688,11 @@ var Cube = function () {
                 var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
                 // create
-                var member = _this8._createMember(name, options);
+                var member = _this9._createMember(name, options);
                 result[name] = member;
 
                 // check dep
-                var dependency = _this8.schema.getByDependency(name);
+                var dependency = _this9.schema.getByDependency(name);
                 if (dependency) {
                     reqursive(dependency.name);
                 }
@@ -707,7 +742,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _NormalizedData2 = __webpack_require__(0);
+var _NormalizedData2 = __webpack_require__(1);
 
 var _NormalizedData3 = _interopRequireDefault(_NormalizedData2);
 
@@ -733,12 +768,10 @@ var NormalizedDataNotSaved = function (_NormalizedData) {
     function NormalizedDataNotSaved(data, options) {
         _classCallCheck(this, NormalizedDataNotSaved);
 
-        var _this = _possibleConstructorReturn(this, (NormalizedDataNotSaved.__proto__ || Object.getPrototypeOf(NormalizedDataNotSaved)).call(this, data, options));
-
         if (!data.id) {
-            _this.id = uuidv4();
+            data.id = uuidv4();
         }
-        return _this;
+        return _possibleConstructorReturn(this, (NormalizedDataNotSaved.__proto__ || Object.getPrototypeOf(NormalizedDataNotSaved)).call(this, data, options));
     }
 
     return NormalizedDataNotSaved;
@@ -829,25 +862,199 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _SchemaMeasurement = __webpack_require__(8);
+var _SchemaMeasurement2 = __webpack_require__(8);
 
-var _SchemaMeasurement2 = _interopRequireDefault(_SchemaMeasurement);
+var _SchemaMeasurement3 = _interopRequireDefault(_SchemaMeasurement2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Schema = function () {
+var AbstractSchema = function () {
+    function AbstractSchema() {
+        _classCallCheck(this, AbstractSchema);
+    }
+
+    _createClass(AbstractSchema, [{
+        key: 'createIterator',
+        value: function createIterator() {}
+    }, {
+        key: 'getByName',
+        value: function getByName() {}
+    }, {
+        key: 'getByDependency',
+        value: function getByDependency() {}
+    }, {
+        key: 'getNames',
+        value: function getNames() {}
+    }, {
+        key: 'getMeasure',
+        value: function getMeasure() {}
+    }, {
+        key: 'getColumns',
+        value: function getColumns() {}
+    }]);
+
+    return AbstractSchema;
+}();
+
+var schema = {
+    name: 'counts',
+    keyProps: ['planesCount'],
+    dependency: [{
+        name: 'prices',
+        keyProps: ['price'],
+        dependency: [{
+            name: 'cities',
+            keyProps: ['city']
+        }]
+    }, {
+        name: 'companies',
+        keyProps: ['company']
+    }, {
+        name: 'age',
+        keyProps: ['minAgePlane', 'maxAgePlane']
+    }]
+};
+
+var SchemaMeasurement2 = function (_SchemaMeasurement) {
+    _inherits(SchemaMeasurement2, _SchemaMeasurement);
+
+    function SchemaMeasurement2(options, indexSchema) {
+        _classCallCheck(this, SchemaMeasurement2);
+
+        var _this = _possibleConstructorReturn(this, (SchemaMeasurement2.__proto__ || Object.getPrototypeOf(SchemaMeasurement2)).call(this, options));
+
+        if (indexSchema) {
+            indexSchema.push(_this);
+        }
+        if (_this.dependency) {
+            _this.dependency = _this.dependency.map(function (dependency) {
+                return new SchemaMeasurement2(dependency, indexSchema);
+            });
+        }
+        return _this;
+    }
+
+    return SchemaMeasurement2;
+}(_SchemaMeasurement3.default);
+
+var Schema2 = function (_AbstractSchema) {
+    _inherits(Schema2, _AbstractSchema);
+
+    function Schema2(schema) {
+        _classCallCheck(this, Schema2);
+
+        var _this2 = _possibleConstructorReturn(this, (Schema2.__proto__ || Object.getPrototypeOf(Schema2)).call(this));
+
+        _this2.indexSchema = [];
+        _this2.schema = new SchemaMeasurement2(schema, _this2.indexSchema);
+        return _this2;
+    }
+
+    _createClass(Schema2, [{
+        key: 'createIterator',
+        value: function createIterator() {
+            var i = 0;
+            var schema = this.indexSchema.concat([]).reverse();
+
+            return {
+                next: function next() {
+                    var done = i >= schema.length;
+                    var value = !done ? schema[i++] : void 0;
+                    return {
+                        done: done,
+                        value: value
+                    };
+                }
+            };
+        }
+    }, {
+        key: 'getNames',
+        value: function getNames() {
+            return this.indexSchema.map(function (schema) {
+                return schema.name;
+            });
+        }
+    }, {
+        key: 'getByName',
+        value: function getByName(name) {
+            var find = this.indexSchema.find(function (schema) {
+                return schema.name === name;
+            });
+            return find;
+        }
+    }, {
+        key: 'getByDependency',
+        value: function getByDependency(name) {
+            var find = this.indexSchema.find(function (schema) {
+                if (schema.dependency) {
+                    var _find = schema.dependency.find(function (schema) {
+                        return schema.name === name;
+                    });
+                    if (_find) {
+                        return schema;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            });
+            return find;
+        }
+    }, {
+        key: 'getMeasure',
+        value: function getMeasure() {
+            return this.schema;
+        }
+    }, {
+        key: 'getColumns',
+        value: function getColumns() {
+            return this.schema.dependency.map(function (schema) {
+                while (schema.dependency) {
+                    if (schema.dependency.length > 1) {
+                        throw "new case with mix of deps";
+                    }
+                    schema = schema.dependency[0];
+                }
+                return schema;
+            });
+        }
+    }, {
+        key: 'getDependencyNames',
+        value: function getDependencyNames(dependency) {
+            //todo ref
+            var map = dependency.map(function (dependency) {
+                return dependency.name;
+            });
+            return map.length === 1 ? map[0] : map;
+        }
+    }]);
+
+    return Schema2;
+}(AbstractSchema);
+
+var Schema = function (_AbstractSchema2) {
+    _inherits(Schema, _AbstractSchema2);
+
     function Schema(schema) {
         _classCallCheck(this, Schema);
 
-        this.schema = schema.map(function (i) {
-            return new _SchemaMeasurement2.default(i);
+        var _this3 = _possibleConstructorReturn(this, (Schema.__proto__ || Object.getPrototypeOf(Schema)).call(this));
+
+        _this3.schema = schema.map(function (i) {
+            return new _SchemaMeasurement3.default(i);
         });
+        return _this3;
     }
 
     _createClass(Schema, [{
-        key: "createIterator",
+        key: 'createIterator',
         value: function createIterator() {
             var i = 0;
             var schema = this.schema;
@@ -864,46 +1071,51 @@ var Schema = function () {
             };
         }
     }, {
-        key: "getByName",
+        key: 'getByName',
         value: function getByName(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.name === name;
             });
         }
     }, {
-        key: "getByDependency",
+        key: 'getByDependency',
         value: function getByDependency(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.dependency === name;
             });
         }
     }, {
-        key: "getNames",
+        key: 'getNames',
         value: function getNames() {
             return this.schema.map(function (schemaMeasurement) {
                 return schemaMeasurement.name;
             });
         }
     }, {
-        key: "getMeasure",
+        key: 'getMeasure',
         value: function getMeasure() {
             return this.schema.find(function (schemaMeasurement) {
                 return Array.isArray(schemaMeasurement.dependency);
             });
         }
     }, {
-        key: "getColumns",
+        key: 'getColumns',
         value: function getColumns() {
             return this.schema.filter(function (schemaMeasurement) {
                 return !schemaMeasurement.dependency;
             });
         }
+    }, {
+        key: 'getDependencyNames',
+        value: function getDependencyNames(dependency) {
+            return dependency;
+        }
     }]);
 
     return Schema;
-}();
+}(AbstractSchema);
 
-exports.default = Schema;
+exports.default = Schema2;
 
 /***/ }),
 /* 8 */

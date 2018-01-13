@@ -21,13 +21,30 @@ let dataArray = [
 ]
 
 // This is the data schema we need to obtain
-let schema = [
-    { name: 'cities', keyProps: ['city']},
-    { name: 'companies', keyProps: ['company']},
-    { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
-    { name: 'prices', keyProps: ['price'], dependency: 'cities' },
-    { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
-]
+let schema = {
+    name: 'counts',
+    keyProps: ['planesCount'],
+    dependency: [
+        {
+            name: 'prices',
+            keyProps: ['price'],
+            dependency: [
+                {
+                    name: 'cities',
+                    keyProps: ['city']
+                }
+            ]
+        },
+        {
+            name: 'companies',
+            keyProps: ['company']
+        },
+        {
+            name: 'age',
+            keyProps: ['minAgePlane', 'maxAgePlane']
+        }
+    ]
+}
 
 // We send it all to the constructor
 let cube = new Cube(dataArray, schema);

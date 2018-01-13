@@ -34,6 +34,40 @@ angular.module('RatesCube', ['Cube'])
                         dependency: ['initialCollateral', 'periods']
                     },
                 ];
+                const measurementsSchema2 = {
+                    name: "rates",
+                    keyProps: ['rate_min', 'rate_max'],
+                    dependency: [
+                        {
+                            name: 'initialCollateral'
+                            keyProps: ['initial_fee_from', 'initial_fee_to', 'collateral_ratio_to', 'collateral_ratio_from'],
+                            dependency: [
+                                {
+                                    name: "amounts",
+                                    keyProps: ['amount_from', 'amount_to'],
+                                    dependency: [
+                                        {
+                                            name: "variations",
+                                            keyProps: ['rate_variation_delta', 'rate_variation_id'],
+                                            dependency: [
+                                                {
+                                                    name: "currencies",
+                                                    keyProps: ['currency_id']
+                                                },
+                                            ]
+                                        },
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            name: 'periods',
+                            keyProps: ['period_from_notation', 'period_to_notation'],
+                            otherProps: ['period_from', 'period_to']
+                        }
+                    ]
+                };
+
                 super(rates, measurementsSchema);
                 this.rates = rates;
                 this.schema = measurementsSchema;

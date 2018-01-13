@@ -67,8 +67,7 @@ schema = {
                     keyProps: ['city']
                 }
             ]
-        }
-        ,
+        },
         {
             name: 'companies',
             keyProps: ['company']
