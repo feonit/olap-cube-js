@@ -1,5 +1,4 @@
 import Cube from '../src/cube.js';
-import _ from 'lodash';
 
 describe('stand alone', function(){
 

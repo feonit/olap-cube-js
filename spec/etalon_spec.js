@@ -1,6 +1,5 @@
 import Cube from '../src/cube.js';
-import _ from 'lodash';
-
+import '../node_modules/lodash/lodash.js';
 const etalon = {
     measurements: {
         cities: [
@@ -39,23 +38,49 @@ const etalon = {
     ]
 }
 
+let arrayData = [
+    { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
+    { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
+    { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
+    { id: 4, city: 'Moscow', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
+    { id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
+]
+
+let schema = [
+    { name: 'cities', keyProps: ['city']},
+    { name: 'companies', keyProps: ['company']},
+    { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
+    { name: 'prices', keyProps: ['price'], dependency: 'cities' },
+    { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
+]
+
+schema = {
+    name: 'counts',
+    keyProps: ['planesCount'],
+    dependency: [
+        {
+            name: 'prices',
+            keyProps: ['price'],
+            dependency: [
+                {
+                    name: 'cities',
+                    keyProps: ['city']
+                }
+            ]
+        }
+        ,
+        {
+            name: 'companies',
+            keyProps: ['company']
+        },
+        {
+            name: 'age',
+            keyProps: ['minAgePlane', 'maxAgePlane']
+        }
+    ]
+}
+
 describe('common work', function(){
-
-    let arrayData = [
-        { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-        { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-        { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-        { id: 4, city: 'Moscow', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-        { id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
-    ]
-
-    let schema = [
-        { name: 'cities', keyProps: ['city']},
-        { name: 'companies', keyProps: ['company']},
-        { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
-        { name: 'prices', keyProps: ['price'], dependency: 'cities' },
-        { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
-    ]
 
     it('must be equal etalon and expected cube data', () => {
         let cube = new Cube(arrayData, schema);
@@ -63,13 +88,13 @@ describe('common work', function(){
         expect(_.isEqual(cube, etalon)).toBe(true)
     })
 
-    it('shold return same array of data', () => {
+    it('should return same array of data', () => {
         let cube = new Cube(arrayData, schema);
         let data = JSON.parse(JSON.stringify(cube.getDataArray()));
         expect(_.isEqual(arrayData, data)).toBe(true)
     })
 
-    it('shold return unique data', () => {
+    it('should return unique data', () => {
         let cube = new Cube(arrayData, schema);
         const res = cube.unique('prices');
         const expection = [
@@ -79,6 +104,37 @@ describe('common work', function(){
             { id: 4, price: "25$" },
         ];
         expect(_.isEqual(JSON.parse(JSON.stringify(res)), expection)).toBe(true)
+    })
+
+    it('should add column to cube data', () => {
+        const arrayData = [
+            {id: 1, x: 0, y: 0, value: 10 },
+            {id: 2, x: 0, y: 1, value: 100 },
+            {id: 3, x: 1, y: 0, value: 1000 },
+            {id: 4, x: 1, y: 1, value: 10000 },
+        ];
+
+        const schema = {
+            name: 'valueOfXY',
+            keyProps: ['value'],
+            dependency: [
+                {
+                    name: 'coordinateX',
+                    keyProps: ['x']
+                },{
+                    name: 'coordinateY',
+                    keyProps: ['y']
+                }
+            ]
+        };
+
+        let cube = new Cube(arrayData, schema);
+
+        cube.addColumn('coordinateX', { x: 2 });
+
+        const res = cube.unique('coordinateX');
+
+        expect(res.length).toBe(3)
     })
 
 })

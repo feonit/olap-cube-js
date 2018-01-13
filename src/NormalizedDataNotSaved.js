@@ -9,9 +9,9 @@ function uuidv4() {
 
 export default class NormalizedDataNotSaved extends NormalizedData{
     constructor(data, options){
-        super(data, options)
         if (!data.id){
-            this.id = uuidv4()
+            data.id = uuidv4()
         }
+        super(data, options)
     }
 }

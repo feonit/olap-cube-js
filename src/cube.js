@@ -105,7 +105,7 @@ class Cube{
                     if ( (index + 1) === measurementsLength){
                         // create cell
                         const measureName = this.schema.getMeasure().name;
-                        const measure = this._createMember();
+                        const measure = this._createMember(measureName);
                         const options = Object.assign({}, cellOptions, { [measureName]: measure });
                         this._createNormalizeData(options);
                     }
@@ -190,7 +190,18 @@ class Cube{
                 // определим подмножества для каждой зависимости
                 let entitiesParts = [];
 
-                if (Array.isArray(dependency)){
+                let dependencyNames;
+                let dependencyName;
+
+                //todo ref
+                const analize = this.schema.getDependencyNames(dependency);
+                if (Array.isArray(analize)){
+                    dependencyNames = analize;
+                } else {
+                    dependencyName = analize;
+                }
+
+                if (dependencyNames){
 
                     const dismember = (dependencyName, data) => {
                         const dependencyMeasure = measurements[dependencyName];
@@ -212,7 +223,7 @@ class Cube{
                     };
 
                     let parts = [this.normalizedDataArray];
-                    dependency.forEach( dependencyName => {
+                    dependencyNames.forEach( dependencyName => {
                         let newParts = [];
                         parts.forEach( partData => {
                             const entitiesParts = dismember(dependencyName, partData)
@@ -225,14 +236,14 @@ class Cube{
 
                     entitiesParts = parts;
                 } else {
-                    const dependencyMeasure = measurements[dependency];
+                    const dependencyMeasure = measurements[dependencyName];
 
                     entitiesParts = dependencyMeasure.map( measure => {
                         // множество сущностей соответствующих измерению
                         const measureId = measure[ENTITY_ID];
                         const entitiesPart = this.normalizedDataArray.filter( data => {
                             let isPart = true;
-                            let idName = Cube.genericId(dependency);
+                            let idName = Cube.genericId(dependencyName);
                             isPart = data[idName] == measureId;
                             return isPart;
                         });
@@ -401,6 +412,18 @@ class Cube{
         if (report.length){
             console.log('битые ссылки:', report)
         }
+    }
+    /**
+     * Full size of cube
+     * */
+    _getSize(){
+        return this.schema.getColumns().reduce((accumulate, current)=>{
+            let unique = this.unique(current.name);
+            return accumulate * unique.length
+        }, 1)
+    }
+    _fillToFullSize(){
+        //todo
     }
     /**
      *

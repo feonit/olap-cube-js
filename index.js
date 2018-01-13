@@ -16,7 +16,7 @@ let schema = [
     { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
 ]
 
-let cube = new Cube(entities, schema);
+// let cube = new Cube(entities, schema);
 
 //    class Schema{
 //        constructor(schema){
