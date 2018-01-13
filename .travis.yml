@@ -7,6 +7,7 @@ os: osx
 install:
   - npm install
   - npm install -g codecov
+  - npm install -g istanbul
 
 script:
  - npm run build:spec
