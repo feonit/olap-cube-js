@@ -1,4 +1,5 @@
 import Cube from '../src/cube.js';
+import _ from 'lodash';
 
 const etalon = {
     measurements: {

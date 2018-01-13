@@ -1,11 +1,13 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/cube.js',
+    entry: {
+        spec: path.resolve(__dirname, '../spec/spec.js'),
+    },
     output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'cube.js',
-        library: "Cube",
+        path: path.resolve(__dirname, '../dist'),
+        filename: '[name].js',
+        library: "Spec",
         libraryTarget: "var"
     },
     module: {

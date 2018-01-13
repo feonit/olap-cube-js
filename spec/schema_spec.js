@@ -1,5 +1,6 @@
 import Schema from '../src/Schema.js';
 import SchemaMeasurement from '../src/SchemaMeasurement.js';
+import _ from 'lodash';
 
 describe('test schema', function(){
 
