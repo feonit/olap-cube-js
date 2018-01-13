@@ -11,7 +11,8 @@ install:
 
 script:
  - npm run build:spec
- - istanbul cover node_modules\jasmine\bin\jasmine.js --reporter lcovonly -- -R spec
+ - istanbul cover ./node_modules/.bin/jasmine
+ - ./node_modules/.bin/codecov
  - npm run build
 
 after_success:

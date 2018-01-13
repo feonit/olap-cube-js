@@ -1,5 +1,8 @@
 import Cube from '../src/cube.js';
 import '../node_modules/lodash/lodash.js';
+// const Cube = require('../src/cube.js')
+// const _ = require('../node_modules/lodash/lodash.js')
+
 const etalon = {
     measurements: {
         cities: [
