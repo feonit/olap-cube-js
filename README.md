@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://github.com/feonit/olap-cube">
+    <img width="200" height="200" src="https://raw.githubusercontent.com/feonit/olap-cube/master/cube.jpg">
+  </a>
+</div>
+
 [![Build Status](https://travis-ci.org/feonit/olap-cube.svg?branch=master)](https://travis-ci.org/feonit/olap-cube)
 
 ## Quick Start
