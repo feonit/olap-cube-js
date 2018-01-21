@@ -253,7 +253,7 @@ var Cube = function () {
 
     }, {
         key: 'addColumn',
-        value: function addColumn(name, options) {
+        value: function addColumn(measurementName, memberOptions) {
             var _this2 = this;
 
             var cellOptions = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -263,51 +263,53 @@ var Cube = function () {
             var columns = {};
 
             // остальные измерения этого уровня
-            measurements.forEach(function (value) {
-                if (value.name !== name) {
-                    if (!cellOptions[value.name]) {
-                        columns[value.name] = _this2.measurements[value.name];
+            measurements.forEach(function (measurement) {
+                if (measurement.name !== measurementName) {
+                    if (!cellOptions[measurement.name]) {
+                        columns[measurement.name] = _this2.measurements[measurement.name];
                     }
                 }
             });
 
-            cellOptions = Object.assign({}, cellOptions, this._createMemberDependency(name, options));
+            var memberDepOptions = this._createMemberDependency(measurementName, memberOptions);
 
-            var reqursiveForEach = function reqursiveForEach(cellOptions, columns, index, isDependency) {
-                var keys = Object.keys(columns);
-                var measurementsLength = keys.length;
+            cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
-                if (index !== measurementsLength) {
-                    var mesurement = columns[keys[index]];
+            var recursivelyForEach = function recursivelyForEach(cellOptions, columns, index, isDependency) {
+                var measurementNames = Object.keys(columns);
+                var measurementNamesLength = measurementNames.length;
 
-                    mesurement.forEach(function (member) {
-                        cellOptions[keys[index]] = member;
-                        var dependency = _this2.schema.getByDependency(keys[index]);
+                if (index !== measurementNamesLength) {
+                    var members = columns[measurementNames[index]];
+
+                    members.forEach(function (member) {
+                        cellOptions[measurementNames[index]] = member;
+                        var dependency = _this2.schema.getByDependency(measurementNames[index]);
                         if (dependency) {
-                            var uniqueOptions = _defineProperty({}, keys[index], member);
+                            var uniqueOptions = _defineProperty({}, measurementNames[index], member);
                             var unique = _this2.unique(dependency.name, uniqueOptions);
                             var _columns = _defineProperty({}, dependency.name, unique);
 
-                            reqursiveForEach(cellOptions, _columns, 0, true);
+                            recursivelyForEach(cellOptions, _columns, 0, true);
                         }
-                        reqursiveForEach(cellOptions, columns, index + 1, isDependency);
+                        recursivelyForEach(cellOptions, columns, index + 1, isDependency);
 
                         if (isDependency) {
                             return;
                         }
 
-                        if (index + 1 === measurementsLength) {
+                        if (index + 1 === measurementNamesLength) {
                             // create cell
                             var measureName = _this2.schema.getMeasure().name;
-                            var measure = _this2._createMember(measureName);
-                            var _options = Object.assign({}, cellOptions, _defineProperty({}, measureName, measure));
-                            _this2._createNormalizeData(_options);
+                            var _member = _this2._createMember(measureName);
+                            var options = Object.assign({}, cellOptions, _defineProperty({}, measureName, _member));
+                            _this2._createNormalizeData(options);
                         }
                     });
                 }
             };
 
-            reqursiveForEach(cellOptions, columns, 0);
+            recursivelyForEach(cellOptions, columns, 0);
         }
         /**
          *
@@ -678,26 +680,26 @@ var Cube = function () {
 
     }, {
         key: '_createMemberDependency',
-        value: function _createMemberDependency(name) {
+        value: function _createMemberDependency(measurementName) {
             var _this9 = this;
 
-            var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var memberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
             var result = {};
-            var reqursive = function reqursive(name) {
-                var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var reqursive = function reqursive(measurementName) {
+                var memberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
                 // create
-                var member = _this9._createMember(name, options);
-                result[name] = member;
+                var member = _this9._createMember(measurementName, memberOptions);
+                result[measurementName] = member;
 
                 // check dep
-                var dependency = _this9.schema.getByDependency(name);
-                if (dependency) {
-                    reqursive(dependency.name);
-                }
+                // let dependency = this.schema.getByDependency(measurementName);
+                // if (dependency){
+                //     reqursive(dependency.name)
+                // }
             };
-            reqursive(name, options);
+            reqursive(measurementName, memberOptions);
             return result;
         }
         /**
@@ -880,46 +882,27 @@ var AbstractSchema = function () {
     }
 
     _createClass(AbstractSchema, [{
-        key: 'createIterator',
+        key: "createIterator",
         value: function createIterator() {}
     }, {
-        key: 'getByName',
+        key: "getByName",
         value: function getByName() {}
     }, {
-        key: 'getByDependency',
+        key: "getByDependency",
         value: function getByDependency() {}
     }, {
-        key: 'getNames',
+        key: "getNames",
         value: function getNames() {}
     }, {
-        key: 'getMeasure',
+        key: "getMeasure",
         value: function getMeasure() {}
     }, {
-        key: 'getColumns',
+        key: "getColumns",
         value: function getColumns() {}
     }]);
 
     return AbstractSchema;
 }();
-
-var schema = {
-    name: 'counts',
-    keyProps: ['planesCount'],
-    dependency: [{
-        name: 'prices',
-        keyProps: ['price'],
-        dependency: [{
-            name: 'cities',
-            keyProps: ['city']
-        }]
-    }, {
-        name: 'companies',
-        keyProps: ['company']
-    }, {
-        name: 'age',
-        keyProps: ['minAgePlane', 'maxAgePlane']
-    }]
-};
 
 var SchemaMeasurement2 = function (_SchemaMeasurement) {
     _inherits(SchemaMeasurement2, _SchemaMeasurement);
@@ -929,13 +912,13 @@ var SchemaMeasurement2 = function (_SchemaMeasurement) {
 
         var _this = _possibleConstructorReturn(this, (SchemaMeasurement2.__proto__ || Object.getPrototypeOf(SchemaMeasurement2)).call(this, options));
 
-        if (indexSchema) {
-            indexSchema.push(_this);
-        }
         if (_this.dependency) {
             _this.dependency = _this.dependency.map(function (dependency) {
                 return new SchemaMeasurement2(dependency, indexSchema);
             });
+        }
+        if (indexSchema) {
+            indexSchema.push(_this);
         }
         return _this;
     }
@@ -953,19 +936,26 @@ var Schema2 = function (_AbstractSchema) {
 
         _this2.indexSchema = [];
         _this2.schema = new SchemaMeasurement2(schema, _this2.indexSchema);
+
+        // первый сделать последним (меру в конец)
+        // this.indexSchema.push(this.indexSchema.splice(0, 1)[0]);
+
+        if (schema.dependency && schema.dependency.length === 1) {
+            throw Error('такая схема не поддерживается пока что'); //todo переписать getDependencyNames
+        }
         return _this2;
     }
 
     _createClass(Schema2, [{
-        key: 'createIterator',
+        key: "createIterator",
         value: function createIterator() {
             var i = 0;
-            var schema = this.indexSchema.concat([]).reverse();
+            var schemaOrder = this.getOrder();
 
             return {
                 next: function next() {
-                    var done = i >= schema.length;
-                    var value = !done ? schema[i++] : void 0;
+                    var done = i >= schemaOrder.length;
+                    var value = !done ? schemaOrder[i++] : void 0;
                     return {
                         done: done,
                         value: value
@@ -974,14 +964,33 @@ var Schema2 = function (_AbstractSchema) {
             };
         }
     }, {
-        key: 'getNames',
+        key: "getOrder",
+        value: function getOrder() {
+            var order = [];
+
+            var reqursively = function reqursively(dependency) {
+                dependency.forEach(function (schema) {
+                    if (schema.dependency) {
+                        reqursively(schema.dependency);
+                    }
+                    order.push(schema);
+                });
+            };
+
+            reqursively(this.schema.dependency);
+
+            order.push(this.schema);
+            return order;
+        }
+    }, {
+        key: "getNames",
         value: function getNames() {
             return this.indexSchema.map(function (schema) {
                 return schema.name;
             });
         }
     }, {
-        key: 'getByName',
+        key: "getByName",
         value: function getByName(name) {
             var find = this.indexSchema.find(function (schema) {
                 return schema.name === name;
@@ -989,7 +998,7 @@ var Schema2 = function (_AbstractSchema) {
             return find;
         }
     }, {
-        key: 'getByDependency',
+        key: "getByDependency",
         value: function getByDependency(name) {
             var find = this.indexSchema.find(function (schema) {
                 if (schema.dependency) {
@@ -1008,12 +1017,12 @@ var Schema2 = function (_AbstractSchema) {
             return find;
         }
     }, {
-        key: 'getMeasure',
+        key: "getMeasure",
         value: function getMeasure() {
             return this.schema;
         }
     }, {
-        key: 'getColumns',
+        key: "getColumns",
         value: function getColumns() {
             return this.schema.dependency.map(function (schema) {
                 while (schema.dependency) {
@@ -1026,7 +1035,7 @@ var Schema2 = function (_AbstractSchema) {
             });
         }
     }, {
-        key: 'getDependencyNames',
+        key: "getDependencyNames",
         value: function getDependencyNames(dependency) {
             //todo ref
             var map = dependency.map(function (dependency) {
@@ -1054,7 +1063,7 @@ var Schema = function (_AbstractSchema2) {
     }
 
     _createClass(Schema, [{
-        key: 'createIterator',
+        key: "createIterator",
         value: function createIterator() {
             var i = 0;
             var schema = this.schema;
@@ -1071,42 +1080,42 @@ var Schema = function (_AbstractSchema2) {
             };
         }
     }, {
-        key: 'getByName',
+        key: "getByName",
         value: function getByName(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.name === name;
             });
         }
     }, {
-        key: 'getByDependency',
+        key: "getByDependency",
         value: function getByDependency(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.dependency === name;
             });
         }
     }, {
-        key: 'getNames',
+        key: "getNames",
         value: function getNames() {
             return this.schema.map(function (schemaMeasurement) {
                 return schemaMeasurement.name;
             });
         }
     }, {
-        key: 'getMeasure',
+        key: "getMeasure",
         value: function getMeasure() {
             return this.schema.find(function (schemaMeasurement) {
                 return Array.isArray(schemaMeasurement.dependency);
             });
         }
     }, {
-        key: 'getColumns',
+        key: "getColumns",
         value: function getColumns() {
             return this.schema.filter(function (schemaMeasurement) {
                 return !schemaMeasurement.dependency;
             });
         }
     }, {
-        key: 'getDependencyNames',
+        key: "getDependencyNames",
         value: function getDependencyNames(dependency) {
             return dependency;
         }

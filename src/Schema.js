@@ -9,39 +9,15 @@ class AbstractSchema {
     getColumns(){}
 }
 
-let schema = {
-    name: 'counts',
-    keyProps: ['planesCount'],
-    dependency: [
-        {
-            name: 'prices',
-            keyProps: ['price'],
-            dependency: [
-                {
-                    name: 'cities',
-                    keyProps: ['city']
-                }
-            ]
-        },
-        {
-            name: 'companies',
-            keyProps: ['company']
-        },
-        {
-            name: 'age',
-            keyProps: ['minAgePlane', 'maxAgePlane']
-        }
-    ]
-}
-
 class SchemaMeasurement2 extends SchemaMeasurement{
     constructor(options, indexSchema){
         super(options);
-        if (indexSchema){
-            indexSchema.push(this);
-        }
+
         if (this.dependency){
             this.dependency = this.dependency.map( dependency => new SchemaMeasurement2(dependency, indexSchema) )
+        }
+        if (indexSchema){
+            indexSchema.push(this);
         }
     }
 }
@@ -51,21 +27,45 @@ class Schema2 extends AbstractSchema{
         super()
         this.indexSchema = [];
         this.schema = new SchemaMeasurement2(schema, this.indexSchema);
+
+        // первый сделать последним (меру в конец)
+        // this.indexSchema.push(this.indexSchema.splice(0, 1)[0]);
+
+        if (schema.dependency && schema.dependency.length === 1){
+            throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
+        }
     }
     createIterator(){
         let i = 0;
-        let schema = this.indexSchema.concat([]).reverse();
+        let schemaOrder = this.getOrder();
 
         return {
             next: ()=>{
-                let done = (i >= schema.length);
-                let value = !done ? schema[i++] : void 0;
+                let done = (i >= schemaOrder.length);
+                let value = !done ? schemaOrder[i++] : void 0;
                 return {
                     done,
                     value
                 }
             }
         }
+    }
+    getOrder(){
+        const order = [];
+
+        const reqursively = (dependency)=> {
+            dependency.forEach(schema => {
+                if (schema.dependency){
+                    reqursively(schema.dependency)
+                }
+                order.push(schema);
+            })
+        };
+
+        reqursively(this.schema.dependency);
+
+        order.push(this.schema)
+        return order;
     }
     getNames(){
         return this.indexSchema.map( schema => schema.name );

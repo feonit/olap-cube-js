@@ -63,50 +63,52 @@ class Cube{
      *
      * @public
      * */
-    addColumn(name, options, cellOptions = {}){
+    addColumn(measurementName, memberOptions, cellOptions = {}){
         const measurements = this.schema.getColumns();
 
         const columns = {};
 
         // остальные измерения этого уровня
-        measurements.forEach((value)=>{
-            if (value.name !== name){
-                if (!cellOptions[value.name]){
-                    columns[value.name] = this.measurements[value.name]
+        measurements.forEach((measurement)=>{
+            if (measurement.name !== measurementName){
+                if (!cellOptions[measurement.name]){
+                    columns[measurement.name] = this.measurements[measurement.name]
                 }
             }
         });
 
-        cellOptions = Object.assign({}, cellOptions, this._createMemberDependency(name, options));
+        const memberDepOptions = this._createMemberDependency(measurementName, memberOptions);
 
-        const reqursiveForEach = (cellOptions, columns, index, isDependency) => {
-            const keys = Object.keys(columns);
-            const measurementsLength = keys.length;
+        cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
-            if (index !== measurementsLength){
-                const mesurement = columns[keys[index]];
+        const recursivelyForEach = (cellOptions, columns, index, isDependency) => {
+            const measurementNames = Object.keys(columns);
+            const measurementNamesLength = measurementNames.length;
 
-                mesurement.forEach( member => {
-                    cellOptions[keys[index]] = member;
-                    let dependency = this.schema.getByDependency(keys[index]);
+            if (index !== measurementNamesLength){
+                const members = columns[measurementNames[index]];
+
+                members.forEach( member => {
+                    cellOptions[measurementNames[index]] = member;
+                    let dependency = this.schema.getByDependency(measurementNames[index]);
                     if (dependency){
-                        const uniqueOptions = { [keys[index]]: member };
+                        const uniqueOptions = { [measurementNames[index]]: member };
                         const unique = this.unique(dependency.name, uniqueOptions);
                         const columns = { [ dependency.name ]: unique };
 
-                        reqursiveForEach(cellOptions, columns, 0, true);
+                        recursivelyForEach(cellOptions, columns, 0, true);
                     }
-                    reqursiveForEach(cellOptions, columns, index + 1, isDependency);
+                    recursivelyForEach(cellOptions, columns, index + 1, isDependency);
 
                     if (isDependency){
                         return;
                     }
 
-                    if ( (index + 1) === measurementsLength){
+                    if ( (index + 1) === measurementNamesLength ){
                         // create cell
                         const measureName = this.schema.getMeasure().name;
-                        const measure = this._createMember(measureName);
-                        const options = Object.assign({}, cellOptions, { [measureName]: measure });
+                        const member = this._createMember(measureName);
+                        const options = Object.assign({}, cellOptions, { [measureName]: member });
                         this._createNormalizeData(options);
                     }
                 })
@@ -114,7 +116,7 @@ class Cube{
             }
         };
 
-        reqursiveForEach(cellOptions, columns, 0);
+        recursivelyForEach(cellOptions, columns, 0);
     }
     /**
      *
@@ -429,20 +431,20 @@ class Cube{
      *
      * @private
      * */
-    _createMemberDependency(name, options = {}){
+    _createMemberDependency(measurementName, memberOptions = {}){
         const result = {};
-        const reqursive = (name, options = {}) => {
+        const reqursive = (measurementName, memberOptions = {}) => {
             // create
-            const member = this._createMember(name, options);
-            result[name] = member;
+            const member = this._createMember(measurementName, memberOptions);
+            result[measurementName] = member;
 
             // check dep
-            let dependency = this.schema.getByDependency(name);
-            if (dependency){
-                reqursive(dependency.name)
-            }
+            // let dependency = this.schema.getByDependency(measurementName);
+            // if (dependency){
+            //     reqursive(dependency.name)
+            // }
         };
-        reqursive(name, options);
+        reqursive(measurementName, memberOptions);
         return result;
     }
     /**

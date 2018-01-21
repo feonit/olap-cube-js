@@ -82,7 +82,7 @@ schema = {
     ]
 }
 
-describe('common work', function(){
+describe('[ Cube work ]', function(){
 
     it('must be equal etalon and expected cube data', () => {
         let cube = new Cube(arrayData, schema);
@@ -132,11 +132,135 @@ describe('common work', function(){
 
         let cube = new Cube(arrayData, schema);
 
+        const ealon = {
+            "normalizedDataArray":[
+                {"id":1,"coordinateY_id":1,"coordinateX_id":1,"valueOfXY_id":1},
+                {"id":2,"coordinateY_id":2,"coordinateX_id":1,"valueOfXY_id":2},
+                {"id":3,"coordinateY_id":1,"coordinateX_id":2,"valueOfXY_id":3},
+                {"id":4,"coordinateY_id":2,"coordinateX_id":2,"valueOfXY_id":4}],
+            "measurements":{
+                "coordinateY":[
+                    {"id":1,"y":0},
+                    {"id":2,"y":1}
+                ],
+                "coordinateX":[
+                    {"id":1,"x":0},
+                    {"id":2,"x":1}
+                ],
+                "valueOfXY":[
+                    {"id":1,"value":10},
+                    {"id":2,"value":100},
+                    {"id":3,"value":1000},
+                    {"id":4,"value":10000}
+                ]
+            }
+        };
+
+        let isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealon);
+        expect(isEqual).toBe(true);
+
         cube.addColumn('coordinateX', { x: 2 });
 
-        const res = cube.unique('coordinateX');
+        cube.normalizedDataArray[4].id = null;
+        cube.normalizedDataArray[5].id = null;
 
-        expect(res.length).toBe(3)
+        const ealonAfterAdding = {
+            "normalizedDataArray":[
+                {"id":1,"coordinateY_id":1,"coordinateX_id":1,"valueOfXY_id":1},
+                {"id":2,"coordinateY_id":2,"coordinateX_id":1,"valueOfXY_id":2},
+                {"id":3,"coordinateY_id":1,"coordinateX_id":2,"valueOfXY_id":3},
+                {"id":4,"coordinateY_id":2,"coordinateX_id":2,"valueOfXY_id":4},
+                {"id":null,"coordinateY_id":1,"coordinateX_id":3,"valueOfXY_id":5},
+                {"id":null,"coordinateY_id":2,"coordinateX_id":3,"valueOfXY_id":6},
+            ],
+            "measurements":{
+                "coordinateY":[
+                    {"id":1,"y":0},
+                    {"id":2,"y":1}
+                ],
+                "coordinateX":[
+                    {"id":1,"x":0},
+                    {"id":2,"x":1},
+                    {"id":3,"x":2}
+                ],
+                "valueOfXY":[
+                    {"id":1,"value":10},
+                    {"id":2,"value":100},
+                    {"id":3,"value":1000},
+                    {"id":4,"value":10000},
+                    {"id":5,"value":null},
+                    {"id":6,"value":null}
+                ]
+            }
+        };
+
+        isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealonAfterAdding)
+        expect(isEqual).toBe(true);
     })
 
-})
+    it('should add column to cube data with dependency columns', () => {
+
+        const schema = {
+            name: 'money',
+            keyProps: ['money'],
+            dependency: [
+                {
+                    name: 'product',
+                    keyProps: ['product']
+                },
+                {
+                    name: 'day',
+                    keyProps: ['day'],
+                    dependency: [
+                        {
+                            name: 'month',
+                            keyProps: ['month'],
+                            dependency: [
+                                {
+                                    name: 'year',
+                                    keyProps: ['year']
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        const arrayData = [
+            { id: 1, product: 'telephone', money: '5$', year: '2018', month: 'january', day: '1'},
+            { id: 2, product: 'tv', money: '50$', year: '2018', month: 'january', day: '2' },
+            { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: '2' }
+        ];
+
+        let cube = new Cube(arrayData, schema);
+
+        expect(cube.measurements['product'].length).toBe(2);
+        expect(cube.measurements['money'].length).toBe(3);
+
+        cube.addColumn('product', { product : 'mp3' } );
+
+        expect(cube.measurements['product'].length).toBe(3);
+        expect(cube.measurements['money'].length).toBe(4);
+
+        cube = new Cube(arrayData, schema);
+
+        expect(cube.measurements['year'].length).toBe(1);
+        expect(cube.measurements['money'].length).toBe(3);
+
+        cube.addColumn('year', { year : '2019' } );
+
+        expect(cube.measurements['year'].length).toBe(2);
+        expect(cube.measurements['money'].length).toBe(5);
+
+        cube = new Cube(arrayData, schema);
+
+        expect(cube.measurements['month'].length).toBe(1);
+        expect(cube.measurements['money'].length).toBe(3);
+
+        cube.addColumn('month', { month : 'april' } );
+
+        expect(cube.measurements['month'].length).toBe(2);
+        expect(cube.measurements['money'].length).toBe(5);
+    })
+});

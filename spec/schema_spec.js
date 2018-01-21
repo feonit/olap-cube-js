@@ -2,7 +2,7 @@ import Schema from '../src/Schema.js';
 import SchemaMeasurement from '../src/SchemaMeasurement.js';
 import NormalizedData from '../src/NormalizedData.js';
 
-describe('test schema', function(){
+describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
@@ -16,12 +16,6 @@ describe('test schema', function(){
         }).toThrow();
     });
 
-    // it('should find by name', () => {
-    //     const mesurement = { name: 'boo', keyProps: ['prop'] };
-    //     const schema = new Schema([mesurement]);
-    //     const res = schema.getByName('boo');
-    //     expect(res.name).toBe('boo');
-    // });
 
     it('should find by name', () => {
         const mesurement = { name: 'boo', keyProps: ['prop'] };
@@ -30,14 +24,6 @@ describe('test schema', function(){
         expect(res.name).toBe('boo');
     });
 
-    // it('should find dependent measurement', () => {
-    //     const schema = new Schema([
-    //         { name: 'regions', dependency: 'cities', keyProps: ['propName'] },
-    //         { name: 'cities', keyProps: ['otherPropName'] }
-    //     ]);
-    //     const res = schema.getByDependency('cities');
-    //     expect(res && res.name === 'regions').toBe(true);
-    // });
     it('should find dependent measurement', () => {
         const schema = new Schema({
             name: 'regions',
@@ -46,27 +32,16 @@ describe('test schema', function(){
                 {
                     name: 'cities',
                     keyProps: ['cityPropName', 'otherCityPropName']
+                },
+                {
+                    name: 'data',
+                    keyProps: ['data']
                 }
             ]
         });
         const res = schema.getByDependency('cities');
         expect(res && res.name === 'regions').toBe(true);
     });
-
-    // it('should return all name of measurements', () => {
-    //     const schema = new Schema([
-    //         { name: 'regions', dependency: 'cities', keyProps: ['propName'] },
-    //         { name: 'cities', keyProps: ['otherPropName'] },
-    //         { name: 'countries', keyProps: ['else'] },
-    //     ]);
-    //     const res = schema.getNames();
-    //     expect(
-    //         res.length === 3
-    //         && res.indexOf('regions') > -1
-    //         && res.indexOf('cities') > -1
-    //         && res.indexOf('countries') > -1
-    //     ).toBe(true);
-    // });
 
     it('should return all name of measurements', () => {
         const schema = new Schema({
@@ -80,16 +55,20 @@ describe('test schema', function(){
                         name: 'countries',
                         keyProps: ['countryPropName']
                     }]
+                },
+                {
+                    name: 'data',
+                    keyProps: ['data']
                 }
             ]
         });
         const res = schema.getNames();
         expect(
-            res.length === 3
+            res.length === 4
             && res.indexOf('regions') > -1
             && res.indexOf('cities') > -1
             && res.indexOf('countries') > -1
+            && res.indexOf('data') > -1
         ).toBe(true);
     });
-
-})
+});
