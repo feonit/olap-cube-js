@@ -16,6 +16,53 @@ class Cube{
         this.measurements = this._getMembersGroupsByMeasurementsFromSchema(dataArray, this.schema.createIterator())
     }
     /**
+     * Filling method for full size of table
+     * */
+    fill(){
+        const measureName = this.schema.getMeasure().name;
+        const combinations = this._getCombinations();
+        const emptyMemberOptions = [];
+        combinations.forEach( combination => {
+            const unique = this.unique(measureName, combination );
+            if ( !unique.length ){
+                emptyMemberOptions.push( combination );
+            }
+        });
+
+        emptyMemberOptions.forEach( cellOptions => {
+            const member = this._createMemberDependency( measureName, { [measureName]: null } );
+            const options = Object.assign({}, cellOptions, member );
+            this._createNormalizeData(options);
+        });
+    }
+
+    _getCombinations(){
+        const combination = [];
+        const callback = (item) => {
+            combination.push(item)
+        };
+        const columnMeasurements = this.schema.getInnerColumns();
+        const measurementsMembers = {};
+        const reqursively = (measurementsMembers, index) => {
+            let columnMeasurement = columnMeasurements[index];
+            let members = this.measurements[columnMeasurement.name];
+            members.forEach( member => {
+                let newMeasurementsMembers = Object.assign({}, measurementsMembers, {[columnMeasurement.name]: member} );
+                if ( Object.keys(newMeasurementsMembers).length === columnMeasurements.length ){
+                    callback(newMeasurementsMembers)
+                } else {
+                    measurementsMembers[columnMeasurement.name] = member;
+                    reqursively(measurementsMembers, index + 1);
+                }
+            });
+        };
+
+        reqursively(measurementsMembers, 0);
+
+        return combination;
+    }
+
+    /**
      *
      * @public
      * */
@@ -376,12 +423,13 @@ class Cube{
      * @private
      * */
     _createMember(name, options = {}){
+        const memberPropDefaultValue = null;
         const measurement = this.schema.getByName(name);
         const memberOptions = Object.assign({}, options, {
             id: Cube.reduceId(this.measurements[name]),
         });
         measurement.keyProps.forEach( propName => {
-            memberOptions[propName] = options[propName] || null
+            memberOptions[propName] = options[propName] || memberPropDefaultValue
         });
 
         const member = new CreatedMember(memberOptions);
@@ -423,9 +471,6 @@ class Cube{
             let unique = this.unique(current.name);
             return accumulate * unique.length
         }, 1)
-    }
-    _fillToFullSize(){
-        //todo
     }
     /**
      *

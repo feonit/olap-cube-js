@@ -105,6 +105,9 @@ class Schema2 extends AbstractSchema{
             return schema;
         });
     }
+    getInnerColumns(){
+        return this.schema.dependency;
+    }
     getDependencyNames(dependency){
         //todo ref
         const map = dependency.map(dependency => dependency.name);

@@ -263,4 +263,40 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['month'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);
     })
+
+    it('should normalize count of measure for non-normalized data', () => {
+        const arrayData = [
+            { id: 1, x: 0, y: 0, z: 0,is: true },
+            { id: 2, x: 0, y: 0, z: 1,is: true },
+            { id: 3, x: 0, y: 1, z: 0,is: true },
+            { id: 4, x: 0, y: 1, z: 1,is: true },
+            { id: 5, x: 1, y: 0, z: 0,is: true },
+            // { id: 6, x: 1, y: 0, z: 1,is: true },
+            // { id: 7, x: 1, y: 1, z: 0,is: true },
+            // { id: 8, x: 1, y: 1, z: 1,is: true },
+        ];
+        const schema = {
+            name: 'is',
+            keyProps: ['is'],
+            dependency: [
+                {
+                    name: 'x',
+                    keyProps: ['x']
+                },
+                {
+                    name: 'y',
+                    keyProps: ['y']
+                },
+                {
+                    name: 'z',
+                    keyProps: ['z']
+                }
+            ]
+        };
+
+        let cube = new Cube(arrayData, schema);
+        expect(cube.measurements['is'].length).toBe(5);
+        cube.fill();
+        expect(cube.measurements['is'].length).toBe(8);
+    })
 });
