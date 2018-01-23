@@ -108,7 +108,7 @@ class Schema2 extends AbstractSchema{
         return this.schema;
     }
     getColumns(){
-        return this.schema.dependency.map(schema => {
+        const columns = this.schema.dependency.map(schema => {
             while (schema.dependency){
                 if (schema.dependency.length > 1){
                     throw "new case with mix of deps"
@@ -117,6 +117,7 @@ class Schema2 extends AbstractSchema{
             }
             return schema;
         });
+        return columns;
     }
     getInnerColumns(){
         return this.schema.dependency;

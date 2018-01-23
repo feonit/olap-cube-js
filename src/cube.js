@@ -472,10 +472,12 @@ class Cube{
      * Full size of cube
      * */
     _getSize(){
-        return this.schema.getColumns().reduce((accumulate, current)=>{
+        const columns = this.schema.getColumns();
+        const size = columns.reduce((accumulate, current)=>{
             let unique = this.unique(current.name);
             return accumulate * unique.length
-        }, 1)
+        }, 1);
+        return size
     }
     /**
      *
