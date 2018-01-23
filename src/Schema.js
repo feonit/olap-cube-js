@@ -80,11 +80,11 @@ class Schema2 extends AbstractSchema{
         return find;
     }
     getDependencies(name){
-        const dependencies = [this.getMeasure().name];
-        let dep;
+        let dependencies = [this.getMeasure().name];
+        let schema = this.getByDependency(name);
 
-        while (dep = this.getByDependency(name)){
-            dependencies.push(dep)
+        if (schema.dependency){
+            dependencies = dependencies.concat( schema.dependency.map( schema => schema.name ) )
         }
 
         return dependencies;

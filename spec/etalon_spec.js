@@ -350,7 +350,7 @@ describe('[ Cube work ]', function(){
             let unique = cube.unique('z');
             expect(unique.length).toBe(2);
 
-            cube.removeSubModelDepend('z', unique);
+            cube.removeSubModelDepend('z', unique[0]);
             unique = cube.unique('z');
             expect(unique.length).toBe(1);
         })
