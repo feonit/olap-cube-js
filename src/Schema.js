@@ -74,7 +74,20 @@ class Schema2 extends AbstractSchema{
         const find = this.indexSchema.find(schema => {
             return schema.name === name;
         });
+        if (!find){
+            throw 'schema for name: \"${name}\" not found'
+        }
         return find;
+    }
+    getDependencies(name){
+        const dependencies = [this.getMeasure().name];
+        let dep;
+
+        while (dep = this.getByDependency(name)){
+            dependencies.push(dep)
+        }
+
+        return dependencies;
     }
     getByDependency(name){
         const find = this.indexSchema.find( schema => {

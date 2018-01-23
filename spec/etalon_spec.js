@@ -3,6 +3,10 @@ import '../node_modules/lodash/lodash.js';
 // const Cube = require('../src/cube.js')
 // const _ = require('../node_modules/lodash/lodash.js')
 
+function jsonParseStringify(data){
+    return JSON.parse(JSON.stringify(data))
+}
+
 const etalon = {
     measurements: {
         cities: [
@@ -86,13 +90,13 @@ describe('[ Cube work ]', function(){
 
     it('must be equal etalon and expected cube data', () => {
         let cube = new Cube(arrayData, schema);
-        cube = JSON.parse(JSON.stringify(cube));
+        cube = jsonParseStringify(cube);
         expect(_.isEqual(cube, etalon)).toBe(true)
     })
 
     it('should return same array of data', () => {
         let cube = new Cube(arrayData, schema);
-        let data = JSON.parse(JSON.stringify(cube.getDataArray()));
+        let data = jsonParseStringify(cube.getDataArray());
         expect(_.isEqual(arrayData, data)).toBe(true)
     })
 
@@ -105,7 +109,7 @@ describe('[ Cube work ]', function(){
             { id: 3, price: "20$" },
             { id: 4, price: "25$" },
         ];
-        expect(_.isEqual(JSON.parse(JSON.stringify(res)), expection)).toBe(true)
+        expect(_.isEqual( jsonParseStringify(res), expection)).toBe(true)
     })
 
     it('should add column to cube data', () => {
@@ -156,7 +160,7 @@ describe('[ Cube work ]', function(){
             }
         };
 
-        let isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealon);
+        let isEqual = _.isEqual( jsonParseStringify(cube), ealon);
         expect(isEqual).toBe(true);
 
         cube.addColumn('coordinateX', { x: 2 });
@@ -194,7 +198,7 @@ describe('[ Cube work ]', function(){
             }
         };
 
-        isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealonAfterAdding)
+        isEqual = _.isEqual( jsonParseStringify(cube), ealonAfterAdding);
         expect(isEqual).toBe(true);
     })
 
@@ -264,39 +268,91 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['money'].length).toBe(5);
     })
 
-    it('should normalize count of measure for non-normalized data', () => {
+    describe('[ Filling ]', function(){
         const arrayData = [
             { id: 1, x: 0, y: 0, z: 0,is: true },
             { id: 2, x: 0, y: 0, z: 1,is: true },
             { id: 3, x: 0, y: 1, z: 0,is: true },
             { id: 4, x: 0, y: 1, z: 1,is: true },
             { id: 5, x: 1, y: 0, z: 0,is: true },
-            // { id: 6, x: 1, y: 0, z: 1,is: true },
-            // { id: 7, x: 1, y: 1, z: 0,is: true },
-            // { id: 8, x: 1, y: 1, z: 1,is: true },
         ];
+
         const schema = {
             name: 'is',
             keyProps: ['is'],
             dependency: [
-                {
-                    name: 'x',
-                    keyProps: ['x']
-                },
-                {
-                    name: 'y',
-                    keyProps: ['y']
-                },
-                {
-                    name: 'z',
-                    keyProps: ['z']
-                }
+                { name: 'x', keyProps: ['x']},
+                { name: 'y', keyProps: ['y']},
+                { name: 'z', keyProps: ['z']}
             ]
         };
 
-        let cube = new Cube(arrayData, schema);
-        expect(cube.measurements['is'].length).toBe(5);
-        cube.fill();
-        expect(cube.measurements['is'].length).toBe(8);
+        it('should normalize count of measure for non-normalized data', () => {
+            let cube = new Cube(arrayData, schema);
+            expect(cube.measurements['is'].length).toBe(5);
+            cube.fill({ is: false });
+            expect(cube.measurements['is'].length).toBe(8);
+        });
+
+        it('should normalize count of measure for non-normalized data with default props', () => {
+            let cube = new Cube(arrayData, schema);
+            expect(cube.measurements['is'][5]).not.toBeDefined();
+            expect(cube.measurements['is'][6]).not.toBeDefined();
+            expect(cube.measurements['is'][7]).not.toBeDefined();
+            cube.fill({ is: false });
+            expect(cube.measurements['is'][5]).toBeDefined();
+            expect(cube.measurements['is'][6]).toBeDefined();
+            expect(cube.measurements['is'][7]).toBeDefined();
+            const arrayDataExpectedAfter = arrayData.concat([
+                { x: 1, y: 0, z: 1,is: false },
+                { x: 1, y: 1, z: 0,is: false },
+                { x: 1, y: 1, z: 1,is: false }
+            ]);
+            expect(_.isEqual(jsonParseStringify(cube.getDataArray()), arrayDataExpectedAfter )).toBe(true);
+        });
+    });
+
+    describe('[ Remove ]', () => {
+        it('it should be removed', () => {
+            const arrayData = [
+                { id: 1, x: 0, xx: '12', xxx: '123', y: 0, z: 0, is: true },
+                { id: 2, x: 0, xx: '13', xxx: '123', y: 0, z: 1, is: true },
+                { id: 3, x: 0, xx: '14', xxx: '123', y: 1, z: 0, is: true },
+            ];
+            const schema = {
+                name: 'is',
+                keyProps: ['is'],
+                dependency: [
+                    {
+                        name: 'x',
+                        keyProps: ['x'],
+                        dependency: [{
+                            name: 'xx',
+                            keyProps: ['xx'],
+                            dependency: [{
+                                name: 'xxx',
+                                keyProps: ['xxx']
+                            }]
+                        }]
+                    },
+                    {
+                        name: 'y',
+                        keyProps: ['y']
+                    },
+                    {
+                        name: 'z',
+                        keyProps: ['z']
+                    }
+                ]
+            };
+            debugger;
+            let cube = new Cube(arrayData, schema);
+            let unique = cube.unique('z');
+            expect(unique.length).toBe(2);
+
+            cube.removeSubModelDepend('z', unique);
+            unique = cube.unique('z');
+            expect(unique.length).toBe(1);
+        })
     })
 });

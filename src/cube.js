@@ -18,7 +18,7 @@ class Cube{
     /**
      * Filling method for full size of table
      * */
-    fill(){
+    fill(props){
         const measureName = this.schema.getMeasure().name;
         const combinations = this._getCombinations();
         const emptyMemberOptions = [];
@@ -30,7 +30,7 @@ class Cube{
         });
 
         emptyMemberOptions.forEach( cellOptions => {
-            const member = this._createMemberDependency( measureName, { [measureName]: null } );
+            const member = this._createMemberDependency( measureName, props );
             const options = Object.assign({}, cellOptions, member );
             this._createNormalizeData(options);
         });
@@ -203,6 +203,7 @@ class Cube{
      * @public
      * */
     removeSubModelDepend(subModelName, subModel, dependencies){
+        dependencies = dependencies || this.schema.getDependencies(subModelName);
         // подчистить суб-модельку
         const index = this.measurements[subModelName].indexOf(subModel);
         if (index === -1){
@@ -419,20 +420,24 @@ class Cube{
         })
     }
     /**
-     *
+     * @param {string} name
+     * @param {object?} props
      * @private
      * */
-    _createMember(name, options = {}){
+    _createMember(name, props = {}){
+        if (!name){
+            throw 'attribute \"name\" nor found';
+        }
         const memberPropDefaultValue = null;
         const measurement = this.schema.getByName(name);
-        const memberOptions = Object.assign({}, options, {
+        const memberProps = Object.assign({}, props, {
             id: Cube.reduceId(this.measurements[name]),
         });
         measurement.keyProps.forEach( propName => {
-            memberOptions[propName] = options[propName] || memberPropDefaultValue
+            memberProps[propName] = props.hasOwnProperty(propName) ? props[propName] : memberPropDefaultValue
         });
 
-        const member = new CreatedMember(memberOptions);
+        const member = new CreatedMember(memberProps);
         this.measurements[name].push(member);
         return member;
     }
