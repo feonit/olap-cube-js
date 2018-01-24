@@ -76,24 +76,24 @@ class Cube{
     getRawDataArray(Constructor, forSave = false){
         const list = [];
 
-        this.normalizedDataArray.forEach( data => {
-            const newEntity = Object.assign(new Constructor(), data);
+        this.normalizedDataArray.forEach( normalizedData => {
+            const data = Object.assign(new Constructor(), normalizedData);
 
-            if (forSave && (data instanceof NormalizedDataNotSaved)){
-                delete newEntity[ENTITY_ID];
+            if (forSave && (normalizedData instanceof NormalizedDataNotSaved)){
+                delete data[ENTITY_ID];
             }
 
             const handleMeasurement = measurement => {
-                const subEntityIdName = Cube.genericId(measurement.name);
-                const subEntityId = data[subEntityIdName];
-                const subEntity = this.measurements[measurement.name].find( item => {
-                    return  item[ENTITY_ID] === subEntityId;
+                const idName = Cube.genericId(measurement.name);
+                const idValue = normalizedData[idName];
+                const member = this.measurements[measurement.name].find( member => {
+                    return member[ENTITY_ID] === idValue;
                 });
-                const subEntityCopy = Object.assign({}, subEntity);
-                delete subEntityCopy[ENTITY_ID];
-                delete newEntity[subEntityIdName];
-                Object.assign(newEntity, subEntityCopy);
-            }
+                const memberCopy = Object.assign({}, member);
+                delete memberCopy[ENTITY_ID];
+                delete data[idName];
+                Object.assign(data, memberCopy);
+            };
 
             const iterator = this.schema.createIterator();
             let next;
@@ -101,7 +101,7 @@ class Cube{
                 handleMeasurement(next.value)
             }
 
-            list.push(newEntity);
+            list.push(data);
         });
 
         return list;
