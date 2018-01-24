@@ -170,7 +170,7 @@ var Cube = function () {
 
     _createClass(Cube, [{
         key: 'fill',
-        value: function fill() {
+        value: function fill(props) {
             var _this = this;
 
             var measureName = this.schema.getMeasure().name;
@@ -184,7 +184,7 @@ var Cube = function () {
             });
 
             emptyMemberOptions.forEach(function (cellOptions) {
-                var member = _this._createMemberDependency(measureName, _defineProperty({}, measureName, null));
+                var member = _this._createMemberDependency(measureName, props);
                 var options = Object.assign({}, cellOptions, member);
                 _this._createNormalizeData(options);
             });
@@ -378,32 +378,33 @@ var Cube = function () {
         }
         /**
          *
+         * @param {string} measurementName - name of measurement from which the member will be removed
+         * @param {Member} member - the member will be removed
          * @public
          * */
 
     }, {
         key: 'removeSubModelDepend',
-        value: function removeSubModelDepend(subModelName, subModel, dependencies) {
+        value: function removeSubModelDepend(measurementName, member) {
             var _this5 = this;
 
-            // подчистить суб-модельку
-            var index = this.measurements[subModelName].indexOf(subModel);
+            var dependenciesMeasurementNames = this.schema.getDependencies(measurementName);
+            var index = this.measurements[measurementName].indexOf(member);
             if (index === -1) {
-                debugger; // что то пошло не так
+                throw new Error('represented member was not found in the ' + measurementName + ' measurement');
             }
-            this.measurements[subModelName].splice(index, 1);
+            this.measurements[measurementName].splice(index, 1);
 
-            // подчистить нормальную форму
             var filterData = this.normalizedDataArray.filter(function (data) {
-                return data[Cube.genericId(subModelName)] == subModel[_const.ENTITY_ID];
+                return data[Cube.genericId(measurementName)] == member[_const.ENTITY_ID];
             });
 
             filterData.forEach(function (data) {
                 var index = _this5.normalizedDataArray.indexOf(data);
                 _this5.normalizedDataArray.splice(index, 1);
 
-                dependencies.forEach(function (depName) {
-                    _this5._removeSubModel(data, depName);
+                dependenciesMeasurementNames.forEach(function (measurementName) {
+                    _this5._removeSubModel(data, measurementName);
                 });
             });
             this._normalize();
@@ -630,25 +631,29 @@ var Cube = function () {
             });
         }
         /**
-         *
+         * @param {string} name
+         * @param {object?} props
          * @private
          * */
 
     }, {
         key: '_createMember',
         value: function _createMember(name) {
-            var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+            if (!name) {
+                throw 'attribute \"name\" nor found';
+            }
             var memberPropDefaultValue = null;
             var measurement = this.schema.getByName(name);
-            var memberOptions = Object.assign({}, options, {
+            var memberProps = Object.assign({}, props, {
                 id: Cube.reduceId(this.measurements[name])
             });
             measurement.keyProps.forEach(function (propName) {
-                memberOptions[propName] = options[propName] || memberPropDefaultValue;
+                memberProps[propName] = props.hasOwnProperty(propName) ? props[propName] : memberPropDefaultValue;
             });
 
-            var member = new _CreatedMember2.default(memberOptions);
+            var member = new _CreatedMember2.default(memberProps);
             this.measurements[name].push(member);
             return member;
         }
@@ -693,10 +698,12 @@ var Cube = function () {
         value: function _getSize() {
             var _this10 = this;
 
-            return this.schema.getColumns().reduce(function (accumulate, current) {
+            var columns = this.schema.getColumns();
+            var size = columns.reduce(function (accumulate, current) {
                 var unique = _this10.unique(current.name);
                 return accumulate * unique.length;
             }, 1);
+            return size;
         }
         /**
          *
@@ -815,22 +822,22 @@ var AbstractSchema = function () {
     }
 
     _createClass(AbstractSchema, [{
-        key: "createIterator",
+        key: 'createIterator',
         value: function createIterator() {}
     }, {
-        key: "getByName",
+        key: 'getByName',
         value: function getByName() {}
     }, {
-        key: "getByDependency",
+        key: 'getByDependency',
         value: function getByDependency() {}
     }, {
-        key: "getNames",
+        key: 'getNames',
         value: function getNames() {}
     }, {
-        key: "getMeasure",
+        key: 'getMeasure',
         value: function getMeasure() {}
     }, {
-        key: "getColumns",
+        key: 'getColumns',
         value: function getColumns() {}
     }]);
 
@@ -880,7 +887,7 @@ var Schema2 = function (_AbstractSchema) {
     }
 
     _createClass(Schema2, [{
-        key: "createIterator",
+        key: 'createIterator',
         value: function createIterator() {
             var i = 0;
             var schemaOrder = this.getOrder();
@@ -897,7 +904,7 @@ var Schema2 = function (_AbstractSchema) {
             };
         }
     }, {
-        key: "getOrder",
+        key: 'getOrder',
         value: function getOrder() {
             var order = [];
 
@@ -916,22 +923,39 @@ var Schema2 = function (_AbstractSchema) {
             return order;
         }
     }, {
-        key: "getNames",
+        key: 'getNames',
         value: function getNames() {
             return this.indexSchema.map(function (schema) {
                 return schema.name;
             });
         }
     }, {
-        key: "getByName",
+        key: 'getByName',
         value: function getByName(name) {
             var find = this.indexSchema.find(function (schema) {
                 return schema.name === name;
             });
+            if (!find) {
+                throw 'schema for name: \"${name}\" not found';
+            }
             return find;
         }
     }, {
-        key: "getByDependency",
+        key: 'getDependencies',
+        value: function getDependencies(name) {
+            var dependencies = [this.getMeasure().name];
+            var schema = this.getByDependency(name);
+
+            if (schema.dependency) {
+                dependencies = dependencies.concat(schema.dependency.map(function (schema) {
+                    return schema.name;
+                }));
+            }
+
+            return dependencies;
+        }
+    }, {
+        key: 'getByDependency',
         value: function getByDependency(name) {
             var find = this.indexSchema.find(function (schema) {
                 if (schema.dependency) {
@@ -950,14 +974,14 @@ var Schema2 = function (_AbstractSchema) {
             return find;
         }
     }, {
-        key: "getMeasure",
+        key: 'getMeasure',
         value: function getMeasure() {
             return this.schema;
         }
     }, {
-        key: "getColumns",
+        key: 'getColumns',
         value: function getColumns() {
-            return this.schema.dependency.map(function (schema) {
+            var columns = this.schema.dependency.map(function (schema) {
                 while (schema.dependency) {
                     if (schema.dependency.length > 1) {
                         throw "new case with mix of deps";
@@ -966,14 +990,15 @@ var Schema2 = function (_AbstractSchema) {
                 }
                 return schema;
             });
+            return columns;
         }
     }, {
-        key: "getInnerColumns",
+        key: 'getInnerColumns',
         value: function getInnerColumns() {
             return this.schema.dependency;
         }
     }, {
-        key: "getDependencyNames",
+        key: 'getDependencyNames',
         value: function getDependencyNames(dependency) {
             //todo ref
             var map = dependency.map(function (dependency) {
@@ -1001,7 +1026,7 @@ var Schema = function (_AbstractSchema2) {
     }
 
     _createClass(Schema, [{
-        key: "createIterator",
+        key: 'createIterator',
         value: function createIterator() {
             var i = 0;
             var schema = this.schema;
@@ -1018,42 +1043,42 @@ var Schema = function (_AbstractSchema2) {
             };
         }
     }, {
-        key: "getByName",
+        key: 'getByName',
         value: function getByName(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.name === name;
             });
         }
     }, {
-        key: "getByDependency",
+        key: 'getByDependency',
         value: function getByDependency(name) {
             return this.schema.find(function (schemaMeasurement) {
                 return schemaMeasurement.dependency === name;
             });
         }
     }, {
-        key: "getNames",
+        key: 'getNames',
         value: function getNames() {
             return this.schema.map(function (schemaMeasurement) {
                 return schemaMeasurement.name;
             });
         }
     }, {
-        key: "getMeasure",
+        key: 'getMeasure',
         value: function getMeasure() {
             return this.schema.find(function (schemaMeasurement) {
                 return Array.isArray(schemaMeasurement.dependency);
             });
         }
     }, {
-        key: "getColumns",
+        key: 'getColumns',
         value: function getColumns() {
             return this.schema.filter(function (schemaMeasurement) {
                 return !schemaMeasurement.dependency;
             });
         }
     }, {
-        key: "getDependencyNames",
+        key: 'getDependencyNames',
         value: function getDependencyNames(dependency) {
             return dependency;
         }
@@ -1125,23 +1150,23 @@ __webpack_require__(14);
 "use strict";
 
 
-var _cube = __webpack_require__(2);
+var _Cube = __webpack_require__(2);
 
-var _cube2 = _interopRequireDefault(_cube);
+var _Cube2 = _interopRequireDefault(_Cube);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 describe('[ Function work ]', function () {
     it('generation unique entity ID name', function () {
-        expect(_cube2.default.genericId('entity')).toBe('entity_id');
+        expect(_Cube2.default.genericId('entity')).toBe('entity_id');
     });
 
     it('generation unique entity ID from exist entities if they have empty list', function () {
-        expect(_cube2.default.reduceId([])).toBe(1);
+        expect(_Cube2.default.reduceId([])).toBe(1);
     });
 
     it('generation unique entity ID from exist entities if they have one or more elements', function () {
-        expect(_cube2.default.reduceId([{ id: 1 }, { id: 3 }])).toBe(4);
+        expect(_Cube2.default.reduceId([{ id: 1 }, { id: 3 }])).toBe(4);
     });
 });
 
@@ -1368,16 +1393,20 @@ describe('[ Schema work ]', function () {
 "use strict";
 
 
-var _cube = __webpack_require__(2);
+var _Cube = __webpack_require__(2);
 
-var _cube2 = _interopRequireDefault(_cube);
+var _Cube2 = _interopRequireDefault(_Cube);
 
 __webpack_require__(15);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// const Cube = require('../src/cube.js')
+// const Cube = require('../src/Cube.js')
 // const _ = require('../node_modules/lodash/lodash.js')
+
+function jsonParseStringify(data) {
+    return JSON.parse(JSON.stringify(data));
+}
 
 var etalon = {
     measurements: {
@@ -1416,22 +1445,30 @@ schema = {
 describe('[ Cube work ]', function () {
 
     it('must be equal etalon and expected cube data', function () {
-        var cube = new _cube2.default(arrayData, schema);
-        cube = JSON.parse(JSON.stringify(cube));
+        var cube = new _Cube2.default(arrayData, schema);
+        cube = jsonParseStringify(cube);
         expect(_.isEqual(cube, etalon)).toBe(true);
     });
 
     it('should return same array of data', function () {
-        var cube = new _cube2.default(arrayData, schema);
-        var data = JSON.parse(JSON.stringify(cube.getDataArray()));
+        var cube = new _Cube2.default(arrayData, schema);
+        var data = jsonParseStringify(cube.getDataArray());
         expect(_.isEqual(arrayData, data)).toBe(true);
     });
 
     it('should return unique data', function () {
-        var cube = new _cube2.default(arrayData, schema);
+        var cube = new _Cube2.default(arrayData, schema);
         var res = cube.unique('prices');
-        var expection = [{ id: 1, price: "20$" }, { id: 2, price: "10$" }, { id: 3, price: "20$" }, { id: 4, price: "25$" }];
-        expect(_.isEqual(JSON.parse(JSON.stringify(res)), expection)).toBe(true);
+        var expectation = [{ id: 1, price: "20$" }, { id: 2, price: "10$" }, { id: 3, price: "20$" }, { id: 4, price: "25$" }];
+        expect(_.isEqual(jsonParseStringify(res), expectation)).toBe(true);
+    });
+
+    it('should return unique data with dependency param', function () {
+        var cube = new _Cube2.default(arrayData, schema);
+        var expectation = [{ id: 3, price: "20$" }, { id: 4, price: "25$" }];
+        var city = { id: 3 /** city: "Moscow"*/ }; // other parameters are optional
+        var res = cube.unique('prices', { 'cities': city });
+        expect(_.isEqual(jsonParseStringify(res), expectation)).toBe(true);
     });
 
     it('should add column to cube data', function () {
@@ -1449,7 +1486,7 @@ describe('[ Cube work ]', function () {
             }]
         };
 
-        var cube = new _cube2.default(arrayData, schema);
+        var cube = new _Cube2.default(arrayData, schema);
 
         var ealon = {
             "normalizedDataArray": [{ "id": 1, "coordinateY_id": 1, "coordinateX_id": 1, "valueOfXY_id": 1 }, { "id": 2, "coordinateY_id": 2, "coordinateX_id": 1, "valueOfXY_id": 2 }, { "id": 3, "coordinateY_id": 1, "coordinateX_id": 2, "valueOfXY_id": 3 }, { "id": 4, "coordinateY_id": 2, "coordinateX_id": 2, "valueOfXY_id": 4 }],
@@ -1460,7 +1497,7 @@ describe('[ Cube work ]', function () {
             }
         };
 
-        var isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealon);
+        var isEqual = _.isEqual(jsonParseStringify(cube), ealon);
         expect(isEqual).toBe(true);
 
         cube.addColumn('coordinateX', { x: 2 });
@@ -1477,7 +1514,7 @@ describe('[ Cube work ]', function () {
             }
         };
 
-        isEqual = _.isEqual(JSON.parse(JSON.stringify(cube)), ealonAfterAdding);
+        isEqual = _.isEqual(jsonParseStringify(cube), ealonAfterAdding);
         expect(isEqual).toBe(true);
     });
 
@@ -1505,7 +1542,7 @@ describe('[ Cube work ]', function () {
 
         var arrayData = [{ id: 1, product: 'telephone', money: '5$', year: '2018', month: 'january', day: '1' }, { id: 2, product: 'tv', money: '50$', year: '2018', month: 'january', day: '2' }, { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: '2' }];
 
-        var cube = new _cube2.default(arrayData, schema);
+        var cube = new _Cube2.default(arrayData, schema);
 
         expect(cube.measurements['product'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(3);
@@ -1515,7 +1552,7 @@ describe('[ Cube work ]', function () {
         expect(cube.measurements['product'].length).toBe(3);
         expect(cube.measurements['money'].length).toBe(4);
 
-        cube = new _cube2.default(arrayData, schema);
+        cube = new _Cube2.default(arrayData, schema);
 
         expect(cube.measurements['year'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
@@ -1525,7 +1562,7 @@ describe('[ Cube work ]', function () {
         expect(cube.measurements['year'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);
 
-        cube = new _cube2.default(arrayData, schema);
+        cube = new _Cube2.default(arrayData, schema);
 
         expect(cube.measurements['month'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
@@ -1536,14 +1573,52 @@ describe('[ Cube work ]', function () {
         expect(cube.measurements['money'].length).toBe(5);
     });
 
-    it('should normalize count of measure for non-normalized data', function () {
+    describe('[ Filling ]', function () {
         var arrayData = [{ id: 1, x: 0, y: 0, z: 0, is: true }, { id: 2, x: 0, y: 0, z: 1, is: true }, { id: 3, x: 0, y: 1, z: 0, is: true }, { id: 4, x: 0, y: 1, z: 1, is: true }, { id: 5, x: 1, y: 0, z: 0, is: true }];
+
+        var schema = {
+            name: 'is',
+            keyProps: ['is'],
+            dependency: [{ name: 'x', keyProps: ['x'] }, { name: 'y', keyProps: ['y'] }, { name: 'z', keyProps: ['z'] }]
+        };
+
+        it('should normalize count of measure for non-normalized data', function () {
+            var cube = new _Cube2.default(arrayData, schema);
+            expect(cube.measurements['is'].length).toBe(5);
+            cube.fill({ is: false });
+            expect(cube.measurements['is'].length).toBe(8);
+        });
+
+        it('should normalize count of measure for non-normalized data with default props', function () {
+            var cube = new _Cube2.default(arrayData, schema);
+            expect(cube.measurements['is'][5]).not.toBeDefined();
+            expect(cube.measurements['is'][6]).not.toBeDefined();
+            expect(cube.measurements['is'][7]).not.toBeDefined();
+            cube.fill({ is: false });
+            expect(cube.measurements['is'][5]).toBeDefined();
+            expect(cube.measurements['is'][6]).toBeDefined();
+            expect(cube.measurements['is'][7]).toBeDefined();
+            var arrayDataExpectedAfter = arrayData.concat([{ x: 1, y: 0, z: 1, is: false }, { x: 1, y: 1, z: 0, is: false }, { x: 1, y: 1, z: 1, is: false }]);
+            expect(_.isEqual(jsonParseStringify(cube.getDataArray()), arrayDataExpectedAfter)).toBe(true);
+        });
+    });
+
+    describe('[ Remove ]', function () {
+        var arrayData = [{ id: 1, xxx: 0.49, xx: 0.5, x: 0, y: 0, z: 0, is: true }, { id: 2, xxx: 1.18, xx: 1.2, x: 1, y: 0, z: 1, is: true }, { id: 3, xxx: 1.12, xx: 1.1, x: 1, y: 1, z: 0, is: true }];
         var schema = {
             name: 'is',
             keyProps: ['is'],
             dependency: [{
-                name: 'x',
-                keyProps: ['x']
+                name: 'xxx',
+                keyProps: ['xxx'],
+                dependency: [{
+                    name: 'xx',
+                    keyProps: ['xx'],
+                    dependency: [{
+                        name: 'x',
+                        keyProps: ['x']
+                    }]
+                }]
             }, {
                 name: 'y',
                 keyProps: ['y']
@@ -1552,11 +1627,33 @@ describe('[ Cube work ]', function () {
                 keyProps: ['z']
             }]
         };
+        var debug = void 0;
+        it('it should remove member and change measure length', function () {
+            var cube = new _Cube2.default(arrayData, schema);
+            expect((debug = cube.unique('is')).length).toBe(3);
+            expect((debug = cube.unique('z')).length).toBe(2);
 
-        var cube = new _cube2.default(arrayData, schema);
-        expect(cube.measurements['is'].length).toBe(5);
-        cube.fill();
-        expect(cube.measurements['is'].length).toBe(8);
+            var memberForDelete = cube.unique('z')[0];
+            expect(_.isEqual(jsonParseStringify(memberForDelete), { id: 1, z: 0 }));
+            cube.removeSubModelDepend('z', memberForDelete);
+            expect((debug = cube.unique('z')).length).toBe(1);
+            expect((debug = cube.unique('is')).length).toBe(1);
+        });
+        it('it should remove target member and his own dependencies', function () {
+            var cube = new _Cube2.default(arrayData, schema);
+            expect((debug = cube.unique('is')).length).toBe(3);
+            expect((debug = cube.unique('x')).length).toBe(2);
+            expect((debug = cube.unique('xx')).length).toBe(3);
+            expect((debug = cube.unique('xxx')).length).toBe(3);
+            var memberForDelete = cube.unique('x')[1];
+            expect(_.isEqual(jsonParseStringify(memberForDelete), { id: 1, x: 1 }));
+            expect(memberForDelete).toBeDefined();
+            cube.removeSubModelDepend('x', memberForDelete);
+            expect((debug = cube.unique('is')).length).toBe(1);
+            expect((debug = cube.unique('x')).length).toBe(1);
+            expect((debug = cube.unique('xx')).length).toBe(1);
+            expect((debug = cube.unique('xxx')).length).toBe(1);
+        });
     });
 });
 

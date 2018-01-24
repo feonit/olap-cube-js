@@ -200,28 +200,28 @@ class Cube{
     }
     /**
      *
+     * @param {string} measurementName - name of measurement from which the member will be removed
+     * @param {Member} member - the member will be removed
      * @public
      * */
-    removeSubModelDepend(subModelName, subModel, dependencies){
-        dependencies = dependencies || this.schema.getDependencies(subModelName);
-        // подчистить суб-модельку
-        const index = this.measurements[subModelName].indexOf(subModel);
+    removeSubModelDepend(measurementName, member){
+        const dependenciesMeasurementNames = this.schema.getDependencies(measurementName);
+        const index = this.measurements[measurementName].indexOf(member);
         if (index === -1){
-            debugger; // что то пошло не так
+            throw new Error('represented member was not found in the ' + measurementName + ' measurement')
         }
-        this.measurements[subModelName].splice(index, 1);
+        this.measurements[measurementName].splice(index, 1);
 
-        // подчистить нормальную форму
         const filterData = this.normalizedDataArray.filter(data => {
-            return data[Cube.genericId(subModelName)] == subModel[ENTITY_ID];
+            return data[Cube.genericId(measurementName)] == member[ENTITY_ID];
         });
 
         filterData.forEach( data => {
             const index = this.normalizedDataArray.indexOf(data);
             this.normalizedDataArray.splice(index, 1);
 
-            dependencies.forEach( depName => {
-                this._removeSubModel(data, depName);
+            dependenciesMeasurementNames.forEach( measurementName => {
+                this._removeSubModel(data, measurementName);
             });
         });
         this._normalize();

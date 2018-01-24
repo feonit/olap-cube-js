@@ -1,4 +1,4 @@
-import Cube from './src/cube.js';
+import Cube from './src/Cube.js';
 
 let entities = [
     { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},

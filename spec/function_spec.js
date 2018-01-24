@@ -1,4 +1,4 @@
-import Cube from '../src/cube.js';
+import Cube from '../src/Cube.js';
 
 describe('[ Function work ]', function(){
     it('generation unique entity ID name', () => {

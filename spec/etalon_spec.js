@@ -1,6 +1,6 @@
-import Cube from '../src/cube.js';
+import Cube from '../src/Cube.js';
 import '../node_modules/lodash/lodash.js';
-// const Cube = require('../src/cube.js')
+// const Cube = require('../src/Cube.js')
 // const _ = require('../node_modules/lodash/lodash.js')
 
 function jsonParseStringify(data){
@@ -103,13 +103,24 @@ describe('[ Cube work ]', function(){
     it('should return unique data', () => {
         let cube = new Cube(arrayData, schema);
         const res = cube.unique('prices');
-        const expection = [
+        const expectation = [
             { id: 1, price: "20$" },
             { id: 2, price: "10$" },
             { id: 3, price: "20$" },
             { id: 4, price: "25$" },
         ];
-        expect(_.isEqual( jsonParseStringify(res), expection)).toBe(true)
+        expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
+    })
+
+    it('should return unique data with dependency param', () => {
+        let cube = new Cube(arrayData, schema);
+        const expectation = [
+            { id: 3, price: "20$" },
+            { id: 4, price: "25$" }
+        ];
+        let city = { id: 3 /** city: "Moscow"*/ }; // other parameters are optional
+        let res = cube.unique('prices', { 'cities': city });
+        expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
     })
 
     it('should add column to cube data', () => {
@@ -313,46 +324,63 @@ describe('[ Cube work ]', function(){
     });
 
     describe('[ Remove ]', () => {
-        it('it should be removed', () => {
-            const arrayData = [
-                { id: 1, x: 0, xx: '12', xxx: '123', y: 0, z: 0, is: true },
-                { id: 2, x: 0, xx: '13', xxx: '123', y: 0, z: 1, is: true },
-                { id: 3, x: 0, xx: '14', xxx: '123', y: 1, z: 0, is: true },
-            ];
-            const schema = {
-                name: 'is',
-                keyProps: ['is'],
-                dependency: [
-                    {
-                        name: 'x',
-                        keyProps: ['x'],
+        const arrayData = [
+            { id: 1, xxx: 0.49, xx: 0.5, x: 0, y: 0, z: 0, is: true },
+            { id: 2, xxx: 1.18, xx: 1.2, x: 1, y: 0, z: 1, is: true },
+            { id: 3, xxx: 1.12, xx: 1.1, x: 1, y: 1, z: 0, is: true },
+        ];
+        const schema = {
+            name: 'is',
+            keyProps: ['is'],
+            dependency: [
+                {
+                    name: 'xxx',
+                    keyProps: ['xxx'],
+                    dependency: [{
+                        name: 'xx',
+                        keyProps: ['xx'],
                         dependency: [{
-                            name: 'xx',
-                            keyProps: ['xx'],
-                            dependency: [{
-                                name: 'xxx',
-                                keyProps: ['xxx']
-                            }]
+                            name: 'x',
+                            keyProps: ['x']
                         }]
-                    },
-                    {
-                        name: 'y',
-                        keyProps: ['y']
-                    },
-                    {
-                        name: 'z',
-                        keyProps: ['z']
-                    }
-                ]
-            };
-            debugger;
+                    }]
+                },
+                {
+                    name: 'y',
+                    keyProps: ['y']
+                },
+                {
+                    name: 'z',
+                    keyProps: ['z']
+                }
+            ]
+        };
+        let debug;
+        it('it should remove member and change measure length', () => {
             let cube = new Cube(arrayData, schema);
-            let unique = cube.unique('z');
-            expect(unique.length).toBe(2);
+            expect((debug=cube.unique('is')).length).toBe(3);
+            expect((debug=cube.unique('z')).length).toBe(2);
 
-            cube.removeSubModelDepend('z', unique[0]);
-            unique = cube.unique('z');
-            expect(unique.length).toBe(1);
+            const memberForDelete = cube.unique('z')[0];
+            expect(_.isEqual(jsonParseStringify(memberForDelete), {id: 1, z: 0} ));
+            cube.removeSubModelDepend('z', memberForDelete);
+            expect((debug=cube.unique('z')).length).toBe(1);
+            expect((debug=cube.unique('is')).length).toBe(1);
+        });
+        it('it should remove target member and his own dependencies', () => {
+            let cube = new Cube(arrayData, schema);
+            expect((debug=cube.unique('is')).length).toBe(3);
+            expect((debug=cube.unique('x')).length).toBe(2);
+            expect((debug=cube.unique('xx')).length).toBe(3);
+            expect((debug=cube.unique('xxx')).length).toBe(3);
+            const memberForDelete = cube.unique('x')[1];
+            expect(_.isEqual(jsonParseStringify(memberForDelete), {id: 1, x: 1} ));
+            expect(memberForDelete).toBeDefined();
+            cube.removeSubModelDepend('x', memberForDelete);
+            expect((debug=cube.unique('is')).length).toBe(1);
+            expect((debug=cube.unique('x')).length).toBe(1);
+            expect((debug=cube.unique('xx')).length).toBe(1);
+            expect((debug=cube.unique('xxx')).length).toBe(1);
         })
     })
 });
