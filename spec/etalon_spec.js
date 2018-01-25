@@ -110,7 +110,16 @@ describe('[ Cube work ]', function(){
             { id: 4, price: "25$" },
         ];
         expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
-    })
+    });
+
+    it('should be equal length of members for specified measurement and result of unique request without filter argument', () => {
+        let cube = new Cube(arrayData, schema);
+        expect(cube.unique('prices').length).toBe(cube.measurements['prices'].length);
+        expect(cube.unique('counts').length).toBe(cube.measurements['counts'].length);
+        expect(cube.unique('cities').length).toBe(cube.measurements['cities'].length);
+        expect(cube.unique('companies').length).toBe(cube.measurements['companies'].length);
+        expect(cube.unique('age').length).toBe(cube.measurements['age'].length);
+    });
 
     it('should return unique data with dependency param', () => {
         let cube = new Cube(arrayData, schema);
@@ -121,7 +130,7 @@ describe('[ Cube work ]', function(){
         let city = { id: 3 /** city: "Moscow"*/ }; // other parameters are optional
         let res = cube.unique('prices', { 'cities': city });
         expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
-    })
+    });
 
     it('should add column to cube data', () => {
         const arrayData = [

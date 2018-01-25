@@ -166,33 +166,34 @@ class Cube{
         recursivelyForEach(cellOptions, columns, 0);
     }
     /**
+     * A method that allows you to find all members of a specified measurement
+     * or part of the members using a filter if they are in a hierarchy
      *
      * @public
+     * @param {string} measurementName - name of measurement from which the member will be found
+     * @param {object?} filterData - the composed aggregate object, members grouped by measurement names
+     * @return {Member[]} returns members
      * */
-    unique(measurementName, dependency){
-        const members = this.measurements[measurementName];
-        let data = this.normalizedDataArray;
-
-        if (dependency){
-            Object.keys(dependency).forEach( key => {
-                const measurement = key;
-                const etalonEntity = dependency[key];
-                data = data.filter((data)=>{
-                    return data[Cube.genericId(measurement)] == etalonEntity[ENTITY_ID];
-                })
-            })
+    unique(measurementName, filterData){
+        if (!measurementName){
+            throw new Error('first argument is required')
         }
-
-        const measurementIdName = Cube.genericId(measurementName);
-        const map = data.map( data => {
-            return data[measurementIdName];
-        });
-        const uniq = _.uniq(map);
+        const members = this.measurements[measurementName];
+        const idName = Cube.genericId(measurementName);
         const result = [];
 
-        // фильтрация без потери порядка в массиве
+        let data = this.normalizedDataArray;
+
+        if (filterData){
+            data = NormalizedData.filter(data, filterData)
+        }
+
+        const ids = data.map( data => data[idName]);
+        const uniqueIds = _.uniq(ids);
+
+        // filtering without loss of order in the array
         members.forEach( member => {
-            if (uniq.indexOf(member[ENTITY_ID]) !== -1){
+            if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
                 result.push(member)
             }
         });

@@ -271,23 +271,23 @@ var Cube = function () {
 
             var list = [];
 
-            this.normalizedDataArray.forEach(function (data) {
-                var newEntity = Object.assign(new Constructor(), data);
+            this.normalizedDataArray.forEach(function (normalizedData) {
+                var data = Object.assign(new Constructor(), normalizedData);
 
-                if (forSave && data instanceof _NormalizedDataNotSaved2.default) {
-                    delete newEntity[_const.ENTITY_ID];
+                if (forSave && normalizedData instanceof _NormalizedDataNotSaved2.default) {
+                    delete data[_const.ENTITY_ID];
                 }
 
                 var handleMeasurement = function handleMeasurement(measurement) {
-                    var subEntityIdName = Cube.genericId(measurement.name);
-                    var subEntityId = data[subEntityIdName];
-                    var subEntity = _this3.measurements[measurement.name].find(function (item) {
-                        return item[_const.ENTITY_ID] === subEntityId;
+                    var idName = Cube.genericId(measurement.name);
+                    var idValue = normalizedData[idName];
+                    var member = _this3.measurements[measurement.name].find(function (member) {
+                        return member[_const.ENTITY_ID] === idValue;
                     });
-                    var subEntityCopy = Object.assign({}, subEntity);
-                    delete subEntityCopy[_const.ENTITY_ID];
-                    delete newEntity[subEntityIdName];
-                    Object.assign(newEntity, subEntityCopy);
+                    var memberCopy = Object.assign({}, member);
+                    delete memberCopy[_const.ENTITY_ID];
+                    delete data[idName];
+                    Object.assign(data, memberCopy);
                 };
 
                 var iterator = _this3.schema.createIterator();
@@ -296,7 +296,7 @@ var Cube = function () {
                     handleMeasurement(next.value);
                 }
 
-                list.push(newEntity);
+                list.push(data);
             });
 
             return list;
@@ -367,7 +367,8 @@ var Cube = function () {
             recursivelyForEach(cellOptions, columns, 0);
         }
         /**
-         *
+         * @param {string} measurementName - name of measurement from which the member will be found
+         * @param {object} dependency
          * @public
          * */
 
