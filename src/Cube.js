@@ -16,7 +16,9 @@ class Cube{
         this.measurements = this._getMembersGroupsByMeasurementsFromSchema(dataArray, this.schema.createIterator())
     }
     /**
-     * Filling method for full size of table
+     * Filling method for full size of cube
+     * @param {object?} props - properties for empty cells
+     * @public
      * */
     fill(props){
         const measureName = this.schema.getMeasure().name;
@@ -107,7 +109,9 @@ class Cube{
         return list;
     }
     /**
-     *
+     * @param {string} measurementName - name of measurement in which the member is created
+     * @param {object} memberOptions - properties for the created member
+     * @param {object} cellOptions -
      * @public
      * */
     addColumn(measurementName, memberOptions, cellOptions = {}){

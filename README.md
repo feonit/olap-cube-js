@@ -133,3 +133,40 @@ cube.unique('prices', { 'cities': city })
     { id: 4, price: "25$" },
 ]
 ```
+
+Cube filling:
+
+```js
+const schema = {
+	name: 'xy',
+	keyProps: ['xy'],
+	dependency: [
+	    {
+	    	name: 'x',
+	    	keyProps: ['x']
+	    },{
+	    	name: 'y',
+	    	keyProps: ['y']
+	    }
+	]
+}
+const dataArray = [
+    { id: 1, x: 0, y: 1, xy: true },
+    { id: 2, x: 1, y: 0, xy: true }
+]
+const cube = new Cube(dataArray, schema)
+cube.fill({ xy: false })
+const newDataArray = cube.getDataArray()
+
+```
+
+Now newDataArray will be:
+```js
+[
+    { id: 1, x: 0, y: 1, xy: true },
+    { id: 2, x: 1, y: 0, xy: true },
+    { x: 0, y: 0, xy: false },
+    { x: 1, y: 1, xy: false }
+]
+
+```

@@ -258,7 +258,7 @@ describe('[ Cube work ]', function(){
         ];
 
         let cube = new Cube(arrayData, schema);
-
+        //
         expect(cube.measurements['product'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(3);
 
@@ -267,6 +267,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['product'].length).toBe(3);
         expect(cube.measurements['money'].length).toBe(4);
 
+        //
         cube = new Cube(arrayData, schema);
 
         expect(cube.measurements['year'].length).toBe(1);
@@ -277,6 +278,18 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['year'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);
 
+        //
+        cube = new Cube(arrayData, schema);
+
+        expect(cube.measurements['month'].length).toBe(1);
+        expect(cube.measurements['money'].length).toBe(3);
+
+        cube.addColumn('month', { month : 'april' } );
+
+        expect(cube.measurements['month'].length).toBe(2);
+        expect(cube.measurements['money'].length).toBe(5);
+
+        //
         cube = new Cube(arrayData, schema);
 
         expect(cube.measurements['month'].length).toBe(1);
@@ -330,6 +343,35 @@ describe('[ Cube work ]', function(){
             ]);
             expect(_.isEqual(jsonParseStringify(cube.getDataArray()), arrayDataExpectedAfter )).toBe(true);
         });
+
+        it('should pass for example doc', () => {
+            const schema = {
+                name: 'xy',
+                keyProps: ['xy'],
+                dependency: [
+                    {
+                        name: 'x',
+                        keyProps: ['x']
+                    },{
+                        name: 'y',
+                        keyProps: ['y']
+                    }
+                ]
+            }
+            const dataArray = [
+                { id: 1, x: 0, y: 1, xy: true },
+                { id: 2, x: 1, y: 0, xy: true }
+            ]
+            const cube = new Cube(dataArray, schema)
+            cube.fill({ xy: false })
+
+            expect(_.isEqual(jsonParseStringify(cube.getDataArray()), [
+                { id: 1, x: 0, y: 1, xy: true },
+                { id: 2, x: 1, y: 0, xy: true },
+                { x: 0, y: 0, xy: false },
+                { x: 1, y: 1, xy: false }
+            ] )).toBe(true);
+        })
     });
 
     describe('[ Remove ]', () => {
