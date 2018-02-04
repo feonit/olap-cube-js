@@ -1,38 +1,21 @@
-import SchemaMeasurement from "./SchemaMeasurement.js";
+import Measurement from "./Measurement.js";
 
-class SchemaMeasurement2 extends SchemaMeasurement{
-    constructor(options, indexSchema){
-        super(options);
-
-        if (this.dependency){
-            this.dependency = this.dependency.map( dependency => new SchemaMeasurement2(dependency, indexSchema) )
-        }
-        if (indexSchema){
-            indexSchema.push(this);
-        }
-    }
-}
-
-class Schema {
+export default class Schema {
     constructor(schema){
-        this.indexSchema = [];
-        this.schema = new SchemaMeasurement2(schema, this.indexSchema);
-
-        // первый сделать последним (меру в конец)
-        // this.indexSchema.push(this.indexSchema.splice(0, 1)[0]);
-
+        this.schema = new Measurement(schema);
         if (schema.dependency && schema.dependency.length === 1){
             throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
         }
+        this._measurementsResolutionOrder = this.getMeasurementsResolutionOrder();
     }
     createIterator(){
         let i = 0;
-        let schemaOrder = this.getOrder();
+        let measurement = this.getMeasurementsResolutionOrder();
 
         return {
             next: ()=>{
-                let done = (i >= schemaOrder.length);
-                let value = !done ? schemaOrder[i++] : void 0;
+                let done = (i >= measurement.length);
+                let value = !done ? measurement[i++] : void 0;
                 return {
                     done,
                     value
@@ -40,28 +23,37 @@ class Schema {
             }
         }
     }
-    getOrder(){
+    /**
+     * Take an ordered list of measurements by dependency resolution
+     * @return {Measurement[]}
+     * */
+    getMeasurementsResolutionOrder(){
+        if (this._measurementsResolutionOrder){
+            return this._measurementsResolutionOrder;
+        }
         const order = [];
-
-        const reqursively = (dependency)=> {
-            dependency.forEach(schema => {
-                if (schema.dependency){
-                    reqursively(schema.dependency)
-                }
-                order.push(schema);
-            })
-        };
-
-        reqursively(this.schema.dependency);
-
-        order.push(this.schema)
+        if ( this.schema.dependency ){
+            const reqursively = dependency => {
+                dependency.forEach(schema => {
+                    if (schema.dependency){
+                        reqursively(schema.dependency)
+                    }
+                    order.push(schema);
+                })
+            };
+            reqursively(this.schema.dependency);
+        }
+        order.push(this.schema);
+        this._measurementsResolutionOrder = order;
         return order;
     }
-    getNames(){
-        return this.indexSchema.map( schema => schema.name );
-    }
+    /**
+     * Get a measurement by name
+     * @return {Measurement}
+     * @throw
+     * */
     getByName(name){
-        const find = this.indexSchema.find(schema => {
+        const find = this._measurementsResolutionOrder.find(schema => {
             return schema.name === name;
         });
         if (!find){
@@ -69,34 +61,43 @@ class Schema {
         }
         return find;
     }
-    getDependencies(name){
+    /**
+     * Get a measurement by its dependency
+     * @return {string|undefined}
+     * */
+    getByDependency(name){
+        return this._measurementsResolutionOrder.find( schema => {
+            return schema.dependency && schema.dependency.find( schema => schema.name === name ) ? schema : false;
+        });
+    }
+    /**
+     * Get list of measurements names
+     * @return {string[]}
+     * */
+    getNames(){
+        return this._measurementsResolutionOrder.map( schema => schema.name );
+    }
+    /**
+     * Get a list of all measurement names related to the selected measurement by name
+     * @return {string[]}
+     * */
+    getDependenciesNames(name){
         let dependencies = [this.getMeasure().name];
         let schema = this.getByDependency(name);
-
         if (schema.dependency){
             dependencies = dependencies.concat( schema.dependency.map( schema => schema.name ) )
         }
-
         return dependencies;
     }
-    getByDependency(name){
-        const find = this.indexSchema.find( schema => {
-            if (schema.dependency){
-                let find = schema.dependency.find( schema => schema.name === name )
-                if (find){
-                    return schema;
-                } else {
-                    return false
-                }
-            } else {
-                return false
-            }
-        });
-        return find;
-    }
+    /**
+     * take a point measure in the measurement space
+     * */
     getMeasure(){
         return this.schema;
     }
+    /**
+     *
+     * */
     getColumns(){
         const columns = this.schema.dependency.map(schema => {
             while (schema.dependency){
@@ -109,15 +110,19 @@ class Schema {
         });
         return columns;
     }
-    getInnerColumns(){
+    /**
+     * List of all final measurements forming count of measure
+     * @return {Measurement[]}
+     * */
+    getFinal(){
         return this.schema.dependency;
     }
+    /**
+     *
+     * */
     getDependencyNames(dependency){
         //todo ref
         const map = dependency.map(dependency => dependency.name);
         return map.length === 1 ? map[0] : map;
     }
 }
-
-
-export default Schema;

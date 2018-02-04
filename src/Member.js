@@ -1,10 +1,11 @@
 import {ENTITY_ID} from './const.js';
 
 export default class Member{
-    constructor(id){
+    constructor(options){
+        const {id} = options;
         if (typeof id === "string"){
-            debugger;
+            throw 'id is not string'
         }
-        this[ENTITY_ID] = id;
+        Object.assign(this, options);
     }
 }

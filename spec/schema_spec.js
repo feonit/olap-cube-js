@@ -1,12 +1,12 @@
 import Schema from '../src/Schema.js';
-import SchemaMeasurement from '../src/SchemaMeasurement.js';
+import Measurement from '../src/Measurement.js';
 import NormalizedData from '../src/NormalizedData.js';
 
 describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
-            new SchemaMeasurement({});
+            new Measurement({});
         }).toThrow();
     });
 

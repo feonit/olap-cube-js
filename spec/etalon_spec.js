@@ -132,7 +132,7 @@ describe('[ Cube work ]', function(){
         expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
     });
 
-    it('should add column to cube data', () => {
+    it('should add member to cube data', () => {
         const arrayData = [
             {id: 1, x: 0, y: 0, value: 10 },
             {id: 2, x: 0, y: 1, value: 100 },
@@ -183,7 +183,7 @@ describe('[ Cube work ]', function(){
         let isEqual = _.isEqual( jsonParseStringify(cube), ealon);
         expect(isEqual).toBe(true);
 
-        cube.addColumn('coordinateX', { x: 2 });
+        cube.addMember('coordinateX', { x: 2 });
 
         cube.normalizedDataArray[4].id = null;
         cube.normalizedDataArray[5].id = null;
@@ -222,7 +222,7 @@ describe('[ Cube work ]', function(){
         expect(isEqual).toBe(true);
     })
 
-    it('should add column to cube data with dependency columns', () => {
+    it('should add member to cube data with dependency columns', () => {
 
         const schema = {
             name: 'money',
@@ -262,7 +262,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['product'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(3);
 
-        cube.addColumn('product', { product : 'mp3' } );
+        cube.addMember('product', { product : 'mp3' } );
 
         expect(cube.measurements['product'].length).toBe(3);
         expect(cube.measurements['money'].length).toBe(4);
@@ -273,7 +273,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['year'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
 
-        cube.addColumn('year', { year : '2019' } );
+        cube.addMember('year', { year : '2019' } );
 
         expect(cube.measurements['year'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);
@@ -284,7 +284,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['month'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
 
-        cube.addColumn('month', { month : 'april' } );
+        cube.addMember('month', { month : 'april' } );
 
         expect(cube.measurements['month'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);
@@ -295,7 +295,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['month'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
 
-        cube.addColumn('month', { month : 'april' } );
+        cube.addMember('month', { month : 'april' } );
 
         expect(cube.measurements['month'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(5);

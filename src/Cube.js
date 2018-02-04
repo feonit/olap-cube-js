@@ -10,6 +10,8 @@ import Measurements from './Measurements.js';
 /**
  * Base class for normalizing a denormalized data array
  * and analyzing unique values according to a given scheme
+ *
+ * @param {object[]} dataArray - facts which will be subject to analysis
  * */
 class Cube{
     constructor(dataArray, measurementsSchema){
@@ -195,15 +197,19 @@ class Cube{
                 cache[key] = memberId;
 
                 // создать подсущность
-                const member = new Member(memberId);
+                const memberOptions = {
+                    [ENTITY_ID]: memberId
+                };
 
                 // запись по ключевым параметрам
                 totalProps.forEach( (prop) => {
                     // исключить идентификатор самой сущности
                     if (prop !== ENTITY_ID){
-                        member[prop] = data[prop];
+                        memberOptions[prop] = data[prop]
                     }
                 });
+
+                const member = new Member(memberOptions);
 
                 mesure.push(member);
             }
@@ -260,16 +266,16 @@ class DynamicCube extends Cube{
      * @param {object} cellOptions -
      * @public
      * */
-    addColumn(measurementName, memberOptions, cellOptions = {}){
-        const measurements = this.schema.getColumns();
+    addMember(measurementName, memberOptions, cellOptions = {}){
+        const columns = this.schema.getColumns();
 
-        const columns = {};
+        const measurements = {};
 
         // остальные измерения этого уровня
-        measurements.forEach((measurement)=>{
+        columns.forEach((measurement)=>{
             if (measurement.name !== measurementName){
                 if (!cellOptions[measurement.name]){
-                    columns[measurement.name] = this.measurements[measurement.name]
+                    measurements[measurement.name] = this.measurements[measurement.name]
                 }
             }
         });
@@ -278,12 +284,12 @@ class DynamicCube extends Cube{
 
         cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
-        const recursivelyForEach = (cellOptions, columns, index, isDependency) => {
-            const measurementNames = Object.keys(columns);
+        const recursivelyForEach = (cellOptions, measurements, index, isDependency) => {
+            const measurementNames = Object.keys(measurements);
             const measurementNamesLength = measurementNames.length;
 
             if (index !== measurementNamesLength){
-                const members = columns[measurementNames[index]];
+                const members = measurements[measurementNames[index]];
 
                 members.forEach( member => {
                     cellOptions[measurementNames[index]] = member;
@@ -291,11 +297,11 @@ class DynamicCube extends Cube{
                     if (dependency){
                         const uniqueOptions = { [measurementNames[index]]: member };
                         const unique = this.unique(dependency.name, uniqueOptions);
-                        const columns = { [ dependency.name ]: unique };
+                        const measurements = { [ dependency.name ]: unique };
 
-                        recursivelyForEach(cellOptions, columns, 0, true);
+                        recursivelyForEach(cellOptions, measurements, 0, true);
                     }
-                    recursivelyForEach(cellOptions, columns, index + 1, isDependency);
+                    recursivelyForEach(cellOptions, measurements, index + 1, isDependency);
 
                     if (isDependency){
                         return;
@@ -313,7 +319,7 @@ class DynamicCube extends Cube{
             }
         };
 
-        recursivelyForEach(cellOptions, columns, 0);
+        recursivelyForEach(cellOptions, measurements, 0);
     }
     /**
      *
@@ -322,7 +328,7 @@ class DynamicCube extends Cube{
      * @public
      * */
     removeSubModelDepend(measurementName, member){
-        const dependenciesMeasurementNames = this.schema.getDependencies(measurementName);
+        const dependenciesMeasurementNames = this.schema.getDependenciesNames(measurementName);
         const index = this.measurements[measurementName].indexOf(member);
         if (index === -1){
             throw new Error('represented member was not found in the ' + measurementName + ' measurement')
@@ -477,17 +483,17 @@ class DynamicCube extends Cube{
         const callback = (item) => {
             combination.push(item)
         };
-        const columnMeasurements = this.schema.getInnerColumns();
+        const finalMeasurements = this.schema.getFinal();
         const measurementsMembers = {};
         const reqursively = (measurementsMembers, index) => {
-            let columnMeasurement = columnMeasurements[index];
-            let members = this.measurements[columnMeasurement.name];
+            let finalMeasurement = finalMeasurements[index];
+            let members = this.measurements[finalMeasurement.name];
             members.forEach( member => {
-                let newMeasurementsMembers = Object.assign({}, measurementsMembers, {[columnMeasurement.name]: member} );
-                if ( Object.keys(newMeasurementsMembers).length === columnMeasurements.length ){
+                let newMeasurementsMembers = Object.assign({}, measurementsMembers, {[finalMeasurement.name]: member} );
+                if ( Object.keys(newMeasurementsMembers).length === finalMeasurements.length ){
                     callback(newMeasurementsMembers)
                 } else {
-                    measurementsMembers[columnMeasurement.name] = member;
+                    measurementsMembers[finalMeasurement.name] = member;
                     reqursively(measurementsMembers, index + 1);
                 }
             });
