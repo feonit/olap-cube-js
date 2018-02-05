@@ -12,12 +12,14 @@
 - any object analysis
 - the ability to edit data
 
+[1]: https://en.wikipedia.org/wiki/Star_schema
 ## Support:
 - multidimensionality
 - multilevel hierarchy
 - 1 fact table
 - variability
 - operations: slice, consolidation
+- OLAP data is typically stored in a [star schema][1] 
 
 ## Quick Start
 How Cube is work?

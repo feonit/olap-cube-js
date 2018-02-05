@@ -1,0 +1,47 @@
+измерения - measurements (значения разных измерений)
+метки - members (разные значения одного измерения)
+мера - measure (числовое значение, мера бизнеса)
+
+иерархия - выявленные стойкие взаимосвязи между многоуровневыми объединениями измерений и мер
+В кубе введены отношения обобщения и специализации (roll-up/drill-down)
+по иерархиям измерений
+
+сущность - элемент массива данных
+
+http://www.ykud.ru/articles/olap_lattices/olap_lattices.pdf
+http://media.ls.urfu.ru/632/1734/4218/5290/
+
+измерение состоит из членов
+атрибут измерения - имя измерения
+кортеж - набор членов каждого из измерений
+
+ячейка идентифицируется кортежем
+
+пустые ячейчки - в таблице фактов для них не содержится данных
+
+arrayData - это https://en.wikipedia.org/wiki/Fact_table
+Fact_table содержит records
+normalizedData это Star schema https://en.wikipedia.org/wiki/Star_schema
+
+
+Surrogate key https://en.wikipedia.org/wiki/Surrogate_key
+ключ It is recommended that the key field be a simple integer because a key value is meaningless
+
+Dimension table - это мой member https://en.wikipedia.org/wiki/Dimension_(data_warehouse)#Dimension_table
+Conformed dimension  junk потому что ключ образуют несколько имен
+
+//todo заменить может быть _getMembersGroupsByMeasurementsFromSchema на идею подкубов
+
+
+dimension - year
+dimensions year, product
+member qtr1 (квартал), телефон
+members qtr1,qtr2,qtr3,qtr4
+childMembers
+
+Dimension Combinations сочетания измерений
+
+Dimension Types пусть будет двух типов, то что образует ячейку и остальные
+
+
+решение проблемы  Typical Multidimensional Problem: missing values

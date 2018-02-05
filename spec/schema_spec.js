@@ -10,7 +10,7 @@ describe('[ Schema work ]', function(){
         }).toThrow();
     });
 
-    it('throws when trying to create bad schema from arrayData without id param', () => {
+    it('throws when trying to create bad schema from factTable without id param', () => {
         expect(() => {
             new NormalizedData({});
         }).toThrow();

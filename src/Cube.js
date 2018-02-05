@@ -6,20 +6,22 @@ import Member from './Member.js';
 import CreatedMember from './CreatedMember.js';
 import Schema from './Schema.js';
 import Measurements from './Measurements.js';
+import DimensionTable from './DimensionTable.js';
+import FactTable from './FactTable.js';
 
 /**
  * Base class for normalizing a denormalized data array
  * and analyzing unique values according to a given scheme
  *
- * @param {object[]} dataArray - facts which will be subject to analysis
+ * @param {object[]} factTable - facts which will be subject to analysis
  * */
 class Cube{
-    constructor(dataArray, measurementsSchema){
+    constructor(factTable, measurementsSchema){
         const schema = new Schema(measurementsSchema);
         Object.defineProperty(this, 'schema', { value: schema });
-        Object.defineProperty(this, 'dataArray', { value: dataArray });
-        this.normalizedDataArray = dataArray.map( data => new NormalizedData(data) );
-        this.measurements = this._getMembersGroupsByMeasurementsFromSchema(dataArray, this.schema.createIterator())
+        Object.defineProperty(this, 'factTable', { value: new FactTable(factTable) });
+        this.normalizedDataArray = factTable.map( data => new NormalizedData(data) );
+        this.measurements = this._getMembersGroupsByMeasurementsFromSchema(factTable, this.schema.createIterator())
     }
     /**
      * A method that allows you to find all members of a specified measurement
@@ -56,11 +58,11 @@ class Cube{
         return result;
     }
     /**
-     * @param {object[]} dataArray - Data array to the analysis of values for measurement
+     * @param {object[]} factTable - Data array to the analysis of values for measurement
      * @param {object} iterator
      * @private
      * */
-    _getMembersGroupsByMeasurementsFromSchema(dataArray, iterator){
+    _getMembersGroupsByMeasurementsFromSchema(factTable, iterator){
         const measurements = new Measurements();
 
         const handleMeasurement = (measurement) => {
@@ -148,9 +150,9 @@ class Cube{
                     return item[ENTITY_ID]
                 });
 
-                measure = totalUniq;
+                measure = new DimensionTable(totalUniq);
             } else {
-                measure = this._makeMeasureFrom(dataArray, keyProps, 0, name, otherProps);
+                measure = this._makeMeasureFrom(factTable, keyProps, 0, name, otherProps);
             }
             measurements[name] = measure;
         };
@@ -165,7 +167,7 @@ class Cube{
     /**
      * The method of analyzing the data array and generating new measurement values
      *
-     * @param {object[]} dataArray - Data array to the analysis of values for measurement
+     * @param {object[]} factTable - Data array to the analysis of values for measurement
      * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for measurement
      * @param {number} startFrom
      * @param {string} measurementName - The name of the measurement for which members will be created
@@ -173,15 +175,15 @@ class Cube{
      * @return {Member[]}
      * @private
      * */
-    _makeMeasureFrom(dataArray, keyProps, startFrom = 0, measurementName, otherProps){
+    _makeMeasureFrom(factTable, keyProps, startFrom = 0, measurementName, otherProps){
         // соотношение созданных id к ключам
         const cache = {};
         const DIVIDER = ',';
-        const mesure = [];
+        const mesure = new DimensionTable();
         const idName = Cube.genericId(measurementName);
 
         // создания групп по уникальным ключам
-        dataArray.forEach((data)=>{
+        factTable.forEach((data)=>{
 
             // собрать ключ на основе ключевых значений
             const key = keyProps.map( prop => {
@@ -257,8 +259,8 @@ class Cube{
  * as well as generating missing values for possible display of data
  * */
 class DynamicCube extends Cube{
-    constructor(dataArray, measurementsSchema){
-        super(dataArray, measurementsSchema)
+    constructor(factTable, measurementsSchema){
+        super(factTable, measurementsSchema)
     }
     /**
      * @param {string} measurementName - name of measurement in which the member is created
@@ -535,12 +537,6 @@ class DynamicCube extends Cube{
             // create
             const member = this._createMember(measurementName, memberOptions);
             result[measurementName] = member;
-
-            // check dep
-            // let dependency = this.schema.getByDependency(measurementName);
-            // if (dependency){
-            //     reqursive(dependency.name)
-            // }
         };
         reqursive(measurementName, memberOptions);
         return result;

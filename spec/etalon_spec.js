@@ -45,7 +45,7 @@ const etalon = {
     ]
 }
 
-let arrayData = [
+let factTable = [
     { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
     { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
     { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
@@ -89,19 +89,19 @@ schema = {
 describe('[ Cube work ]', function(){
 
     it('must be equal etalon and expected cube data', () => {
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         cube = jsonParseStringify(cube);
         expect(_.isEqual(cube, etalon)).toBe(true)
     })
 
     it('should return same array of data', () => {
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         let data = jsonParseStringify(cube.getDataArray());
-        expect(_.isEqual(arrayData, data)).toBe(true)
+        expect(_.isEqual(factTable, data)).toBe(true)
     })
 
     it('should return unique data', () => {
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         const res = cube.unique('prices');
         const expectation = [
             { id: 1, price: "20$" },
@@ -113,7 +113,7 @@ describe('[ Cube work ]', function(){
     });
 
     it('should be equal length of members for specified measurement and result of unique request without filter argument', () => {
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         expect(cube.unique('prices').length).toBe(cube.measurements['prices'].length);
         expect(cube.unique('counts').length).toBe(cube.measurements['counts'].length);
         expect(cube.unique('cities').length).toBe(cube.measurements['cities'].length);
@@ -122,7 +122,7 @@ describe('[ Cube work ]', function(){
     });
 
     it('should return unique data with dependency param', () => {
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         const expectation = [
             { id: 3, price: "20$" },
             { id: 4, price: "25$" }
@@ -133,7 +133,7 @@ describe('[ Cube work ]', function(){
     });
 
     it('should add member to cube data', () => {
-        const arrayData = [
+        const factTable = [
             {id: 1, x: 0, y: 0, value: 10 },
             {id: 2, x: 0, y: 1, value: 100 },
             {id: 3, x: 1, y: 0, value: 1000 },
@@ -154,7 +154,7 @@ describe('[ Cube work ]', function(){
             ]
         };
 
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
 
         const ealon = {
             "normalizedDataArray":[
@@ -251,13 +251,13 @@ describe('[ Cube work ]', function(){
             ]
         };
 
-        const arrayData = [
+        const factTable = [
             { id: 1, product: 'telephone', money: '5$', year: '2018', month: 'january', day: '1'},
             { id: 2, product: 'tv', money: '50$', year: '2018', month: 'january', day: '2' },
             { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: '2' }
         ];
 
-        let cube = new Cube(arrayData, schema);
+        let cube = new Cube(factTable, schema);
         //
         expect(cube.measurements['product'].length).toBe(2);
         expect(cube.measurements['money'].length).toBe(3);
@@ -268,7 +268,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['money'].length).toBe(4);
 
         //
-        cube = new Cube(arrayData, schema);
+        cube = new Cube(factTable, schema);
 
         expect(cube.measurements['year'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
@@ -279,7 +279,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['money'].length).toBe(5);
 
         //
-        cube = new Cube(arrayData, schema);
+        cube = new Cube(factTable, schema);
 
         expect(cube.measurements['month'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
@@ -290,7 +290,7 @@ describe('[ Cube work ]', function(){
         expect(cube.measurements['money'].length).toBe(5);
 
         //
-        cube = new Cube(arrayData, schema);
+        cube = new Cube(factTable, schema);
 
         expect(cube.measurements['month'].length).toBe(1);
         expect(cube.measurements['money'].length).toBe(3);
@@ -302,7 +302,7 @@ describe('[ Cube work ]', function(){
     })
 
     describe('[ Filling ]', function(){
-        const arrayData = [
+        const factTable = [
             { id: 1, x: 0, y: 0, z: 0,is: true },
             { id: 2, x: 0, y: 0, z: 1,is: true },
             { id: 3, x: 0, y: 1, z: 0,is: true },
@@ -321,14 +321,14 @@ describe('[ Cube work ]', function(){
         };
 
         it('should normalize count of measure for non-normalized data', () => {
-            let cube = new Cube(arrayData, schema);
+            let cube = new Cube(factTable, schema);
             expect(cube.measurements['is'].length).toBe(5);
             cube.fill({ is: false });
             expect(cube.measurements['is'].length).toBe(8);
         });
 
         it('should normalize count of measure for non-normalized data with default props', () => {
-            let cube = new Cube(arrayData, schema);
+            let cube = new Cube(factTable, schema);
             expect(cube.measurements['is'][5]).not.toBeDefined();
             expect(cube.measurements['is'][6]).not.toBeDefined();
             expect(cube.measurements['is'][7]).not.toBeDefined();
@@ -336,12 +336,12 @@ describe('[ Cube work ]', function(){
             expect(cube.measurements['is'][5]).toBeDefined();
             expect(cube.measurements['is'][6]).toBeDefined();
             expect(cube.measurements['is'][7]).toBeDefined();
-            const arrayDataExpectedAfter = arrayData.concat([
+            const factTableExpectedAfter = factTable.concat([
                 { x: 1, y: 0, z: 1,is: false },
                 { x: 1, y: 1, z: 0,is: false },
                 { x: 1, y: 1, z: 1,is: false }
             ]);
-            expect(_.isEqual(jsonParseStringify(cube.getDataArray()), arrayDataExpectedAfter )).toBe(true);
+            expect(_.isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true);
         });
 
         it('should pass for example doc', () => {
@@ -375,7 +375,7 @@ describe('[ Cube work ]', function(){
     });
 
     describe('[ Remove ]', () => {
-        const arrayData = [
+        const factTable = [
             { id: 1, xxx: 0.49, xx: 0.5, x: 0, y: 0, z: 0, is: true },
             { id: 2, xxx: 1.18, xx: 1.2, x: 1, y: 0, z: 1, is: true },
             { id: 3, xxx: 1.12, xx: 1.1, x: 1, y: 1, z: 0, is: true },
@@ -408,7 +408,7 @@ describe('[ Cube work ]', function(){
         };
         let debug;
         it('it should remove member and change measure length', () => {
-            let cube = new Cube(arrayData, schema);
+            let cube = new Cube(factTable, schema);
             expect((debug=cube.unique('is')).length).toBe(3);
             expect((debug=cube.unique('z')).length).toBe(2);
 
@@ -419,7 +419,7 @@ describe('[ Cube work ]', function(){
             expect((debug=cube.unique('is')).length).toBe(1);
         });
         it('it should remove target member and his own dependencies', () => {
-            let cube = new Cube(arrayData, schema);
+            let cube = new Cube(factTable, schema);
             expect((debug=cube.unique('is')).length).toBe(3);
             expect((debug=cube.unique('x')).length).toBe(2);
             expect((debug=cube.unique('xx')).length).toBe(3);
