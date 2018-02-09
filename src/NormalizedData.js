@@ -10,14 +10,14 @@ export default class NormalizedData {
     }
     /**
      * @param {NormalizedData[]} normalizedData - array of data to be filtered
-     * @param {object} filterData - the composed aggregate object, members grouped by measurement names
+     * @param {object} filterData - the composed aggregate object, members grouped by dimension names
      * @returns {NormalizedData[]}
      * */
     static filter(normalizedData, filterData){
-        Object.keys(filterData).forEach( measurementName => {
-            const member = filterData[measurementName];
+        Object.keys(filterData).forEach( dimensionName => {
+            const member = filterData[dimensionName];
             const memberId = member[ENTITY_ID];
-            const idName = Cube.genericId(measurementName);
+            const idName = Cube.genericId(dimensionName);
             normalizedData = normalizedData.filter( data => data[idName] == memberId )
         });
         return normalizedData;

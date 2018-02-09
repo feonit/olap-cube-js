@@ -1,18 +1,18 @@
 /**
- * Measurement attributes
+ * Dimension attributes
  * */
-export default class Measurement {
+export default class Dimension {
     constructor({ name, keyProps, dependency = null, otherProps = [] }){
 
         if (!name || !keyProps || !keyProps.length){
-            throw Error("Bad measurement description at schema, params 'name' and 'keyProps' is required");
+            throw Error("Bad dimension description at schema, params 'name' and 'keyProps' is required");
         }
 
-        /** Name of the measurement */
+        /** Name of the dimension */
         this.name = name;
 
-        /** The list of measurements with which the current measurement is directly related */
-        this.dependency = dependency && dependency.map( dependency => new Measurement(dependency) );
+        /** The list of dimensions with which the current dimension is directly related */
+        this.dependency = dependency && dependency.map( dependency => new Dimension(dependency) );
 
         /** List of key names properties of the entity belonging to the current dimension */
         this.keyProps = keyProps;

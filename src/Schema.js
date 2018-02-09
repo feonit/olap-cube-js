@@ -1,21 +1,21 @@
-import Measurement from "./Measurement.js";
+import Dimension from "./Dimension.js";
 
 export default class Schema {
     constructor(schema){
-        this.schema = new Measurement(schema);
+        this.schema = new Dimension(schema);
         if (schema.dependency && schema.dependency.length === 1){
             throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
         }
-        this._measurementsResolutionOrder = this.getMeasurementsResolutionOrder();
+        this._dimensionsResolutionOrder = this.getDimensionsResolutionOrder();
     }
     createIterator(){
         let i = 0;
-        let measurement = this.getMeasurementsResolutionOrder();
+        let dimension = this.getDimensionsResolutionOrder();
 
         return {
             next: ()=>{
-                let done = (i >= measurement.length);
-                let value = !done ? measurement[i++] : void 0;
+                let done = (i >= dimension.length);
+                let value = !done ? dimension[i++] : void 0;
                 return {
                     done,
                     value
@@ -24,12 +24,12 @@ export default class Schema {
         }
     }
     /**
-     * Take an ordered list of measurements by dependency resolution
-     * @return {Measurement[]}
+     * Take an ordered list of dimensions by dependency resolution
+     * @return {Dimension[]}
      * */
-    getMeasurementsResolutionOrder(){
-        if (this._measurementsResolutionOrder){
-            return this._measurementsResolutionOrder;
+    getDimensionsResolutionOrder(){
+        if (this._dimensionsResolutionOrder){
+            return this._dimensionsResolutionOrder;
         }
         const order = [];
         if ( this.schema.dependency ){
@@ -44,16 +44,16 @@ export default class Schema {
             reqursively(this.schema.dependency);
         }
         order.push(this.schema);
-        this._measurementsResolutionOrder = order;
+        this._dimensionsResolutionOrder = order;
         return order;
     }
     /**
-     * Get a measurement by name
-     * @return {Measurement}
+     * Get a dimension by name
+     * @return {Dimension}
      * @throw
      * */
     getByName(name){
-        const find = this._measurementsResolutionOrder.find(schema => {
+        const find = this._dimensionsResolutionOrder.find(schema => {
             return schema.name === name;
         });
         if (!find){
@@ -62,23 +62,23 @@ export default class Schema {
         return find;
     }
     /**
-     * Get a measurement by its dependency
+     * Get a dimension by its dependency
      * @return {string|undefined}
      * */
     getByDependency(name){
-        return this._measurementsResolutionOrder.find( schema => {
+        return this._dimensionsResolutionOrder.find( schema => {
             return schema.dependency && schema.dependency.find( schema => schema.name === name ) ? schema : false;
         });
     }
     /**
-     * Get list of measurements names
+     * Get list of dimensions names
      * @return {string[]}
      * */
     getNames(){
-        return this._measurementsResolutionOrder.map( schema => schema.name );
+        return this._dimensionsResolutionOrder.map( schema => schema.name );
     }
     /**
-     * Get a list of all measurement names related to the selected measurement by name
+     * Get a list of all dimension names related to the selected dimension by name
      * @return {string[]}
      * */
     getDependenciesNames(name){
@@ -90,7 +90,7 @@ export default class Schema {
         return dependencies;
     }
     /**
-     * take a point measure in the measurement space
+     * take a point measure in the dimension space
      * */
     getMeasure(){
         return this.schema;
@@ -111,8 +111,8 @@ export default class Schema {
         return columns;
     }
     /**
-     * List of all final measurements forming count of measure
-     * @return {Measurement[]}
+     * List of all final dimensions forming count of measure
+     * @return {Dimension[]}
      * */
     getFinal(){
         return this.schema.dependency;

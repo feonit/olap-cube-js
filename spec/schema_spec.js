@@ -1,12 +1,12 @@
 import Schema from '../src/Schema.js';
-import Measurement from '../src/Measurement.js';
+import Dimension from '../src/Dimension.js';
 import NormalizedData from '../src/NormalizedData.js';
 
 describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
-            new Measurement({});
+            new Dimension({});
         }).toThrow();
     });
 
@@ -43,7 +43,7 @@ describe('[ Schema work ]', function(){
         expect(res && res.name === 'regions').toBe(true);
     });
 
-    it('should return all name of measurements', () => {
+    it('should return all name of dimensions', () => {
         const schema = new Schema({
             name: 'regions',
             keyProps: ['regionPropName'],

@@ -68,7 +68,7 @@ Now cube will be:
 
 ```js
 {
-    measurements: {
+    dimensions: {
         cities: [
             { id: 1, city: 'New York' },
             { id: 2, city: 'Paris' },

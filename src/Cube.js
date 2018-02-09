@@ -5,7 +5,7 @@ import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
 import CreatedMember from './CreatedMember.js';
 import Schema from './Schema.js';
-import Measurements from './Measurements.js';
+import Dimensions from './Dimensions.js';
 import DimensionTable from './DimensionTable.js';
 import FactTable from './FactTable.js';
 
@@ -16,28 +16,28 @@ import FactTable from './FactTable.js';
  * @param {object[]} factTable - facts which will be subject to analysis
  * */
 class Cube{
-    constructor(factTable, measurementsSchema){
-        const schema = new Schema(measurementsSchema);
+    constructor(factTable, dimensionsSchema){
+        const schema = new Schema(dimensionsSchema);
         Object.defineProperty(this, 'schema', { value: schema });
         Object.defineProperty(this, 'factTable', { value: new FactTable(factTable) });
         this.normalizedDataArray = factTable.map( data => new NormalizedData(data) );
-        this.measurements = this._getMembersGroupsByMeasurementsFromSchema(factTable, this.schema.createIterator())
+        this.dimensions = this._getMembersGroupsByDimensionsFromSchema(factTable, this.schema.createIterator())
     }
     /**
-     * A method that allows you to find all members of a specified measurement
+     * A method that allows you to find all members of a specified dimension
      * or part of the members using a filter if they are in a hierarchy
      *
      * @public
-     * @param {string} measurementName - name of measurement from which the member will be found
-     * @param {object?} filterData - the composed aggregate object, members grouped by measurement names
+     * @param {string} dimensionName - name of dimension from which the member will be found
+     * @param {object?} filterData - the composed aggregate object, members grouped by dimension names
      * @return {Member[]} returns members
      * */
-    unique(measurementName, filterData){
-        if (!measurementName){
+    unique(dimensionName, filterData){
+        if (!dimensionName){
             throw new Error('first argument is required')
         }
-        const members = this.measurements[measurementName];
-        const idName = Cube.genericId(measurementName);
+        const members = this.dimensions[dimensionName];
+        const idName = Cube.genericId(dimensionName);
         const result = [];
 
         let data = this.normalizedDataArray;
@@ -58,15 +58,15 @@ class Cube{
         return result;
     }
     /**
-     * @param {object[]} factTable - Data array to the analysis of values for measurement
+     * @param {object[]} factTable - Data array to the analysis of values for dimension
      * @param {object} iterator
      * @private
      * */
-    _getMembersGroupsByMeasurementsFromSchema(factTable, iterator){
-        const measurements = new Measurements();
+    _getMembersGroupsByDimensionsFromSchema(factTable, iterator){
+        const dimensions = new Dimensions();
 
-        const handleMeasurement = (measurement) => {
-            const {name, dependency, keyProps, otherProps = []} = measurement;
+        const handleDimension = (dimension) => {
+            const {name, dependency, keyProps, otherProps = []} = dimension;
             let measure;
             if (dependency){
                 // определим подмножества для каждой зависимости
@@ -86,7 +86,7 @@ class Cube{
                 if (dependencyNames){
 
                     const dismember = (dependencyName, data) => {
-                        const dependencyMeasure = measurements[dependencyName];
+                        const dependencyMeasure = dimensions[dependencyName];
 
                         // определим подмножества для каждой зависимости
                         let entitiesParts;
@@ -118,7 +118,7 @@ class Cube{
 
                     entitiesParts = parts;
                 } else {
-                    const dependencyMeasure = measurements[dependencyName];
+                    const dependencyMeasure = dimensions[dependencyName];
 
                     entitiesParts = dependencyMeasure.map( measure => {
                         // множество сущностей соответствующих измерению
@@ -154,33 +154,33 @@ class Cube{
             } else {
                 measure = this._makeMeasureFrom(factTable, keyProps, 0, name, otherProps);
             }
-            measurements[name] = measure;
+            dimensions[name] = measure;
         };
 
         let next;
         while ( !(next = iterator.next()) || !next.done){
-            handleMeasurement(next.value)
+            handleDimension(next.value)
         }
 
-        return measurements;
+        return dimensions;
     }
     /**
-     * The method of analyzing the data array and generating new measurement values
+     * The method of analyzing the data array and generating new dimension values
      *
-     * @param {object[]} factTable - Data array to the analysis of values for measurement
-     * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for measurement
+     * @param {object[]} factTable - Data array to the analysis of values for dimension
+     * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
      * @param {number} startFrom
-     * @param {string} measurementName - The name of the measurement for which members will be created
-     * @param {string[]} otherProps - Names of properties whose values will be appended to the measurement member along with the key properties
+     * @param {string} dimensionName - The name of the dimension for which members will be created
+     * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
      * @return {Member[]}
      * @private
      * */
-    _makeMeasureFrom(factTable, keyProps, startFrom = 0, measurementName, otherProps){
+    _makeMeasureFrom(factTable, keyProps, startFrom = 0, dimensionName, otherProps){
         // соотношение созданных id к ключам
         const cache = {};
         const DIVIDER = ',';
         const mesure = new DimensionTable();
-        const idName = Cube.genericId(measurementName);
+        const idName = Cube.genericId(dimensionName);
 
         // создания групп по уникальным ключам
         factTable.forEach((data)=>{
@@ -259,57 +259,57 @@ class Cube{
  * as well as generating missing values for possible display of data
  * */
 class DynamicCube extends Cube{
-    constructor(factTable, measurementsSchema){
-        super(factTable, measurementsSchema)
+    constructor(factTable, dimensionsSchema){
+        super(factTable, dimensionsSchema)
     }
     /**
-     * @param {string} measurementName - name of measurement in which the member is created
+     * @param {string} dimensionName - name of dimension in which the member is created
      * @param {object} memberOptions - properties for the created member
      * @param {object} cellOptions -
      * @public
      * */
-    addMember(measurementName, memberOptions, cellOptions = {}){
+    addMember(dimensionName, memberOptions, cellOptions = {}){
         const columns = this.schema.getColumns();
 
-        const measurements = {};
+        const dimensions = {};
 
         // остальные измерения этого уровня
-        columns.forEach((measurement)=>{
-            if (measurement.name !== measurementName){
-                if (!cellOptions[measurement.name]){
-                    measurements[measurement.name] = this.measurements[measurement.name]
+        columns.forEach((dimension)=>{
+            if (dimension.name !== dimensionName){
+                if (!cellOptions[dimension.name]){
+                    dimensions[dimension.name] = this.dimensions[dimension.name]
                 }
             }
         });
 
-        const memberDepOptions = this._createMemberDependency(measurementName, memberOptions);
+        const memberDepOptions = this._createMemberDependency(dimensionName, memberOptions);
 
         cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
-        const recursivelyForEach = (cellOptions, measurements, index, isDependency) => {
-            const measurementNames = Object.keys(measurements);
-            const measurementNamesLength = measurementNames.length;
+        const recursivelyForEach = (cellOptions, dimensions, index, isDependency) => {
+            const dimensionNames = Object.keys(dimensions);
+            const dimensionNamesLength = dimensionNames.length;
 
-            if (index !== measurementNamesLength){
-                const members = measurements[measurementNames[index]];
+            if (index !== dimensionNamesLength){
+                const members = dimensions[dimensionNames[index]];
 
                 members.forEach( member => {
-                    cellOptions[measurementNames[index]] = member;
-                    let dependency = this.schema.getByDependency(measurementNames[index]);
+                    cellOptions[dimensionNames[index]] = member;
+                    let dependency = this.schema.getByDependency(dimensionNames[index]);
                     if (dependency){
-                        const uniqueOptions = { [measurementNames[index]]: member };
+                        const uniqueOptions = { [dimensionNames[index]]: member };
                         const unique = this.unique(dependency.name, uniqueOptions);
-                        const measurements = { [ dependency.name ]: unique };
+                        const dimensions = { [ dependency.name ]: unique };
 
-                        recursivelyForEach(cellOptions, measurements, 0, true);
+                        recursivelyForEach(cellOptions, dimensions, 0, true);
                     }
-                    recursivelyForEach(cellOptions, measurements, index + 1, isDependency);
+                    recursivelyForEach(cellOptions, dimensions, index + 1, isDependency);
 
                     if (isDependency){
                         return;
                     }
 
-                    if ( (index + 1) === measurementNamesLength ){
+                    if ( (index + 1) === dimensionNamesLength ){
                         // create cell
                         const measureName = this.schema.getMeasure().name;
                         const member = this._createMember(measureName);
@@ -321,32 +321,32 @@ class DynamicCube extends Cube{
             }
         };
 
-        recursivelyForEach(cellOptions, measurements, 0);
+        recursivelyForEach(cellOptions, dimensions, 0);
     }
     /**
      *
-     * @param {string} measurementName - name of measurement from which the member will be removed
+     * @param {string} dimensionName - name of dimension from which the member will be removed
      * @param {Member} member - the member will be removed
      * @public
      * */
-    removeSubModelDepend(measurementName, member){
-        const dependenciesMeasurementNames = this.schema.getDependenciesNames(measurementName);
-        const index = this.measurements[measurementName].indexOf(member);
+    removeSubModelDepend(dimensionName, member){
+        const dependenciesDimensionNames = this.schema.getDependenciesNames(dimensionName);
+        const index = this.dimensions[dimensionName].indexOf(member);
         if (index === -1){
-            throw new Error('represented member was not found in the ' + measurementName + ' measurement')
+            throw new Error('represented member was not found in the ' + dimensionName + ' dimension')
         }
-        this.measurements[measurementName].splice(index, 1);
+        this.dimensions[dimensionName].splice(index, 1);
 
         const filterData = this.normalizedDataArray.filter(data => {
-            return data[Cube.genericId(measurementName)] == member[ENTITY_ID];
+            return data[Cube.genericId(dimensionName)] == member[ENTITY_ID];
         });
 
         filterData.forEach( data => {
             const index = this.normalizedDataArray.indexOf(data);
             this.normalizedDataArray.splice(index, 1);
 
-            dependenciesMeasurementNames.forEach( measurementName => {
-                this._removeSubModel(data, measurementName);
+            dependenciesDimensionNames.forEach( dimensionName => {
+                this._removeSubModel(data, dimensionName);
             });
         });
         this._normalize();
@@ -361,14 +361,14 @@ class DynamicCube extends Cube{
      * */
     _removeSubModel(normalizeData, name){
         // подчистить суб-модельку
-        const filtered = this.measurements[name].filter(rate => {
+        const filtered = this.dimensions[name].filter(rate => {
             return rate[ENTITY_ID] == normalizeData[Cube.genericId(name)]
         });
 
         // и подчистить суб-модельку
         filtered.forEach( data => {
-            const index = this.measurements[name].indexOf(data);
-            this.measurements[name].splice(index, 1);
+            const index = this.dimensions[name].indexOf(data);
+            this.dimensions[name].splice(index, 1);
         })
     }
     /**
@@ -379,8 +379,8 @@ class DynamicCube extends Cube{
         const names = this.schema.getNames();
         const report = [];
         names.forEach( name => {
-            if (this.measurements[name].length){
-                const copy = [].concat(this.measurements[name]);
+            if (this.dimensions[name].length){
+                const copy = [].concat(this.dimensions[name]);
                 // чтобы splice корректно отработал
                 copy.forEach( (member, index) => {
                     const idName = Cube.genericId(name);
@@ -388,7 +388,7 @@ class DynamicCube extends Cube{
                         return data[idName] == member[ENTITY_ID]
                     });
                     if (!findLink){
-                        this.measurements[name].splice(index - (copy.length - this.measurements[name].length), 1);
+                        this.dimensions[name].splice(index - (copy.length - this.dimensions[name].length), 1);
                         report.push(member)
                     }
                 })
@@ -419,10 +419,10 @@ class DynamicCube extends Cube{
                 delete data[ENTITY_ID];
             }
 
-            const handleMeasurement = measurement => {
-                const idName = Cube.genericId(measurement.name);
+            const handleDimension = dimension => {
+                const idName = Cube.genericId(dimension.name);
                 const idValue = normalizedData[idName];
-                const member = this.measurements[measurement.name].find( member => {
+                const member = this.dimensions[dimension.name].find( member => {
                     return member[ENTITY_ID] === idValue;
                 });
                 const memberCopy = Object.assign({}, member);
@@ -434,7 +434,7 @@ class DynamicCube extends Cube{
             const iterator = this.schema.createIterator();
             let next;
             while ( !(next = iterator.next()) || !next.done){
-                handleMeasurement(next.value)
+                handleDimension(next.value)
             }
 
             list.push(data);
@@ -485,23 +485,23 @@ class DynamicCube extends Cube{
         const callback = (item) => {
             combination.push(item)
         };
-        const finalMeasurements = this.schema.getFinal();
-        const measurementsMembers = {};
-        const reqursively = (measurementsMembers, index) => {
-            let finalMeasurement = finalMeasurements[index];
-            let members = this.measurements[finalMeasurement.name];
+        const finalDimensions = this.schema.getFinal();
+        const dimensionsMembers = {};
+        const reqursively = (dimensionsMembers, index) => {
+            let finalDimension = finalDimensions[index];
+            let members = this.dimensions[finalDimension.name];
             members.forEach( member => {
-                let newMeasurementsMembers = Object.assign({}, measurementsMembers, {[finalMeasurement.name]: member} );
-                if ( Object.keys(newMeasurementsMembers).length === finalMeasurements.length ){
-                    callback(newMeasurementsMembers)
+                let newDimensionsMembers = Object.assign({}, dimensionsMembers, {[finalDimension.name]: member} );
+                if ( Object.keys(newDimensionsMembers).length === finalDimensions.length ){
+                    callback(newDimensionsMembers)
                 } else {
-                    measurementsMembers[finalMeasurement.name] = member;
-                    reqursively(measurementsMembers, index + 1);
+                    dimensionsMembers[finalDimension.name] = member;
+                    reqursively(dimensionsMembers, index + 1);
                 }
             });
         };
 
-        reqursively(measurementsMembers, 0);
+        reqursively(dimensionsMembers, 0);
 
         return combination;
     }
@@ -515,30 +515,30 @@ class DynamicCube extends Cube{
             throw 'attribute \"name\" nor found';
         }
         const memberPropDefaultValue = null;
-        const measurement = this.schema.getByName(name);
+        const dimension = this.schema.getByName(name);
         const memberProps = Object.assign({}, props, {
-            id: Cube.reduceId(this.measurements[name]),
+            id: Cube.reduceId(this.dimensions[name]),
         });
-        measurement.keyProps.forEach( propName => {
+        dimension.keyProps.forEach( propName => {
             memberProps[propName] = props.hasOwnProperty(propName) ? props[propName] : memberPropDefaultValue
         });
 
         const member = new CreatedMember(memberProps);
-        this.measurements[name].push(member);
+        this.dimensions[name].push(member);
         return member;
     }
     /**
      *
      * @private
      * */
-    _createMemberDependency(measurementName, memberOptions = {}){
+    _createMemberDependency(dimensionName, memberOptions = {}){
         const result = {};
-        const reqursive = (measurementName, memberOptions = {}) => {
+        const reqursive = (dimensionName, memberOptions = {}) => {
             // create
-            const member = this._createMember(measurementName, memberOptions);
-            result[measurementName] = member;
+            const member = this._createMember(dimensionName, memberOptions);
+            result[dimensionName] = member;
         };
-        reqursive(measurementName, memberOptions);
+        reqursive(dimensionName, memberOptions);
         return result;
     }
     /**

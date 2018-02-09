@@ -8,7 +8,7 @@ function jsonParseStringify(data){
 }
 
 const etalon = {
-    measurements: {
+    dimensions: {
         cities: [
             { id: 1, city: 'New York' },
             { id: 2, city: 'Paris' },
@@ -114,11 +114,11 @@ describe('[ Cube work ]', function(){
 
     it('should be equal length of members for specified measurement and result of unique request without filter argument', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.unique('prices').length).toBe(cube.measurements['prices'].length);
-        expect(cube.unique('counts').length).toBe(cube.measurements['counts'].length);
-        expect(cube.unique('cities').length).toBe(cube.measurements['cities'].length);
-        expect(cube.unique('companies').length).toBe(cube.measurements['companies'].length);
-        expect(cube.unique('age').length).toBe(cube.measurements['age'].length);
+        expect(cube.unique('prices').length).toBe(cube.dimensions['prices'].length);
+        expect(cube.unique('counts').length).toBe(cube.dimensions['counts'].length);
+        expect(cube.unique('cities').length).toBe(cube.dimensions['cities'].length);
+        expect(cube.unique('companies').length).toBe(cube.dimensions['companies'].length);
+        expect(cube.unique('age').length).toBe(cube.dimensions['age'].length);
     });
 
     it('should return unique data with dependency param', () => {
@@ -162,7 +162,7 @@ describe('[ Cube work ]', function(){
                 {"id":2,"coordinateY_id":2,"coordinateX_id":1,"valueOfXY_id":2},
                 {"id":3,"coordinateY_id":1,"coordinateX_id":2,"valueOfXY_id":3},
                 {"id":4,"coordinateY_id":2,"coordinateX_id":2,"valueOfXY_id":4}],
-            "measurements":{
+            "dimensions":{
                 "coordinateY":[
                     {"id":1,"y":0},
                     {"id":2,"y":1}
@@ -197,7 +197,7 @@ describe('[ Cube work ]', function(){
                 {"id":null,"coordinateY_id":1,"coordinateX_id":3,"valueOfXY_id":5},
                 {"id":null,"coordinateY_id":2,"coordinateX_id":3,"valueOfXY_id":6},
             ],
-            "measurements":{
+            "dimensions":{
                 "coordinateY":[
                     {"id":1,"y":0},
                     {"id":2,"y":1}
@@ -259,46 +259,46 @@ describe('[ Cube work ]', function(){
 
         let cube = new Cube(factTable, schema);
         //
-        expect(cube.measurements['product'].length).toBe(2);
-        expect(cube.measurements['money'].length).toBe(3);
+        expect(cube.dimensions['product'].length).toBe(2);
+        expect(cube.dimensions['money'].length).toBe(3);
 
         cube.addMember('product', { product : 'mp3' } );
 
-        expect(cube.measurements['product'].length).toBe(3);
-        expect(cube.measurements['money'].length).toBe(4);
+        expect(cube.dimensions['product'].length).toBe(3);
+        expect(cube.dimensions['money'].length).toBe(4);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.measurements['year'].length).toBe(1);
-        expect(cube.measurements['money'].length).toBe(3);
+        expect(cube.dimensions['year'].length).toBe(1);
+        expect(cube.dimensions['money'].length).toBe(3);
 
         cube.addMember('year', { year : '2019' } );
 
-        expect(cube.measurements['year'].length).toBe(2);
-        expect(cube.measurements['money'].length).toBe(5);
+        expect(cube.dimensions['year'].length).toBe(2);
+        expect(cube.dimensions['money'].length).toBe(5);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.measurements['month'].length).toBe(1);
-        expect(cube.measurements['money'].length).toBe(3);
+        expect(cube.dimensions['month'].length).toBe(1);
+        expect(cube.dimensions['money'].length).toBe(3);
 
         cube.addMember('month', { month : 'april' } );
 
-        expect(cube.measurements['month'].length).toBe(2);
-        expect(cube.measurements['money'].length).toBe(5);
+        expect(cube.dimensions['month'].length).toBe(2);
+        expect(cube.dimensions['money'].length).toBe(5);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.measurements['month'].length).toBe(1);
-        expect(cube.measurements['money'].length).toBe(3);
+        expect(cube.dimensions['month'].length).toBe(1);
+        expect(cube.dimensions['money'].length).toBe(3);
 
         cube.addMember('month', { month : 'april' } );
 
-        expect(cube.measurements['month'].length).toBe(2);
-        expect(cube.measurements['money'].length).toBe(5);
+        expect(cube.dimensions['month'].length).toBe(2);
+        expect(cube.dimensions['money'].length).toBe(5);
     })
 
     describe('[ Filling ]', function(){
@@ -322,20 +322,20 @@ describe('[ Cube work ]', function(){
 
         it('should normalize count of measure for non-normalized data', () => {
             let cube = new Cube(factTable, schema);
-            expect(cube.measurements['is'].length).toBe(5);
+            expect(cube.dimensions['is'].length).toBe(5);
             cube.fill({ is: false });
-            expect(cube.measurements['is'].length).toBe(8);
+            expect(cube.dimensions['is'].length).toBe(8);
         });
 
         it('should normalize count of measure for non-normalized data with default props', () => {
             let cube = new Cube(factTable, schema);
-            expect(cube.measurements['is'][5]).not.toBeDefined();
-            expect(cube.measurements['is'][6]).not.toBeDefined();
-            expect(cube.measurements['is'][7]).not.toBeDefined();
+            expect(cube.dimensions['is'][5]).not.toBeDefined();
+            expect(cube.dimensions['is'][6]).not.toBeDefined();
+            expect(cube.dimensions['is'][7]).not.toBeDefined();
             cube.fill({ is: false });
-            expect(cube.measurements['is'][5]).toBeDefined();
-            expect(cube.measurements['is'][6]).toBeDefined();
-            expect(cube.measurements['is'][7]).toBeDefined();
+            expect(cube.dimensions['is'][5]).toBeDefined();
+            expect(cube.dimensions['is'][6]).toBeDefined();
+            expect(cube.dimensions['is'][7]).toBeDefined();
             const factTableExpectedAfter = factTable.concat([
                 { x: 1, y: 0, z: 1,is: false },
                 { x: 1, y: 1, z: 0,is: false },
