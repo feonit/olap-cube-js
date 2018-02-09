@@ -9,16 +9,16 @@
 
 
 ## Principles:
-- any object analysis
-- the ability to edit data
+- Any object analysis
+- Mathematical model
 
 [1]: https://en.wikipedia.org/wiki/Star_schema
 ## Support:
-- multidimensionality
-- multilevel hierarchy
-- 1 fact table
-- variability
-- operations: slice, consolidation
+- Multidimensionality
+- Multilevel hierarchy
+- One fact table
+- The ability to edit data
+- Operations: slice, consolidation
 - OLAP data is typically stored in a [star schema][1] 
 
 ## Quick Start
