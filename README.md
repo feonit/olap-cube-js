@@ -69,7 +69,7 @@ Now cube will be:
 
 ```js
 {
-    dimensions: {
+    space: {
         cities: [
             { id: 1, city: 'New York' },
             { id: 2, city: 'Paris' },
