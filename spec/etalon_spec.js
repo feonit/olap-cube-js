@@ -54,33 +54,33 @@ let factTable = [
 ]
 
 let schema = [
-    { name: 'cities', keyProps: ['city']},
-    { name: 'companies', keyProps: ['company']},
-    { name: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
-    { name: 'prices', keyProps: ['price'], dependency: 'cities' },
-    { name: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
+    { dimension: 'cities', keyProps: ['city']},
+    { dimension: 'companies', keyProps: ['company']},
+    { dimension: 'age', keyProps: ['minAgePlane', 'maxAgePlane']},
+    { dimension: 'prices', keyProps: ['price'], dependency: 'cities' },
+    { dimension: 'counts', keyProps: ['planesCount'], dependency: ['cities', 'companies']},
 ]
 
 schema = {
-    name: 'counts',
+    dimension: 'counts',
     keyProps: ['planesCount'],
     dependency: [
         {
-            name: 'prices',
+            dimension: 'prices',
             keyProps: ['price'],
             dependency: [
                 {
-                    name: 'cities',
+                    dimension: 'cities',
                     keyProps: ['city']
                 }
             ]
         },
         {
-            name: 'companies',
+            dimension: 'companies',
             keyProps: ['company']
         },
         {
-            name: 'age',
+            dimension: 'age',
             keyProps: ['minAgePlane', 'maxAgePlane']
         }
     ]
@@ -141,14 +141,14 @@ describe('[ Cube work ]', function(){
         ];
 
         const schema = {
-            name: 'valueOfXY',
+            dimension: 'valueOfXY',
             keyProps: ['value'],
             dependency: [
                 {
-                    name: 'coordinateX',
+                    dimension: 'coordinateX',
                     keyProps: ['x']
                 },{
-                    name: 'coordinateY',
+                    dimension: 'coordinateY',
                     keyProps: ['y']
                 }
             ]
@@ -225,23 +225,23 @@ describe('[ Cube work ]', function(){
     it('should add member to cube data with dependency columns', () => {
 
         const schema = {
-            name: 'money',
+            dimension: 'money',
             keyProps: ['money'],
             dependency: [
                 {
-                    name: 'product',
+                    dimension: 'product',
                     keyProps: ['product']
                 },
                 {
-                    name: 'day',
+                    dimension: 'day',
                     keyProps: ['day'],
                     dependency: [
                         {
-                            name: 'month',
+                            dimension: 'month',
                             keyProps: ['month'],
                             dependency: [
                                 {
-                                    name: 'year',
+                                    dimension: 'year',
                                     keyProps: ['year']
                                 }
                             ]
@@ -311,12 +311,12 @@ describe('[ Cube work ]', function(){
         ];
 
         const schema = {
-            name: 'is',
+            dimension: 'is',
             keyProps: ['is'],
             dependency: [
-                { name: 'x', keyProps: ['x']},
-                { name: 'y', keyProps: ['y']},
-                { name: 'z', keyProps: ['z']}
+                { dimension: 'x', keyProps: ['x']},
+                { dimension: 'y', keyProps: ['y']},
+                { dimension: 'z', keyProps: ['z']}
             ]
         };
 
@@ -346,14 +346,14 @@ describe('[ Cube work ]', function(){
 
         it('should pass for example doc', () => {
             const schema = {
-                name: 'xy',
+                dimension: 'xy',
                 keyProps: ['xy'],
                 dependency: [
                     {
-                        name: 'x',
+                        dimension: 'x',
                         keyProps: ['x']
                     },{
-                        name: 'y',
+                        dimension: 'y',
                         keyProps: ['y']
                     }
                 ]
@@ -381,27 +381,27 @@ describe('[ Cube work ]', function(){
             { id: 3, xxx: 1.12, xx: 1.1, x: 1, y: 1, z: 0, is: true },
         ];
         const schema = {
-            name: 'is',
+            dimension: 'is',
             keyProps: ['is'],
             dependency: [
                 {
-                    name: 'xxx',
+                    dimension: 'xxx',
                     keyProps: ['xxx'],
                     dependency: [{
-                        name: 'xx',
+                        dimension: 'xx',
                         keyProps: ['xx'],
                         dependency: [{
-                            name: 'x',
+                            dimension: 'x',
                             keyProps: ['x']
                         }]
                     }]
                 },
                 {
-                    name: 'y',
+                    dimension: 'y',
                     keyProps: ['y']
                 },
                 {
-                    name: 'z',
+                    dimension: 'z',
                     keyProps: ['z']
                 }
             ]

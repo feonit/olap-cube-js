@@ -1,8 +1,8 @@
-import Dimension from "./Dimension.js";
+import DimensionAttributes from "./DimensionAttributes.js";
 
 export default class Schema {
     constructor(schema){
-        this.schema = new Dimension(schema);
+        this.schema = new DimensionAttributes(schema);
         if (schema.dependency && schema.dependency.length === 1){
             throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
         }
@@ -25,7 +25,7 @@ export default class Schema {
     }
     /**
      * Take an ordered list of dimensions by dependency resolution
-     * @return {Dimension[]}
+     * @return {DimensionAttributes[]}
      * */
     getDimensionsResolutionOrder(){
         if (this._dimensionsResolutionOrder){
@@ -48,16 +48,16 @@ export default class Schema {
         return order;
     }
     /**
-     * Get a dimension by name
-     * @return {Dimension}
+     * Get a dimension
+     * @return {DimensionAttributes}
      * @throw
      * */
-    getByName(name){
+    getByName(dimension){
         const find = this._dimensionsResolutionOrder.find(schema => {
-            return schema.name === name;
+            return schema.dimension === dimension;
         });
         if (!find){
-            throw 'schema for name: \"${name}\" not found'
+            throw 'schema for dimension: \"${dimension}\" not found'
         }
         return find;
     }
@@ -65,9 +65,9 @@ export default class Schema {
      * Get a dimension by its dependency
      * @return {string|undefined}
      * */
-    getByDependency(name){
+    getByDependency(dimension){
         return this._dimensionsResolutionOrder.find( schema => {
-            return schema.dependency && schema.dependency.find( schema => schema.name === name ) ? schema : false;
+            return schema.dependency && schema.dependency.find( schema => schema.dimension === dimension ) ? schema : false;
         });
     }
     /**
@@ -75,17 +75,17 @@ export default class Schema {
      * @return {string[]}
      * */
     getNames(){
-        return this._dimensionsResolutionOrder.map( schema => schema.name );
+        return this._dimensionsResolutionOrder.map( schema => schema.dimension );
     }
     /**
-     * Get a list of all dimension names related to the selected dimension by name
+     * Get a list of all dimension related to the selected dimension
      * @return {string[]}
      * */
-    getDependenciesNames(name){
-        let dependencies = [this.getMeasure().name];
-        let schema = this.getByDependency(name);
+    getDependenciesNames(dimension){
+        let dependencies = [this.getMeasure().dimension];
+        let schema = this.getByDependency(dimension);
         if (schema.dependency){
-            dependencies = dependencies.concat( schema.dependency.map( schema => schema.name ) )
+            dependencies = dependencies.concat( schema.dependency.map( schema => schema.dimension ) )
         }
         return dependencies;
     }
@@ -112,7 +112,7 @@ export default class Schema {
     }
     /**
      * List of all final dimensions forming count of measure
-     * @return {Dimension[]}
+     * @return {DimensionAttributes[]}
      * */
     getFinal(){
         return this.schema.dependency;
@@ -122,7 +122,7 @@ export default class Schema {
      * */
     getDependencyNames(dependency){
         //todo ref
-        const map = dependency.map(dependency => dependency.name);
+        const map = dependency.map(dependency => dependency.dimension);
         return map.length === 1 ? map[0] : map;
     }
 }

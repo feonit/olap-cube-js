@@ -1,12 +1,12 @@
 import Schema from '../src/Schema.js';
-import Dimension from '../src/Dimension.js';
+import DimensionAttributes from '../src/DimensionAttributes.js';
 import NormalizedData from '../src/NormalizedData.js';
 
 describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
-            new Dimension({});
+            new DimensionAttributes({});
         }).toThrow();
     });
 
@@ -17,47 +17,47 @@ describe('[ Schema work ]', function(){
     });
 
 
-    it('should find by name', () => {
-        const mesurement = { name: 'boo', keyProps: ['prop'] };
+    it('should return dimension', () => {
+        const mesurement = { dimension: 'boo', keyProps: ['prop'] };
         const schema = new Schema(mesurement);
         const res = schema.getByName('boo');
-        expect(res.name).toBe('boo');
+        expect(res.dimension).toBe('boo');
     });
 
     it('should find dependent measurement', () => {
         const schema = new Schema({
-            name: 'regions',
+            dimension: 'regions',
             keyProps: ['regionPropName'],
             dependency: [
                 {
-                    name: 'cities',
+                    dimension: 'cities',
                     keyProps: ['cityPropName', 'otherCityPropName']
                 },
                 {
-                    name: 'data',
+                    dimension: 'data',
                     keyProps: ['data']
                 }
             ]
         });
         const res = schema.getByDependency('cities');
-        expect(res && res.name === 'regions').toBe(true);
+        expect(res && res.dimension === 'regions').toBe(true);
     });
 
-    it('should return all name of dimensions', () => {
+    it('should return all dimensions', () => {
         const schema = new Schema({
-            name: 'regions',
+            dimension: 'regions',
             keyProps: ['regionPropName'],
             dependency: [
                 {
-                    name: 'cities',
+                    dimension: 'cities',
                     keyProps: ['cityPropName', 'otherCityPropName'],
                     dependency: [{
-                        name: 'countries',
+                        dimension: 'countries',
                         keyProps: ['countryPropName']
                     }]
                 },
                 {
-                    name: 'data',
+                    dimension: 'data',
                     keyProps: ['data']
                 }
             ]

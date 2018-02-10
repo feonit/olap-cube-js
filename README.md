@@ -37,25 +37,25 @@ let dataArray = [
 
 // This is the data schema we need to obtain
 let schema = {
-    name: 'counts',
+    dimension: 'counts',
     keyProps: ['planesCount'],
     dependency: [
         {
-            name: 'prices',
+            dimension: 'prices',
             keyProps: ['price'],
             dependency: [
                 {
-                    name: 'cities',
+                    dimension: 'cities',
                     keyProps: ['city']
                 }
             ]
         },
         {
-            name: 'companies',
+            dimension: 'companies',
             keyProps: ['company']
         },
         {
-            name: 'age',
+            dimension: 'age',
             keyProps: ['minAgePlane', 'maxAgePlane']
         }
     ]
@@ -153,14 +153,14 @@ Cube filling:
 
 ```js
 const schema = {
-	name: 'xy',
+	dimension: 'xy',
 	keyProps: ['xy'],
 	dependency: [
 	    {
-	    	name: 'x',
+	    	dimension: 'x',
 	    	keyProps: ['x']
 	    },{
-	    	name: 'y',
+	    	dimension: 'y',
 	    	keyProps: ['y']
 	    }
 	]

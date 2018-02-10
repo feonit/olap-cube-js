@@ -14,10 +14,10 @@ export default class NormalizedData {
      * @returns {NormalizedData[]}
      * */
     static filter(normalizedData, filterData){
-        Object.keys(filterData).forEach( dimensionName => {
-            const member = filterData[dimensionName];
+        Object.keys(filterData).forEach( dimension => {
+            const member = filterData[dimension];
             const memberId = member[ENTITY_ID];
-            const idName = Cube.genericId(dimensionName);
+            const idName = Cube.genericId(dimension);
             normalizedData = normalizedData.filter( data => data[idName] == memberId )
         });
         return normalizedData;
