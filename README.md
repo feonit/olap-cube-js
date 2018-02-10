@@ -17,6 +17,7 @@
 - Multidimensionality
 - Multilevel hierarchy
 - One fact table
+- One hierarchy for one dimension
 - The ability to edit data
 - Operations: slice, consolidation
 - OLAP data is typically stored in a [star schema][1] 

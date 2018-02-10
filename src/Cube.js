@@ -3,11 +3,12 @@ import NormalizedDataNotSaved from './NormalizedDataNotSaved.js'
 import _ from './_.js';
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
-import CreatedMember from './CreatedMember.js';
+import InputMember from './InputMember.js';
 import Schema from './Schema.js';
 import Dimensions from './Dimensions.js';
 import DimensionTable from './DimensionTable.js';
 import FactTable from './FactTable.js';
+import DetailMember from "./DetailMember.js";
 
 /**
  * Base class for normalizing a denormalized data array
@@ -136,7 +137,7 @@ class Cube{
                 // для каждого подмножества определим свои меры
                 let countId = 0;
                 const measures = entitiesParts.map( entitiesPart => {
-                    const measure = this._makeMeasureFrom(entitiesPart, keyProps, countId, name, otherProps);
+                    const measure = this._makeMeasureFrom(entitiesPart, countId, dimension);
                     countId = countId + measure.length;
                     return measure;
                 });
@@ -152,7 +153,7 @@ class Cube{
 
                 measure = new DimensionTable(totalUniq);
             } else {
-                measure = this._makeMeasureFrom(factTable, keyProps, 0, name, otherProps);
+                measure = this._makeMeasureFrom(factTable, 0, dimension);
             }
             dimensions[name] = measure;
         };
@@ -168,19 +169,24 @@ class Cube{
      * The method of analyzing the data array and generating new dimension values
      *
      * @param {object[]} factTable - Data array to the analysis of values for dimension
-     * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
      * @param {number} startFrom
-     * @param {string} dimensionName - The name of the dimension for which members will be created
-     * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
+     * @param {Dimension} dimension
      * @return {Member[]}
      * @private
      * */
-    _makeMeasureFrom(factTable, keyProps, startFrom = 0, dimensionName, otherProps){
+    _makeMeasureFrom(factTable, startFrom = 0, dimension){
+        const {
+            name, //The name of the dimension for which members will be created
+            keyProps, //Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
+            otherProps, //Names of properties whose values will be appended to the dimension member along with the key properties
+            dependency
+        } = dimension;
+
         // соотношение созданных id к ключам
         const cache = {};
         const DIVIDER = ',';
         const mesure = new DimensionTable();
-        const idName = Cube.genericId(dimensionName);
+        const idName = Cube.genericId(name);
 
         // создания групп по уникальным ключам
         factTable.forEach((data)=>{
@@ -211,7 +217,9 @@ class Cube{
                     }
                 });
 
-                const member = new Member(memberOptions);
+                const member = dependency
+                    ? new DetailMember(memberOptions)
+                    : new Member(memberOptions);
 
                 mesure.push(member);
             }
@@ -523,7 +531,7 @@ class DynamicCube extends Cube{
             memberProps[propName] = props.hasOwnProperty(propName) ? props[propName] : memberPropDefaultValue
         });
 
-        const member = new CreatedMember(memberProps);
+        const member = new InputMember(memberProps);
         this.dimensions[name].push(member);
         return member;
     }
