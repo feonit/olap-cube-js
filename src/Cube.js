@@ -68,8 +68,8 @@ class Cube{
     _getMembersGroupsByDimensionsFromSchema(factTable, iterator){
         const space = new Space();
 
-        const handleDimension = (dimensionAttributes) => {
-            const {dimension, dependency} = dimensionAttributes;
+        const handleDimension = (dimensionSchema) => {
+            const {dimension, dependency} = dimensionSchema;
             let dimensionTable;
 
             if (dependency){
@@ -140,7 +140,7 @@ class Cube{
                 // для каждого подмножества определим свои меры
                 let countId = 0;
                 const measures = entitiesParts.map( entitiesPart => {
-                    const measure = this._makeMeasureFrom(entitiesPart, countId, dimensionAttributes);
+                    const measure = this._makeMeasureFrom(entitiesPart, countId, dimensionSchema);
                     countId = countId + measure.length;
                     return measure;
                 });
@@ -156,7 +156,7 @@ class Cube{
 
                 dimensionTable = new DimensionTable(totalUniq);
             } else {
-                dimensionTable = this._makeMeasureFrom(factTable, 0, dimensionAttributes);
+                dimensionTable = this._makeMeasureFrom(factTable, 0, dimensionSchema);
             }
             space.setDimensionTable(dimension, dimensionTable);
         };
@@ -173,17 +173,20 @@ class Cube{
      *
      * @param {object[]} factTable - Data array to the analysis of values for dimension
      * @param {number} startFrom
-     * @param {DimensionAttributes} dimension
+     * @param {DimensionSchema} dimensionSchema
      * @return {Member[]}
      * @private
      * */
-    _makeMeasureFrom(factTable, startFrom = 0, dimensionAttributes){
+    _makeMeasureFrom(factTable, startFrom = 0, dimensionSchema){
         const {
             dimension, //The dimension for which members will be created
+            dependency
+        } = dimensionSchema;
+
+        const {
             keyProps, //Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
             otherProps, //Names of properties whose values will be appended to the dimension member along with the key properties
-            dependency
-        } = dimensionAttributes;
+        } = this.schema.getDimensionProperties(dimension)
 
         // соотношение созданных id к ключам
         const cache = {};
@@ -285,10 +288,10 @@ class DynamicCube extends Cube{
         const space = new Space();
 
         // остальные измерения этого уровня
-        columns.forEach((dimensionAttributes)=>{
-            if (dimensionAttributes.dimension !== dimension){
-                if (!cellOptions[dimensionAttributes.dimension]){
-                    space.setDimensionTable(dimensionAttributes.dimension, this.space.getDimensionTable(dimensionAttributes.dimension))
+        columns.forEach((dimensionSchema)=>{
+            if (dimensionSchema.dimension !== dimension){
+                if (!cellOptions[dimensionSchema.dimension]){
+                    space.setDimensionTable(dimensionSchema.dimension, this.space.getDimensionTable(dimensionSchema.dimension))
                 }
             }
         });
@@ -431,10 +434,10 @@ class DynamicCube extends Cube{
                 delete data[ENTITY_ID];
             }
 
-            const handleDimension = dimensionAttributes => {
-                const idName = Cube.genericId(dimensionAttributes.dimension);
+            const handleDimension = dimensionSchema => {
+                const idName = Cube.genericId(dimensionSchema.dimension);
                 const idValue = cell[idName];
-                const member = this.space.getDimensionTable(dimensionAttributes.dimension).find( member => {
+                const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
                     return member[ENTITY_ID] === idValue;
                 });
                 const memberCopy = Object.assign({}, member);
@@ -527,11 +530,11 @@ class DynamicCube extends Cube{
             throw 'attribute \"dimension\" nor found';
         }
         const memberPropDefaultValue = null;
-        const dimensionAttributes = this.schema.getByName(dimension);
         const memberProps = Object.assign({}, props, {
             id: Cube.reduceId(this.space.getDimensionTable(dimension)),
         });
-        dimensionAttributes.keyProps.forEach( propName => {
+        const {keyProps} = this.schema.getDimensionProperties(dimension);
+        keyProps.forEach( propName => {
             memberProps[propName] = props.hasOwnProperty(propName) ? props[propName] : memberPropDefaultValue
         });
 

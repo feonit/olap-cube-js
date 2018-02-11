@@ -1,12 +1,12 @@
 import Schema from '../src/Schema.js';
-import DimensionAttributes from '../src/DimensionAttributes.js';
+import DimensionSchema from '../src/DimensionSchema.js';
 import Cell from '../src/Cell.js';
 
 describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
-            new DimensionAttributes({});
+            new DimensionSchema({});
         }).toThrow();
     });
 
@@ -14,14 +14,6 @@ describe('[ Schema work ]', function(){
         expect(() => {
             new Cell({});
         }).toThrow();
-    });
-
-
-    it('should return dimension', () => {
-        const mesurement = { dimension: 'boo', keyProps: ['prop'] };
-        const schema = new Schema(mesurement);
-        const res = schema.getByName('boo');
-        expect(res.dimension).toBe('boo');
     });
 
     it('should find dependent measurement', () => {

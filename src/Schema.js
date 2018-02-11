@@ -1,12 +1,27 @@
-import DimensionAttributes from "./DimensionAttributes.js";
+import DimensionSchema from "./DimensionSchema.js";
+import DimensionProperties from "./DimensionProperties.js";
+import Relation from "./Relation.js";
+import Hierarchy from "./Hierarchy.js";
 
 export default class Schema {
     constructor(schema){
-        this.schema = new DimensionAttributes(schema);
+        this.schema = new DimensionSchema(schema);
         if (schema.dependency && schema.dependency.length === 1){
             throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
         }
-        this._dimensionsResolutionOrder = this.getDimensionsResolutionOrder();
+        this._dimensionsResolutionOrder = [];
+        this._dimensionProperties = {};
+        this._schemaDimension = {};
+        this.hierarchy = new Hierarchy();
+
+        this._recursivelyWalk(this.schema, schema => {
+            this._addSchemaProps(schema);
+            this._addSchemaRelations(schema);
+            this._addSchemaDimension(schema);
+        });
+
+        const order = this.hierarchy.getResolutionOrder();
+        this._dimensionsResolutionOrder = order.map( dimension => this._schemaDimension[dimension] )
     }
     createIterator(){
         let i = 0;
@@ -23,43 +38,49 @@ export default class Schema {
             }
         }
     }
-    /**
-     * Take an ordered list of dimensions by dependency resolution
-     * @return {DimensionAttributes[]}
-     * */
-    getDimensionsResolutionOrder(){
-        if (this._dimensionsResolutionOrder){
-            return this._dimensionsResolutionOrder;
+    _addSchemaProps(schema){
+        const {keyProps, otherProps, dimension} = schema;
+        if (this._dimensionProperties[dimension]){
+            throw 'the properties of this dimension are already defined'
         }
-        const order = [];
-        if ( this.schema.dependency ){
-            const reqursively = dependency => {
-                dependency.forEach(schema => {
-                    if (schema.dependency){
-                        reqursively(schema.dependency)
-                    }
-                    order.push(schema);
-                })
-            };
-            reqursively(this.schema.dependency);
-        }
-        order.push(this.schema);
-        this._dimensionsResolutionOrder = order;
-        return order;
+        this._dimensionProperties[dimension] = new DimensionProperties({keyProps, otherProps})
+    }
+    _addSchemaRelations(schema){
+        const {dimension, dependency} = schema;
+        this.hierarchy.addRelation(dimension, dependency && dependency.map( schema => schema.dimension ))
+    }
+    _addSchemaDimension(schema){
+        this._schemaDimension[schema.dimension] = schema;
     }
     /**
-     * Get a dimension
-     * @return {DimensionAttributes}
-     * @throw
+     * @param {string} dimension
+     * @return {DimensionProperties|undefined}
      * */
-    getByName(dimension){
-        const find = this._dimensionsResolutionOrder.find(schema => {
-            return schema.dimension === dimension;
-        });
-        if (!find){
-            throw 'schema for dimension: \"${dimension}\" not found'
+    getDimensionProperties(dimension){
+        return this._dimensionProperties[dimension]
+    }
+    /**
+     * Take an ordered list of dimensions by dependency resolution
+     * */
+    getDimensionsResolutionOrder(){
+        return this._dimensionsResolutionOrder;
+    }
+    _addSchemaResolutionOrder(schema){
+        this._dimensionsResolutionOrder.push(schema);
+    }
+    /**
+     * Recursively walk
+     * */
+    _recursivelyWalk(schema, handler){
+        const {dependency} = schema;
+
+        handler(schema);
+
+        if (dependency){
+            dependency.forEach(schema => {
+                this._recursivelyWalk(schema, handler);
+            })
         }
-        return find;
     }
     /**
      * Get a dimension by its dependency
@@ -112,7 +133,7 @@ export default class Schema {
     }
     /**
      * List of all final dimensions forming count of measure
-     * @return {DimensionAttributes[]}
+     * @return {DimensionSchema[]}
      * */
     getFinal(){
         return this.schema.dependency;

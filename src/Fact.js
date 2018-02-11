@@ -1,4 +1,4 @@
-export default class Record {
+export default class Fact {
     constructor(data){
         Object.assign(this, data)
     }

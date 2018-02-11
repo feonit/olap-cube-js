@@ -1,7 +1,7 @@
 /**
  * Dimension attributes
  * */
-export default class DimensionAttributes {
+export default class DimensionSchema {
     constructor({ dimension, keyProps, dependency = null, otherProps = [] }){
 
         if (!dimension || !keyProps || !keyProps.length){
@@ -12,7 +12,7 @@ export default class DimensionAttributes {
         this.dimension = dimension;
 
         /** The list of dimensions with which the current dimension is directly related */
-        this.dependency = dependency && dependency.map( dependency => new DimensionAttributes(dependency) );
+        this.dependency = dependency && dependency.map( dependency => new DimensionSchema(dependency) );
 
         /** List of key names properties of the entity belonging to the current dimension */
         this.keyProps = keyProps;
