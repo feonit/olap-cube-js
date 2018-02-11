@@ -25,7 +25,7 @@ http://media.ls.urfu.ru/632/1734/4218/5290/
 
 arrayData - это https://en.wikipedia.org/wiki/Fact_table
 Fact_table содержит records
-normalizedData это Star schema https://en.wikipedia.org/wiki/Star_schema
+memberCombination это Star schema https://en.wikipedia.org/wiki/Star_schema
 
 
 Surrogate key https://en.wikipedia.org/wiki/Surrogate_key
@@ -57,3 +57,4 @@ Dimension Types пусть будет двух типов, то что обра�
 
 
 
+http://www.cfin.ru/itm/olap/glossary.shtml

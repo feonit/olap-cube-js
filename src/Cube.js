@@ -1,5 +1,5 @@
-import NormalizedData from './NormalizedData.js'
-import NormalizedDataNotSaved from './NormalizedDataNotSaved.js'
+import Cell from './Cell.js'
+import InputCell from './InputCell.js'
 import _ from './_.js';
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
@@ -9,6 +9,7 @@ import Space from './Space.js';
 import DimensionTable from './DimensionTable.js';
 import FactTable from './FactTable.js';
 import DetailMember from "./DetailMember.js";
+import FixSpace from "./FixSpace.js";
 
 /**
  * Base class for normalizing a denormalized data array
@@ -21,7 +22,7 @@ class Cube{
         const schema = new Schema(dimensionsSchema);
         Object.defineProperty(this, 'schema', { value: schema });
         Object.defineProperty(this, 'factTable', { value: new FactTable(factTable) });
-        this.normalizedDataArray = factTable.map( data => new NormalizedData(data) );
+        this.normalizedDataArray = factTable.map( data => new Cell(data) );
         this.space = this._getMembersGroupsByDimensionsFromSchema(factTable, this.schema.createIterator())
     }
     /**
@@ -30,10 +31,10 @@ class Cube{
      *
      * @public
      * @param {string} dimension - dimension from which the member will be found
-     * @param {object?} filterData - the composed aggregate object, members grouped by dimension names
+     * @param {object?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
      * @return {Member[]} returns members
      * */
-    unique(dimension, filterData){
+    unique(dimension, fixSpaceOptions){
         if (!dimension){
             throw new Error('first argument is required')
         }
@@ -41,13 +42,14 @@ class Cube{
         const idName = Cube.genericId(dimension);
         const result = [];
 
-        let data = this.normalizedDataArray;
+        let cells = this.normalizedDataArray;
 
-        if (filterData){
-            data = NormalizedData.filter(data, filterData)
+        if (fixSpaceOptions){
+            const fixSpace = new FixSpace(fixSpaceOptions);
+            cells = fixSpace.match(cells)
         }
 
-        const ids = data.map( data => data[idName]);
+        const ids = cells.map( cell => cell[idName]);
         const uniqueIds = _.uniq(ids);
 
         // filtering without loss of order in the array
@@ -422,16 +424,16 @@ class DynamicCube extends Cube{
     getRawDataArray(Constructor, forSave = false){
         const list = [];
 
-        this.normalizedDataArray.forEach( normalizedData => {
-            const data = Object.assign(new Constructor(), normalizedData);
+        this.normalizedDataArray.forEach( cell => {
+            const data = Object.assign(new Constructor(), cell);
 
-            if (forSave && (normalizedData instanceof NormalizedDataNotSaved)){
+            if (forSave && (cell instanceof InputCell)){
                 delete data[ENTITY_ID];
             }
 
             const handleDimension = dimensionAttributes => {
                 const idName = Cube.genericId(dimensionAttributes.dimension);
-                const idValue = normalizedData[idName];
+                const idValue = cell[idName];
                 const member = this.space.getDimensionTable(dimensionAttributes.dimension).find( member => {
                     return member[ENTITY_ID] === idValue;
                 });
@@ -483,7 +485,7 @@ class DynamicCube extends Cube{
         Object.keys(obj).forEach( key => {
             options[Cube.genericId(key)] = obj[key][ENTITY_ID]
         });
-        const newNormaliseData = new NormalizedDataNotSaved(options);
+        const newNormaliseData = new InputCell(options);
         this.normalizedDataArray.push(newNormaliseData);
     }
     /**
@@ -550,17 +552,6 @@ class DynamicCube extends Cube{
         };
         reqursive(dimension, memberOptions);
         return result;
-    }
-    /**
-     * Full size of cube
-     * */
-    _getSize(){
-        const columns = this.schema.getColumns();
-        const size = columns.reduce((accumulate, current)=>{
-            let unique = this.unique(current.dimension);
-            return accumulate * unique.length
-        }, 1);
-        return size
     }
 }
 

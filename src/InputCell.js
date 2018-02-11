@@ -1,4 +1,4 @@
-import NormalizedData from './NormalizedData.js'
+import Cell from './Cell.js'
 
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -7,7 +7,7 @@ function uuidv4() {
     });
 }
 
-export default class NormalizedDataNotSaved extends NormalizedData{
+export default class InputCell extends Cell{
     constructor(data, options){
         if (!data.id){
             data.id = uuidv4()

@@ -1,6 +1,6 @@
 import Schema from '../src/Schema.js';
 import DimensionAttributes from '../src/DimensionAttributes.js';
-import NormalizedData from '../src/NormalizedData.js';
+import Cell from '../src/Cell.js';
 
 describe('[ Schema work ]', function(){
 
@@ -12,7 +12,7 @@ describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema from factTable without id param', () => {
         expect(() => {
-            new NormalizedData({});
+            new Cell({});
         }).toThrow();
     });
 
