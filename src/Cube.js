@@ -30,17 +30,14 @@ class Cube{
      * or part of the members using a filter if they are in a hierarchy
      *
      * @public
-     * @param {string} dimension - dimension from which the member will be found
+     * @param {(string|null)?} dimension - dimension from which the member will be found
      * @param {object?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
      * @return {Member[]} returns members
      * */
     query(dimension, fixSpaceOptions){
-        if (!dimension){
-            throw new Error('first argument is required')
-        }
-        const members = this.space.getDimensionTable(dimension);
-        const idName = Cube.genericId(dimension);
-        const result = [];
+        // if (!dimension){
+        //     throw new Error('first argument is required')
+        // }
 
         let cells = this.normalizedDataArray;
 
@@ -49,8 +46,15 @@ class Cube{
             cells = fixSpace.match(cells)
         }
 
+        if (!dimension){
+            return cells;
+        }
+
+        const idName = Cube.genericId(dimension);
         const ids = cells.map( cell => cell[idName]);
         const uniqueIds = _.uniq(ids);
+        const result = [];
+        const members = this.space.getDimensionTable(dimension);
 
         // filtering without loss of order in the array
         members.forEach( member => {
