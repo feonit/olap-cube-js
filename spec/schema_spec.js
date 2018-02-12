@@ -1,12 +1,12 @@
 import Schema from '../src/Schema.js';
-import DimensionSchema from '../src/DimensionSchema.js';
+import SchemaDimension from '../src/SchemaDimension.js';
 import Cell from '../src/Cell.js';
 
 describe('[ Schema work ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {
-            new DimensionSchema({});
+            new SchemaDimension({});
         }).toThrow();
     });
 

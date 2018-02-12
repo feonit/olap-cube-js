@@ -173,7 +173,7 @@ class Cube{
      *
      * @param {object[]} factTable - Data array to the analysis of values for dimension
      * @param {number} startFrom
-     * @param {DimensionSchema} dimensionSchema
+     * @param {SchemaDimension} dimensionSchema
      * @return {Member[]}
      * @private
      * */

@@ -1,11 +1,14 @@
-import DimensionSchema from "./DimensionSchema.js";
+import SchemaDimension from "./SchemaDimension.js";
 import DimensionProperties from "./DimensionProperties.js";
 import Relation from "./Relation.js";
 import Hierarchy from "./Hierarchy.js";
 
+/**
+ * It defines the relationship of generalization and specialization (roll-up/drill-down)
+ * */
 export default class Schema {
     constructor(schema){
-        this.schema = new DimensionSchema(schema);
+        this.schema = new SchemaDimension(schema);
         if (schema.dependency && schema.dependency.length === 1){
             throw Error('такая схема не поддерживается пока что') //todo переписать getDependencyNames
         }
@@ -46,7 +49,11 @@ export default class Schema {
         this._dimensionProperties[dimension] = new DimensionProperties({keyProps, otherProps})
     }
     _addSchemaRelations(schema){
-        const {dimension, dependency} = schema;
+        let {dimension, dependency} = schema;
+        // todo: make new default for dependency = []
+        if (!dependency){
+            dependency = []
+        }
         this.hierarchy.addRelation(dimension, dependency && dependency.map( schema => schema.dimension ))
     }
     _addSchemaDimension(schema){
@@ -133,7 +140,7 @@ export default class Schema {
     }
     /**
      * List of all final dimensions forming count of measure
-     * @return {DimensionSchema[]}
+     * @return {SchemaDimension[]}
      * */
     getFinal(){
         return this.schema.dependency;
