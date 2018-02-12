@@ -125,7 +125,7 @@ cube.getDataArray()
 How to take normal data:
 
 ```javascript
-cube.unique('prices')
+cube.query('prices')
 ```
 
 ```js
@@ -139,7 +139,7 @@ cube.unique('prices')
 or for dependent
 ```javascript
 let city = { id: 3 /** city: "Moscow"*/ }; // other parameters are optional
-cube.unique('prices', { 'cities': city })
+cube.query('prices', { 'cities': city })
 ```
 
 ```js

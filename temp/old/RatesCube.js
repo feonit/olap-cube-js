@@ -111,16 +111,16 @@ angular.module('RatesCube', ['Cube'])
                 this.addColumn('initialCollateral', {}, { currencies: currency, variations: variation, amounts: amount } )
             }
             removePeriod(period){
-                this.removeSubModelDepend('periods', period, ['rates']);
+                this.removeMember('periods', period, ['rates']);
             }
             removeCurrency(currency){
-                this.removeSubModelDepend('currencies', currency, ['variations', 'initialCollateral', 'amounts', 'rates']);
+                this.removeMember('currencies', currency, ['variations', 'initialCollateral', 'amounts', 'rates']);
             }
             removeAmount(amount){
-                this.removeSubModelDepend('amounts', amount, ['initialCollateral', 'rates']);
+                this.removeMember('amounts', amount, ['initialCollateral', 'rates']);
             }
             removeInitialCollateral(initialCollateral){
-                this.removeSubModelDepend('initialCollateral', initialCollateral, ['rates'])
+                this.removeMember('initialCollateral', initialCollateral, ['rates'])
             }
             /**
              * Проверка, появились ли битые данные

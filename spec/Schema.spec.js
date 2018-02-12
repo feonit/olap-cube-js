@@ -2,7 +2,7 @@ import Schema from '../src/Schema.js';
 import SchemaDimension from '../src/SchemaDimension.js';
 import Cell from '../src/Cell.js';
 
-describe('[ Schema work ]', function(){
+describe('[ Schema ]', function(){
 
     it('throws when trying to create bad schema', () => {
         expect(() => {

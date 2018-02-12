@@ -291,7 +291,7 @@ angular.module('Cube', [])
                         this.measurements[name].splice(index, 1);
                     })
                 }
-                removeSubModelDepend(subModelName, subModel, dependencies){
+                removeMember(subModelName, subModel, dependencies){
                     // подчистить суб-модельку
                     const index = this.measurements[subModelName].indexOf(subModel);
                     if (index === -1){

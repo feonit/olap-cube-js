@@ -13,7 +13,7 @@ import FixSpace from "./FixSpace.js";
 
 /**
  * Base class for normalizing a denormalized data array
- * and analyzing unique values according to a given scheme
+ * and analyzing query according to a given scheme
  *
  * @param {object[]} factTable - facts which will be subject to analysis
  * */
@@ -34,7 +34,7 @@ class Cube{
      * @param {object?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
      * @return {Member[]} returns members
      * */
-    unique(dimension, fixSpaceOptions){
+    query(dimension, fixSpaceOptions){
         if (!dimension){
             throw new Error('first argument is required')
         }
@@ -311,10 +311,10 @@ class DynamicCube extends Cube{
                     cellOptions[dimensionNames[index]] = member;
                     let dependency = this.schema.getByDependency(dimensionNames[index]);
                     if (dependency){
-                        const uniqueOptions = { [dimensionNames[index]]: member };
-                        const unique = this.unique(dependency.dimension, uniqueOptions);
+                        const queryOptions = { [dimensionNames[index]]: member };
+                        const query = this.query(dependency.dimension, queryOptions);
                         const space = new Space();
-                        space.setDimensionTable(dependency.dimension, unique);
+                        space.setDimensionTable(dependency.dimension, query);
 
                         recursivelyForEach(cellOptions, space, 0, true);
                     }
@@ -344,7 +344,7 @@ class DynamicCube extends Cube{
      * @param {Member} member - the member will be removed
      * @public
      * */
-    removeSubModelDepend(dimension, member){
+    removeMember(dimension, member){
         const dependenciesDimensionNames = this.schema.getDependenciesNames(dimension);
         const index = this.space.getDimensionTable(dimension).indexOf(member);
         if (index === -1){
@@ -467,7 +467,7 @@ class DynamicCube extends Cube{
         const combinations = this._getCombinations();
         const emptyMemberOptions = [];
         combinations.forEach( combination => {
-            const unique = this.unique(measureName, combination );
+            const unique = this.query(measureName, combination );
             if ( !unique.length ){
                 emptyMemberOptions.push( combination );
             }
