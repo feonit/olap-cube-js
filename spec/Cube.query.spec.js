@@ -121,12 +121,21 @@ describe('[ Cube Edit ][ query ]', () => {
         expect(cube.query('year').length).toBe(4);
         expect(cube.query('qr').length).toBe(11);
         expect(cube.query('month').length).toBe(13);
-        // expect(cube.query('qr', { year: { id: cube.getIdOf('year', '2018') } } ).length).toBe(3);
-        // debugger;
-        // expect(cube.query().length).toBe(15);
-        // debugger;
-        // expect(cube.query({ product: 'TV' }).length).toBe(5);
-        // expect(cube.query({ year: '2017' }).length).toBe(4);
-        // expect(cube.query({ product: 'mark', year: 'samsung' }).length).toBe(4);
+
+        expect(cube.query('mark', { product: { id: 1 } }).length).toBe(2);
+        expect(cube.query('mark', { product: { id: 1 }, year: { id: 1 } }).length).toBe(1);
+
+        expect(cube.query('money').length).toBe(15);
+        expect(cube.query('money', { mark: {id: 1} }).length).toBe(3);
+
+        expect(cube.query().length).toBe(15);
+        expect(cube.query(null).length).toBe(15);
+
+        expect(cube.query(null, { mark: { id: 1} }).length).toBe(3);
+        expect(cube.query({ mark: { id: 1 } }).length).toBe(3);
+        expect(cube.query({ mark: [{ id: 1 }, { id: 2 }] }).length).toBe(7);
+        expect(cube.query({ mark: 'sony' }).length).toBe(3);
+        expect(cube.query({ mark: 'samsung' }).length).toBe(4);
+
     })
 });

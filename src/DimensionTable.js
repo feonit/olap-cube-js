@@ -3,4 +3,7 @@ export default class DimensionTable extends Array {
         super();
         Object.assign(this, array)
     }
+    filter(){
+        return [].filter.apply(this, arguments);
+    }
 }

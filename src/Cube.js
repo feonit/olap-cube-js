@@ -30,39 +30,76 @@ class Cube{
      * or part of the members using a filter if they are in a hierarchy
      *
      * @public
-     * @param {(string|null)?} dimension - dimension from which the member will be found
+     * @param {(string|null|object)?} dimension - dimension from which the member will be found
      * @param {object?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
      * @return {Member[]} returns members
      * */
     query(dimension, fixSpaceOptions){
-        // if (!dimension){
-        //     throw new Error('first argument is required')
-        // }
+        const args = [].slice.call(arguments);
+        if (args.length > 0 && args[0]){
+            if (typeof args[0] === "object"){
+                fixSpaceOptions = args[0];
+                dimension = null;
+            }
+        }
 
         let cells = this.normalizedDataArray;
 
         if (fixSpaceOptions){
+            fixSpaceOptions = this._normalizeQuery(fixSpaceOptions);
             const fixSpace = new FixSpace(fixSpaceOptions);
             cells = fixSpace.match(cells)
         }
 
         if (!dimension){
             return cells;
+        } else {
+            const idName = Cube.genericId(dimension);
+            const ids = cells.map( cell => cell[idName]);
+            const uniqueIds = _.uniq(ids);
+            const result = [];
+            const members = this.space.getDimensionTable(dimension);
+
+            // filtering without loss of order in the array
+            members.forEach( member => {
+                if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
+                    result.push(member)
+                }
+            });
+            return result;
         }
+    }
+    // todo fixSpaceOptions object with normalize
+    _normalizeQuery(fixSpaceOptions){
+        const copy = JSON.parse(JSON.stringify(fixSpaceOptions));
+        Object.keys(copy).forEach((dimenstion)=>{
+            const arg = copy[dimenstion];
 
-        const idName = Cube.genericId(dimension);
-        const ids = cells.map( cell => cell[idName]);
-        const uniqueIds = _.uniq(ids);
-        const result = [];
-        const members = this.space.getDimensionTable(dimension);
+            const find = (dimenstion, arg) => {
+                const dimensionTable = this.space.getDimensionTable(dimenstion);
+                const founded = dimensionTable.filter( member => {
+                    return Object.keys(member).find((key)=>{
+                        return key !== ENTITY_ID && member[key] === arg;
+                    });
+                });
+                return founded;
+            };
 
-        // filtering without loss of order in the array
-        members.forEach( member => {
-            if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
-                result.push(member)
+            if (typeof arg === "string"){
+                copy[dimenstion] = find(dimenstion, arg) || [];
+            } else {
+                if (Array.isArray(arg) && arg.length && typeof arg[0] === "string"){
+                    copy[dimenstion] = [];
+                    arg.map((dimenstion)=>{
+                        const found = find(arg);
+                        if (found){
+                            [].splice.apply(copy[dimenstion], copy[dimenstion].length, 0, found)
+                        }
+                    })
+                }
             }
         });
-        return result;
+        return copy;
     }
     /**
      * @param {object[]} factTable - Data array to the analysis of values for dimension
