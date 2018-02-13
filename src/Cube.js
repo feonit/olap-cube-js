@@ -75,11 +75,11 @@ class Cube{
         Object.keys(copy).forEach((dimenstion)=>{
             const arg = copy[dimenstion];
 
-            const find = (dimenstion, arg) => {
+            const find = (dimenstion, value) => {
                 const dimensionTable = this.space.getDimensionTable(dimenstion);
                 const founded = dimensionTable.filter( member => {
                     return Object.keys(member).find((key)=>{
-                        return key !== ENTITY_ID && member[key] === arg;
+                        return key !== ENTITY_ID && member[key] === value;
                     });
                 });
                 return founded;
@@ -90,10 +90,10 @@ class Cube{
             } else {
                 if (Array.isArray(arg) && arg.length && typeof arg[0] === "string"){
                     copy[dimenstion] = [];
-                    arg.map((dimenstion)=>{
-                        const found = find(arg);
+                    arg.map( value => {
+                        const found = find(dimenstion, value);
                         if (found){
-                            [].splice.apply(copy[dimenstion], copy[dimenstion].length, 0, found)
+                            [].splice.apply(copy[dimenstion], [copy[dimenstion].length, 0].concat(found))
                         }
                     })
                 }
