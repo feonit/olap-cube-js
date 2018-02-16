@@ -289,6 +289,46 @@ class Cube{
 
         return mesure;
     }
+    getDataArray(options = Object){
+        return this.getRawDataArray(this.normalizedDataArray, options, true)
+    }
+    /**
+     *
+     * @public
+     * */
+    getRawDataArray(cells, Constructor = Object, forSave = false){
+        const list = [];
+
+        cells.forEach( cell => {
+            const data = Object.assign(new Constructor(), cell);
+
+            if (forSave && (cell instanceof InputCell)){
+                delete data[ENTITY_ID];
+            }
+
+            const handleDimension = dimensionSchema => {
+                const idName = Cube.genericId(dimensionSchema.dimension);
+                const idValue = cell[idName];
+                const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
+                    return member[ENTITY_ID] === idValue;
+                });
+                const memberCopy = Object.assign({}, member);
+                delete memberCopy[ENTITY_ID];
+                delete data[idName];
+                Object.assign(data, memberCopy);
+            };
+
+            const iterator = this.schema.createIterator();
+            let next;
+            while ( !(next = iterator.next()) || !next.done){
+                handleDimension(next.value)
+            }
+
+            list.push(data);
+        });
+
+        return list;
+    }
     /**
      * A way to create a name for a property in which a unique identifier will be stored
      * */
@@ -458,46 +498,6 @@ class DynamicCube extends Cube{
      *
      * @public
      * */
-    getDataArray(options = Object){
-        return this.getRawDataArray(options, true)
-    }
-    /**
-     *
-     * @public
-     * */
-    getRawDataArray(Constructor, forSave = false){
-        const list = [];
-
-        this.normalizedDataArray.forEach( cell => {
-            const data = Object.assign(new Constructor(), cell);
-
-            if (forSave && (cell instanceof InputCell)){
-                delete data[ENTITY_ID];
-            }
-
-            const handleDimension = dimensionSchema => {
-                const idName = Cube.genericId(dimensionSchema.dimension);
-                const idValue = cell[idName];
-                const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
-                    return member[ENTITY_ID] === idValue;
-                });
-                const memberCopy = Object.assign({}, member);
-                delete memberCopy[ENTITY_ID];
-                delete data[idName];
-                Object.assign(data, memberCopy);
-            };
-
-            const iterator = this.schema.createIterator();
-            let next;
-            while ( !(next = iterator.next()) || !next.done){
-                handleDimension(next.value)
-            }
-
-            list.push(data);
-        });
-
-        return list;
-    }
     /**
      * Filling method for full size of cube
      * @param {object?} props - properties for empty cells
