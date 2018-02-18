@@ -1,6 +1,6 @@
 import Space from './Space.js'
 import {ENTITY_ID} from "./const.js";
-import Cube from "./Cube.js";
+import Cell from "./Cell.js";
 
 /**
  * Space with fixed dimensions values
@@ -26,12 +26,12 @@ export default class FixSpace extends Space {
     match(cells){
         let filtered = [].concat(cells);
         this.getDimensionList().forEach( dimension => {
-            const idName = Cube.genericId(dimension);
+            const idAttribute = Cell.genericId(dimension);
             const members = this.getDimensionTable(dimension);
             const totalPart = [];
             members.forEach( member => {
                 const memberId = member[ENTITY_ID];
-                const result = filtered.filter( cell => cell[idName] == memberId );
+                const result = filtered.filter( cell => cell[idAttribute] == memberId );
                 const args = [totalPart.length, 0].concat(result);
                 [].splice.apply(totalPart, args);
             });

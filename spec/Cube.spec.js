@@ -1,4 +1,5 @@
 import Cube from '../src/Cube.js';
+import Cell from '../src/Cell.js';
 import '../node_modules/lodash/lodash.js';
 
 function jsonParseStringify(data){
@@ -34,7 +35,7 @@ const etalon = {
             { id: 5, planesCount: 2 },
         ]
     },
-    normalizedDataArray: [
+    cellTable: [
         { id: 1, cities_id: 1, companies_id: 1, age_id: 1, prices_id: 1, counts_id: 1 },
         { id: 2, cities_id: 2, companies_id: 2, age_id: 2, prices_id: 2, counts_id: 3 },
         { id: 3, cities_id: 2, companies_id: 1, age_id: 2, prices_id: 2, counts_id: 2 },
@@ -101,7 +102,7 @@ describe('[ Cube Instance ]', function(){
 
 describe('[ Cube Static ]', function(){
     it('generation unique entity ID name', () => {
-        expect(Cube.genericId('entity')).toBe('entity_id')
+        expect(Cell.genericId('entity')).toBe('entity_id')
     });
 
     it('generation unique entity ID from exist entities if they have empty list', () => {

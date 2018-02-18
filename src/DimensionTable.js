@@ -1,9 +1,25 @@
+import {ENTITY_ID} from "./const.js";
+
+/**
+ * */
 export default class DimensionTable extends Array {
     constructor(array){
         super();
-        Object.assign(this, array)
+        if (Array.isArray(array)){
+            Object.assign(this, array)
+        }
     }
     filter(){
         return [].filter.apply(this, arguments);
+    }
+    /**
+     * search members for all properties by some value
+     * */
+    search(value){
+        return this.filter( member => {
+            return Object.keys(member).find((key)=>{
+                return key !== ENTITY_ID && member[key] === value;
+            });
+        });
     }
 }

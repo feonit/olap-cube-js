@@ -12,4 +12,21 @@ export default class Cell {
             throw "data must have id parameter"
         }
     }
+    deleteProps(props){
+        props.forEach( prop => {
+            if ( prop !== ENTITY_ID ){
+                delete this[prop];
+            }
+        });
+    }
+    addIdAttribute(value, substring){
+        const idAttribute = Cell.genericId(substring);
+        this[idAttribute] = value;
+    }
+    /**
+     * A way to create a name for a property in which a unique identifier will be stored
+     * */
+    static genericId(entityName) {
+        return entityName + '_' + ENTITY_ID;
+    }
 }

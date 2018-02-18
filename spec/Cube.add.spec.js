@@ -30,7 +30,7 @@ describe('[ Cube Edit ][ add ]', () => {
         let cube = new Cube(factTable, schema);
 
         const ealon = {
-            "normalizedDataArray":[
+            "cellTable":[
                 {"id":1,"coordinateY_id":1,"coordinateX_id":1,"valueOfXY_id":1},
                 {"id":2,"coordinateY_id":2,"coordinateX_id":1,"valueOfXY_id":2},
                 {"id":3,"coordinateY_id":1,"coordinateX_id":2,"valueOfXY_id":3},
@@ -58,11 +58,11 @@ describe('[ Cube Edit ][ add ]', () => {
 
         cube.addMember('coordinateX', { x: 2 });
 
-        cube.normalizedDataArray[4].id = null;
-        cube.normalizedDataArray[5].id = null;
+        cube.cellTable[4].id = null;
+        cube.cellTable[5].id = null;
 
         const ealonAfterAdding = {
-            "normalizedDataArray":[
+            "cellTable":[
                 {"id":1,"coordinateY_id":1,"coordinateX_id":1,"valueOfXY_id":1},
                 {"id":2,"coordinateY_id":2,"coordinateX_id":1,"valueOfXY_id":2},
                 {"id":3,"coordinateY_id":1,"coordinateX_id":2,"valueOfXY_id":3},
