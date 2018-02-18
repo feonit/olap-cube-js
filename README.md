@@ -13,11 +13,14 @@
 - Mathematical model
 
 [1]: https://en.wikipedia.org/wiki/Star_schema
+[2]: https://en.wikipedia.org/wiki/Fact_table
+[3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
+
 ## Support:
 - Multidimensionality
 - Multilevel hierarchy
-- One fact table
-- One hierarchy for one dimension
+- One [fact table][2]
+- One hierarchy for one [dimension][3]
 - The ability to edit data
 - Operations: slice, consolidation
 - OLAP data is typically stored in a [star schema][1] 

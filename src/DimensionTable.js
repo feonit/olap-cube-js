@@ -22,4 +22,11 @@ export default class DimensionTable extends Array {
             });
         });
     }
+    add(member){
+        if (this.indexOf(member[ENTITY_ID] === -1)){
+            this.push(member)
+        } else {
+            debugger;
+        }
+    }
 }

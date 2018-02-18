@@ -11,6 +11,7 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import CellTable from "./CellTable.js";
 import Cell from "./Cell.js";
+import TupleTable from "./TupleTable.js";
 
 /**
  * Base class for normalizing a denormalized data array
@@ -19,10 +20,11 @@ import Cell from "./Cell.js";
  * @param {object[]} factTable - facts which will be subject to analysis
  * */
 class Cube{
-    constructor(factTable, dimensionsSchema){
+    constructor(facts, dimensionsSchema){
         const schema = new Schema(dimensionsSchema);
+        const factTable = new FactTable(facts);
         Object.defineProperty(this, 'schema', { value: schema });
-        Object.defineProperty(this, 'factTable', { value: new FactTable(factTable) });
+        Object.defineProperty(this, 'factTable', { value: factTable });
         this._init(factTable, schema)
     }
     /**
@@ -85,6 +87,11 @@ class Cube{
 
         const handleDimension = (dimensionSchema) => {
             const {dimension, dependency} = dimensionSchema;
+            const {
+                keyProps,
+                otherProps,
+            } = schema.getDimensionProperties(dimension);
+
             let dimensionTable;
 
             if (dependency){
@@ -152,26 +159,26 @@ class Cube{
                     });
                 }
 
+                // затем меры объединяем, таким образум образуя срез
+                let totalDimensionTable = new DimensionTable();
+
                 // для каждого подмножества определим свои меры
                 let countId = 0;
-                const measures = entitiesParts.map( entitiesPart => {
-                    const measure = this._makeMeasureFrom(entitiesPart, countId, dimensionSchema, schema, cellTable);
-                    countId = countId + measure.length;
-                    return measure;
+                entitiesParts.forEach( entitiesPart => {
+                    if (entitiesPart.length){
+                        const dimensionTable = this._makeDimensionTableFrom(entitiesPart, countId, dimension, keyProps, otherProps, cellTable);
+                        countId = countId + dimensionTable.length;
+
+                        dimensionTable.forEach( member => {
+                            member[ENTITY_ID] = totalDimensionTable.length + 1;
+                            totalDimensionTable.add(member)
+                        });
+                    }
                 });
 
-                // затем меры объединяем, таким образум образуя срез
-                let total = [];
-                measures.forEach( measure => {
-                    total = total.concat(measure);
-                });
-                const totalUniq = _.uniq(total, (item)=>{
-                    return item[ENTITY_ID]
-                });
-
-                dimensionTable = new DimensionTable(totalUniq);
+                dimensionTable = totalDimensionTable;
             } else {
-                dimensionTable = this._makeMeasureFrom(factTable, 0, dimensionSchema, schema, cellTable);
+                dimensionTable = this._makeDimensionTableFrom(factTable, 0, dimension, keyProps, otherProps, cellTable);
             }
             space.setDimensionTable(dimension, dimensionTable);
         };
@@ -188,44 +195,30 @@ class Cube{
      *
      * @param {object[]} factTable - Data array to the analysis of values for dimension
      * @param {number} startFrom
-     * @param {SchemaDimension} dimensionSchema
+     * @param {string} dimension - The dimension for which members will be created
+     * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
+     * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
      * @return {DimensionTable}
      * @private
      * */
-    _makeMeasureFrom(factTable, startFrom = 0, dimensionSchema, schema, cellTable){
-        const {
-            dimension, //The dimension for which members will be created
-            dependency
-        } = dimensionSchema;
-
-        const {
-            keyProps, //Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
-            otherProps, //Names of properties whose values will be appended to the dimension member along with the key properties
-        } = schema.getDimensionProperties(dimension);
-
+    _makeDimensionTableFrom(factTable, startFrom = 0, dimension, keyProps, otherProps, cellTable){
         // соотношение созданных id к ключам
         const cache = {};
-        const DIVIDER = ',';
-        const mesure = new DimensionTable();
+        const dimensionTable = new DimensionTable();
+        // полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
+        const totalProps = [].concat(keyProps, otherProps);
 
         // создания групп по уникальным ключам
         factTable.forEach( fact => {
 
             // собрать ключ на основе ключевых значений
-            const key = keyProps.map( prop => {
-                return fact[prop]
-            }).join(DIVIDER);
-
-            // полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
-            const totalProps = [].concat(keyProps, otherProps);
+            const surrogateKey = fact.createKeyFromProps(keyProps);
 
             // если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-            if (! (key in cache) ){
-                const memberId = cache[key] = ++startFrom;
-
-                const member = new Member(memberId, totalProps, fact);
-
-                mesure.push(member);
+            if (! (surrogateKey in cache) ){
+                const id = cache[surrogateKey] = ++startFrom;
+                const member = new Member(id, totalProps, fact);
+                dimensionTable.push(member);
             }
 
             const id = fact[ENTITY_ID];
@@ -237,12 +230,11 @@ class Cube{
             cell.deleteProps(totalProps);
 
             // оставить в нормальной форме ссылку на id под сущности
-            const value = cache[key];
+            const value = cache[surrogateKey];
             cell.addIdAttribute(value, dimension);
-            return key;
         });
 
-        return mesure;
+        return dimensionTable;
     }
 
     getDataArray(options = Object){
@@ -443,7 +435,7 @@ class DynamicCube extends Cube{
      * */
     fill(props){
         const measureName = this.schema.getMeasure().dimension;
-        const combinations = this._getCombinations();
+        const combinations = this._createTupleTable();
         const emptyMemberOptions = [];
         combinations.forEach( combination => {
             const unique = this.query(measureName, combination );
@@ -474,10 +466,10 @@ class DynamicCube extends Cube{
      *
      * @private
      * */
-    _getCombinations(){
-        const combination = [];
+    _createTupleTable(){
+        const tupleTable = new TupleTable();
         const callback = (item) => {
-            combination.push(item)
+            tupleTable.add(item)
         };
         const finalDimensions = this.schema.getFinal();
         const dimensionsMembers = {};
@@ -497,7 +489,7 @@ class DynamicCube extends Cube{
 
         reqursively(dimensionsMembers, 0);
 
-        return combination;
+        return tupleTable;
     }
     /**
      * @param {string} dimension
