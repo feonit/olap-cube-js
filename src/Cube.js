@@ -25,7 +25,13 @@ class Cube{
         const factTable = new FactTable(facts);
         Object.defineProperty(this, 'schema', { value: schema });
         Object.defineProperty(this, 'factTable', { value: factTable });
-        this._init(factTable, schema)
+        /**
+         * is a special case of snowflake schema
+         * where every dimension is represented by one table even if the dimensions has multiple levels
+         * */
+        this.space = null;
+        this.cellTable = null;
+        this._init(factTable, schema);
     }
     /**
      * A method that allows you to find all members of a specified dimension
@@ -55,9 +61,7 @@ class Cube{
         }
 
         if (!dimension){
-            const rowData = this.getRawDataArray(cells);
-            const factTable = new FactTable(rowData);
-            return factTable;
+            return this.getDataArray(cells, true);
         } else {
             const idAttribute = Cell.genericId(dimension);
             const ids = cells.map( cell => cell[idAttribute]);
@@ -236,34 +240,27 @@ class Cube{
 
         return dimensionTable;
     }
-
-    getDataArray(options = Object){
-        return this.getRawDataArray(this.cellTable, options, true)
-    }
     /**
      *
      * @public
      * */
-    getRawDataArray(cells, Constructor = Object, forSave = false){
-        const list = [];
-
+    getDataArray(cells = this.cellTable){
+        const factTable = new FactTable();
         cells.forEach( cell => {
-            const data = Object.assign(new Constructor(), cell);
+            factTable.push(Object.assign({}, cell))
+        });
 
-            if (forSave && (cell instanceof InputCell)){
-                delete data[ENTITY_ID];
-            }
-
+        factTable.forEach( fact => {
             const handleDimension = dimensionSchema => {
                 const idAttribute = Cell.genericId(dimensionSchema.dimension);
-                const idValue = cell[idAttribute];
+                const idValue = fact[idAttribute];
                 const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
                     return member[ENTITY_ID] === idValue;
                 });
                 const memberCopy = Object.assign({}, member);
                 delete memberCopy[ENTITY_ID];
-                delete data[idAttribute];
-                Object.assign(data, memberCopy);
+                delete fact[idAttribute];
+                Object.assign(fact, memberCopy);
             };
 
             const iterator = this.schema.createIterator();
@@ -271,11 +268,9 @@ class Cube{
             while ( !(next = iterator.next()) || !next.done){
                 handleDimension(next.value)
             }
-
-            list.push(data);
         });
 
-        return list;
+        return factTable;
     }
 }
 
@@ -376,6 +371,20 @@ class DynamicCube extends Cube{
             });
         });
         this._normalize();
+    }
+    /**
+     * Get data without random identifiers
+     * */
+    getDataArray(cells = this.cellTable, forSave = true){
+        const data = super.getDataArray(cells);
+        if (forSave){
+            data.forEach( (data, index) => {
+                if (cells[index] instanceof InputCell){
+                    delete data[ENTITY_ID];
+                }
+            })
+        }
+        return data;
     }
     /**
      * Remove subentity, links to which none of the model does not remain
