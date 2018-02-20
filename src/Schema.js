@@ -1,12 +1,18 @@
 import SchemaDimension from "./SchemaDimension.js";
 import DimensionProperties from "./DimensionProperties.js";
-import Relation from "./Relation.js";
 import Hierarchy from "./Hierarchy.js";
+
+export class DimensionException extends Error {
+    constructor(dimension){
+        super(`For the name "${dimension}" the dimension is already set`)
+    }
+}
 
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
+ * @throws {DimensionException}
  * */
-export default class Schema {
+export class Schema {
     constructor(schema){
         this.schema = new SchemaDimension(schema);
         if (schema.dependency && schema.dependency.length === 1){
@@ -18,9 +24,14 @@ export default class Schema {
         this.hierarchy = new Hierarchy();
 
         this._recursivelyWalk(this.schema, schema => {
-            this._addSchemaProps(schema);
-            this._addSchemaRelations(schema);
-            this._addSchemaDimension(schema);
+            const {dimension} = schema;
+            if ( !this._schemaDimension[dimension] ){
+                this._addSchemaDimension(schema);
+                this._addSchemaProps(schema);
+                this._addSchemaRelations(schema);
+            } else {
+                throw new DimensionException(dimension)
+            }
         });
 
         const order = this.hierarchy.getResolutionOrder();
@@ -43,9 +54,6 @@ export default class Schema {
     }
     _addSchemaProps(schema){
         const {keyProps, otherProps, dimension} = schema;
-        if (this._dimensionProperties[dimension]){
-            throw 'the properties of this dimension are already defined'
-        }
         this._dimensionProperties[dimension] = new DimensionProperties({keyProps, otherProps})
     }
     _addSchemaRelations(schema){
@@ -57,7 +65,12 @@ export default class Schema {
         this.hierarchy.addRelation(dimension, dependency && dependency.map( schema => schema.dimension ))
     }
     _addSchemaDimension(schema){
-        this._schemaDimension[schema.dimension] = schema;
+        const {dimension} = schema;
+        if ( !this._schemaDimension[dimension] ){
+            this._schemaDimension[dimension] = schema;
+        } else {
+            throw new DimensionException(dimension)
+        }
     }
     /**
      * @param {string} dimension
