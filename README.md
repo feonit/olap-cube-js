@@ -7,6 +7,9 @@
 [![Build Status](https://travis-ci.org/feonit/olap-cube.svg?branch=master)](https://travis-ci.org/feonit/olap-cube)
 [![codecov](https://codecov.io/gh/feonit/olap-cube/branch/master/graph/badge.svg)](https://codecov.io/gh/feonit/olap-cube)
 
+The simplest data analysis tools written in javascript.
+
+This solution is a means for extracting and replenishing data, which together with your data storage means and a means of providing aggregate data, is intended for decision making.
 
 ## Principles:
 - Any object analysis
@@ -15,15 +18,16 @@
 [1]: https://en.wikipedia.org/wiki/Star_schema
 [2]: https://en.wikipedia.org/wiki/Fact_table
 [3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
+[4]: https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.abx.cub.doc/abx-c-cube-balancedandunbalancedhierarchies.html
 
 ## Support:
-- Multidimensionality
-- Multilevel hierarchy
+- Multidimensional conceptual data representation
+- [Balanced][4] hierarchies
+- Multi-level hierarchies
+- Multiple hierarchies. One hierarchy for one [dimension][3] 
 - One [fact table][2]
-- One hierarchy for one [dimension][3]
-- The ability to edit data
-- Operations: slice, consolidation
 - OLAP data is typically stored in a [star schema][1] 
+- The ability to edit data
 
 ## Quick Start
 How Cube is work?

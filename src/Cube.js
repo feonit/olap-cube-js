@@ -3,7 +3,7 @@ import _ from './_.js';
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
 import InputMember from './InputMember.js';
-import Schema from './Schema.js';
+import {Schema} from './Schema.js';
 import Space from './Space.js';
 import DimensionTable from './DimensionTable.js';
 import FactTable from './FactTable.js';
@@ -14,6 +14,8 @@ import Cell from "./Cell.js";
 import TupleTable from "./TupleTable.js";
 
 /**
+ * It a means to retrieve data
+ *
  * Base class for normalizing a denormalized data array
  * and analyzing query according to a given scheme
  *
@@ -275,6 +277,8 @@ class Cube{
 }
 
 /**
+ * Is a means of replenishing data
+ *
  * A helper class that provides methods for adding and removing values,
  * as well as generating missing values for possible display of data
  * */
