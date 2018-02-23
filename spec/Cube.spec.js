@@ -102,7 +102,7 @@ describe('[ Cube Instance ]', function(){
 
 describe('[ Cube Static ]', function(){
     it('generation unique entity ID name', () => {
-        expect(Cell.genericId('entity')).toBe('entity_id')
+        expect(Cube.genericId('entity')).toBe('entity_id')
     });
 
     it('generation unique entity ID from exist entities if they have empty list', () => {

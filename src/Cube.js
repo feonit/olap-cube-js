@@ -10,7 +10,6 @@ import FactTable from './FactTable.js';
 import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import CellTable from "./CellTable.js";
-import Cell from "./Cell.js";
 import TupleTable from "./TupleTable.js";
 
 /**
@@ -65,7 +64,7 @@ class Cube{
         if (!dimension){
             return this.getDataArray(cells, true);
         } else {
-            const idAttribute = Cell.genericId(dimension);
+            const idAttribute = Cube.genericId(dimension);
             const ids = cells.map( cell => cell[idAttribute]);
             const uniqueIds = _.uniq(ids);
             const result = [];
@@ -91,107 +90,22 @@ class Cube{
         const iterator = schema.createIterator();
         const cellTable = this.cellTable = new CellTable(factTable);
 
-        const handleDimension = (dimensionSchema) => {
-            const {dimension, dependency} = dimensionSchema;
-            const {
-                keyProps,
-                otherProps,
-            } = schema.getDimensionProperties(dimension);
+        let next;
+        while ( !(next = iterator.next()) || !next.done){
+            const isRoot = schema.isRoot(next.value);
+            const {dimension, dependency} = next.value;
+            const { keyProps, otherProps } = schema.getDimensionProperties(dimension);
+            const dimensions = schema.getDependencyNames(dependency);
 
             let dimensionTable;
 
-            if (dependency){
-                // определим подмножества для каждой зависимости
-                let entitiesParts = [];
-
-                let dependencyNames;
-                let dependencyName;
-
-                //todo ref
-                const analize = schema.getDependencyNames(dependency);
-                if (Array.isArray(analize)){
-                    dependencyNames = analize;
-                } else {
-                    dependencyName = analize;
-                }
-
-                if (dependencyNames){
-
-                    const dismember = (dependencyName, data) => {
-                        const dependencyMeasure = space.getDimensionTable(dependencyName);
-
-                        // определим подмножества для каждой зависимости
-                        let entitiesParts;
-                        entitiesParts = dependencyMeasure.map( measure => {
-                            // множество сущностей соответствующих измерению
-                            const measureId = measure[ENTITY_ID];
-                            const entitiesPart = data.filter( data => {
-                                let isPart = true;
-                                let idAttribute = Cell.genericId(dependencyName);
-                                isPart = data[idAttribute] == measureId;
-                                return isPart;
-                            });
-                            return entitiesPart;
-                        });
-                        return entitiesParts;
-                    };
-
-                    let parts = [cellTable];
-                    dependencyNames.forEach( dependencyName => {
-                        let newParts = [];
-                        parts.forEach( partData => {
-                            const entitiesParts = dismember(dependencyName, partData)
-                            entitiesParts.forEach( part => {
-                                newParts.push(part);
-                            })
-                        });
-                        parts = newParts;
-                    });
-
-                    entitiesParts = parts;
-                } else {
-                    const dependencyMeasure = space.getDimensionTable(dependencyName);
-
-                    entitiesParts = dependencyMeasure.map( measure => {
-                        // множество сущностей соответствующих измерению
-                        const measureId = measure[ENTITY_ID];
-                        const entitiesPart = cellTable.filter( data => {
-                            let isPart = true;
-                            let idAttribute = Cell.genericId(dependencyName);
-                            isPart = data[idAttribute] == measureId;
-                            return isPart;
-                        });
-                        return entitiesPart;
-                    });
-                }
-
-                // затем меры объединяем, таким образум образуя срез
-                let totalDimensionTable = new DimensionTable();
-
-                // для каждого подмножества определим свои меры
-                let countId = 0;
-                entitiesParts.forEach( entitiesPart => {
-                    if (entitiesPart.length){
-                        const dimensionTable = this._makeDimensionTableFrom(entitiesPart, countId, dimension, keyProps, otherProps, cellTable);
-                        countId = countId + dimensionTable.length;
-
-                        dimensionTable.forEach( member => {
-                            member[ENTITY_ID] = totalDimensionTable.length + 1;
-                            totalDimensionTable.add(member)
-                        });
-                    }
-                });
-
-                dimensionTable = totalDimensionTable;
+            if (dimensions){
+                dimensionTable = this._makeDimensionTableDependency(dimension, keyProps, otherProps, cellTable, factTable, schema, space, isRoot, dimensions);
             } else {
-                dimensionTable = this._makeDimensionTableFrom(factTable, 0, dimension, keyProps, otherProps, cellTable);
+                dimensionTable = this._makeDimensionTable(factTable, 0, dimension, keyProps, otherProps, cellTable);
             }
-            space.setDimensionTable(dimension, dimensionTable);
-        };
 
-        let next;
-        while ( !(next = iterator.next()) || !next.done){
-            handleDimension(next.value)
+            space.setDimensionTable(dimension, dimensionTable)
         }
 
         return space;
@@ -207,7 +121,7 @@ class Cube{
      * @return {DimensionTable}
      * @private
      * */
-    _makeDimensionTableFrom(factTable, startFrom = 0, dimension, keyProps, otherProps, cellTable){
+    _makeDimensionTable(factTable, startFrom = 0, dimension, keyProps, otherProps, cellTable){
         // соотношение созданных id к ключам
         const cache = {};
         const dimensionTable = new DimensionTable();
@@ -237,10 +151,68 @@ class Cube{
 
             // оставить в нормальной форме ссылку на id под сущности
             const value = cache[surrogateKey];
-            cell.addIdAttribute(value, dimension);
+            const idAttribute = Cube.genericId(dimension);
+
+            cell[idAttribute] = value;
         });
 
         return dimensionTable;
+    }
+
+    _makeDimensionTableDependency(dimension, keyProps, otherProps, cellTable, factTable, schema, space, isRoot, dependencyNames){
+        const mapFilter = (dimension, cellTable) => {
+            const idAttribute = Cube.genericId(dimension);
+            const dimensionTable = space.getDimensionTable(dimension);
+            return dimensionTable.map( member => {
+                return cellTable.filter( cell => {
+                    return cell[idAttribute] == member[ENTITY_ID];
+                });
+            });
+        };
+
+        let entitiesParts = [];
+
+        if (isRoot){
+            const dimensions = dependencyNames;
+            let cellTables = [cellTable];
+            dimensions.forEach( dimension => {
+                let newParts = [];
+                cellTables.forEach( cellTable => {
+                    const cellTables = mapFilter(dimension, cellTable);
+                    cellTables.forEach( cellTable => {
+                        newParts.push(cellTable);
+                    })
+                });
+                cellTables = newParts;
+            });
+            entitiesParts = cellTables;
+        } else {
+            const dimension = dependencyNames;
+            entitiesParts =  mapFilter(dimension, cellTable);
+        }
+
+        let totalDimensionTable = new DimensionTable();
+
+        let countId = 0;
+        entitiesParts.forEach( entitiesPart => {
+            if (entitiesPart.length){
+                const dimensionTable = this._makeDimensionTable(entitiesPart, countId, dimension, keyProps, otherProps, cellTable);
+                countId = countId + dimensionTable.length;
+
+                dimensionTable.forEach( member => {
+                    member[ENTITY_ID] = totalDimensionTable.length + 1;
+                    totalDimensionTable.add(member)
+                });
+            }
+        });
+
+        return totalDimensionTable;
+    }
+    /**
+     * A way to create a name for a property in which a unique identifier will be stored
+     * */
+    static genericId(entityName) {
+        return entityName + '_' + ENTITY_ID;
     }
     /**
      *
@@ -254,7 +226,7 @@ class Cube{
 
         factTable.forEach( fact => {
             const handleDimension = dimensionSchema => {
-                const idAttribute = Cell.genericId(dimensionSchema.dimension);
+                const idAttribute = Cube.genericId(dimensionSchema.dimension);
                 const idValue = fact[idAttribute];
                 const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
                     return member[ENTITY_ID] === idValue;
@@ -363,7 +335,7 @@ class DynamicCube extends Cube{
         this.space.getDimensionTable(dimension).splice(index, 1);
 
         const filterData = this.cellTable.filter(data => {
-            return data[Cell.genericId(dimension)] == member[ENTITY_ID];
+            return data[Cube.genericId(dimension)] == member[ENTITY_ID];
         });
 
         filterData.forEach( data => {
@@ -401,7 +373,7 @@ class DynamicCube extends Cube{
     _removeSubModel(normalizeData, dimension){
         // подчистить суб-модельку
         const filtered = this.space.getDimensionTable(dimension).filter(record => {
-            return record[ENTITY_ID] == normalizeData[Cell.genericId(dimension)]
+            return record[ENTITY_ID] == normalizeData[Cube.genericId(dimension)]
         });
 
         // и подчистить суб-модельку
@@ -422,7 +394,7 @@ class DynamicCube extends Cube{
                 const copy = [].concat(this.space.getDimensionTable(dimension));
                 // чтобы splice корректно отработал
                 copy.forEach( (member, index) => {
-                    const idAttribute = Cell.genericId(dimension);
+                    const idAttribute = Cube.genericId(dimension);
                     const findLink = this.cellTable.find( data => {
                         return data[idAttribute] == member[ENTITY_ID]
                     });
@@ -470,7 +442,7 @@ class DynamicCube extends Cube{
     _createNormalizeData(obj){
         const options = {};
         Object.keys(obj).forEach( key => {
-            options[Cell.genericId(key)] = obj[key][ENTITY_ID]
+            options[Cube.genericId(key)] = obj[key][ENTITY_ID]
         });
         const newNormaliseData = new InputCell(options);
         this.cellTable.push(newNormaliseData);

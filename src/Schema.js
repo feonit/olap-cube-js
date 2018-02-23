@@ -162,8 +162,12 @@ export class Schema {
      *
      * */
     getDependencyNames(dependency){
-        //todo ref
-        const map = dependency.map(dependency => dependency.dimension);
-        return map.length === 1 ? map[0] : map;
+        if (dependency){
+            const dimensions = dependency.map(dependency => dependency.dimension);
+            return dimensions.length === 1 ? dimensions[0] : dimensions;
+        }
+    }
+    isRoot(schemaDimension){
+        return schemaDimension === this.schema;
     }
 }
