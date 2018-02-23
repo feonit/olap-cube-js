@@ -1,6 +1,6 @@
 import Cube from '../src/Cube.js';
-import Cell from '../src/Cell.js';
 import '../node_modules/lodash/lodash.js';
+import Star from "../src/Star.js";
 
 function jsonParseStringify(data){
     return JSON.parse(JSON.stringify(data))
@@ -102,7 +102,7 @@ describe('[ Cube Instance ]', function(){
 
 describe('[ Cube Static ]', function(){
     it('generation unique entity ID name', () => {
-        expect(Cube.genericId('entity')).toBe('entity_id')
+        expect(Star.genericId('entity')).toBe('entity_id')
     });
 
     it('generation unique entity ID from exist entities if they have empty list', () => {
