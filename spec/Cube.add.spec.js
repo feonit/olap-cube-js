@@ -1,5 +1,4 @@
 import Cube from '../src/Cube.js';
-import '../node_modules/lodash/lodash.js';
 
 function jsonParseStringify(data){
     return JSON.parse(JSON.stringify(data))
