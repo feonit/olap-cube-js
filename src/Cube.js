@@ -1,5 +1,4 @@
 import InputCell from './InputCell.js'
-import _ from './_.js';
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
 import InputMember from './InputMember.js';
@@ -63,6 +62,15 @@ class Cube{
         } else {
             const idAttribute = Star.genericId(dimension);
             const ids = cells.map( cell => cell[idAttribute]);
+
+            _.uniq = function (items) {
+                const hash = {};
+                items.forEach((item) => {
+                    hash[item] = item
+                });
+                return Object.keys(hash).map(key => hash[key]);
+            };
+
             const uniqueIds = _.uniq(ids);
             const result = [];
             const members = this.space.getDimensionTable(dimension);
