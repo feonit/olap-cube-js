@@ -1,5 +1,4 @@
 import Cube from '../src/Cube.js';
-import '../node_modules/lodash/lodash.js';
 import Star from "../src/Star.js";
 
 function jsonParseStringify(data){
