@@ -4,5 +4,8 @@
     "spec.js"
   ],
   "stopSpecOnExpectationFailure": false,
-  "random": false
+  "random": false,
+  "helpers": [
+    "../spec/helpers/**/*.js"
+  ]
 }
