@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.angularjs.org/1.6.9/angular.min.js"></script>
+    <script type="module" src="../../src/Cube.js"></script>
+</head>
+<body>
+
+    <script type="module">
+        import Cube from '../../src/Cube.js'
+        const factTable = [
+            { id: 1, place: 'P_1', year: '2017', qr: 'QR1', month: 1, product: 'TV', mark: 'sony', money: 100, cents: 99},
+            { id: 2, place: 'P_2', year: '2017', qr: 'QR2', month: 5, product: 'phone', mark: 'sony', money: 115, cents: 99},
+            { id: 3, place: 'P_1', year: '2017', qr: 'QR3', month: 8, product: 'clock', mark: 'sony', money: 50, cents: 99},
+            { id: 4, place: 'P_1', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 120, cents: 0},
+            { id: 5, place: 'P_2', year: '2018', qr: 'QR2', month: 6, product: 'TV', mark: 'samsung', money: 125, cents: 99},
+            { id: 6, place: 'P_1', year: '2018', qr: 'QR3', month: 7, product: 'TV', mark: 'samsung', money: 125, cents: 90},
+            { id: 7, place: 'P_2', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 122, cents: 99},
+            { id: 8, place: 'P_1', year: '2019', qr: 'QR1', month: 1, product: 'phone', mark: 'LG', money: 100, cents: 99},
+            { id: 9, place: 'P_1', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 120, cents: 99},
+            { id: 10, place: 'P_2', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 130, cents: 90},
+            { id: 11, place: 'P_2', year: '2019', qr: 'QR2', month: 5, product: 'phone', mark: 'LG', money: 140, cents: 0},
+            { id: 12, place: 'P_1', year: '2020', qr: 'QR1', month: 1, product: 'clock', mark: 'LG', money: 110, cents: 99},
+            { id: 13, place: 'P_1', year: '2020', qr: 'QR1', month: 5, product: 'clock', mark: 'LG', money: 130, cents: 99},
+            { id: 14, place: 'P_1', year: '2020', qr: 'QR3', month: 7, product: 'clock', mark: 'LG', money: 110, cents: 99},
+            { id: 15, place: 'P_1', year: '2020', qr: 'QR4', month: 12, product: 'clock', mark: 'LG', money: 110, cents: 90}
+        ];
+
+        const schema = {
+            dimension: 'money',
+            keyProps: ['money', 'cents'],
+            dependency: [
+                {
+                    dimension: 'place',
+                    keyProps: ['place']
+                },
+                {
+                    dimension: 'product',
+                    keyProps: ['product']
+                },
+                {
+                    dimension: 'mark',
+                    keyProps: ['mark']
+                },
+                {
+                    dimension: 'month',
+                    keyProps: ['month'],
+                    dependency: [
+                        {
+                            dimension: 'qr',
+                            keyProps: ['qr'],
+                            dependency: [
+                                {
+                                    dimension: 'year',
+                                    keyProps: ['year']
+                                }
+                            ]
+                        }
+                    ]
+                },
+            ]
+        };
+
+        class Composite {
+            constructor(options){
+                Object.assign(this, options)
+            }
+        }
+        class ProductTable extends Cube{
+            getPlace(){
+                return this.query('place')
+            }
+            getProduct(){
+                return this.query('product')
+            }
+            getMark(){
+                return this.query('mark')
+            }
+            getMonth(qr, year){
+                const query = {};
+                if (qr){
+                    query['qr'] = qr;
+                }
+                if (year){
+                    query['year'] = year;
+                }
+                return this.query('month', query)
+            }
+            getQr(year){
+                const query = {};
+
+                if (year){
+                    query['year'] = year;
+                }
+                return this.query('qr', query)
+            }
+            getYear(){
+                return this.query('year')
+            }
+            getYearQr(){
+                return this.getYear().map( year => {
+                    const composite = new Composite({ member: year,  category: this.getQr(year) });
+                    return composite;
+                })
+            }
+            // todo: add that functional in Cube
+            getMonthYearQr(){
+                return this.getYearQr().map( composite => {
+                    const newComposite = {
+                        member: composite.member,
+                        category: composite.category.map( qr => {
+                            const newComposite = new Composite({
+                                member: qr,
+                                category: this.getMonth(qr, composite.member)
+                            });
+                            return newComposite;
+                        })
+                    };
+                    return newComposite;
+                })
+            }
+        }
+
+        const appModule = window.angular.module('demo', [])
+            .controller('AppController', class DimensionTableController{
+                constructor($scope){
+                    $scope.factTable = factTable;
+                    $scope.cube = new ProductTable(factTable, schema);
+                    $scope.placeTable = $scope.cube.getPlace();
+                    $scope.productTable = $scope.cube.getProduct();
+                    $scope.markTable = $scope.cube.getMark();
+                    $scope.yearTable = $scope.cube.getYear();
+                    $scope.qrTable = $scope.cube.getQr();
+                    $scope.monthTable = $scope.cube.getMonth();
+                    $scope.yearQrTable = $scope.cube.getYearQr();
+                    $scope.yearMonthQrTable = $scope.cube.getMonthYearQr();
+                }
+            })
+            .component('dimensionTable', {
+                bindings: {
+                    "table": "="
+                },
+                template: (
+                    `
+                    <table ng-init="keys=$ctrl.getKeys($ctrl.etalon)">
+                        <thead>
+                            <tr>
+                                <td ng-repeat="key in keys">{{ key }}</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="record in $ctrl.table">
+                                <td ng-repeat="key in keys">{{ record[key] }}</td>
+                            </tr>
+                        </tbody>
+
+                    </table>`
+                ),
+                controllerAs: '$ctrl',
+                controller: class DimensionTableController {
+                    $onInit(){
+                        this.etalon = this.table[0];
+                    }
+                    getKeys(obj){
+                        const keys = Object.keys(obj).sort();
+                        let index;
+                        if (index = keys.indexOf('$$hashKey') !== -1){
+                            keys.splice(index, 1);
+                        }
+                        return keys;
+                    }
+                }
+            })
+            .component('categoryTable', {
+                bindings: {
+                    "table": "="
+                },
+                template: (
+                    `
+                    <table ng-init="memberKeys=$ctrl.getKeys($ctrl.etalon.member)">
+                        <thead>
+                            <tr>
+                                <td ng-repeat="memberKey in memberKeys">{{ memberKey }}</td>
+                                <td> - </td>
+                            </tr>
+                        </thead>
+                        <tbody ng-repeat="record in $ctrl.table">
+                            <tr>
+                                <td ng-repeat="memberKey in memberKeys">{{ record.member[memberKey] }}</td>
+                            </tr>
+                            <tr>
+                                <td ng-repeat="memberKey in memberKeys" class="cell-empty"></td>
+                                <td>
+
+                                    <dimension-table
+                                        ng-if="!$ctrl.isComposite(record.category[0])"
+                                        table="$ctrl.clear(record.category)">
+                                    </dimension-table>
+
+                                    <category-table
+                                        ng-if="$ctrl.isComposite(record.category[0])"
+                                        table="$ctrl.clear(record.category)">
+                                    </category-table>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+`
+                ),
+                controllerAs: '$ctrl',
+                controller: class CategoryTableController {
+                    $onInit(){
+                        this.etalon = this.table[0];
+                    }
+                    getKeys(obj){
+                        const keys = Object.keys(obj).sort();
+                        let index;
+                        if (index = keys.indexOf('$$hashKey') !== -1){
+                            keys.splice(index, 1);
+                        }
+                        return keys;
+                    }
+                    clear(arr){
+                        return arr.map( item => {
+                            return angular.fromJson(angular.toJson(item))
+                        })
+                    }
+                    /**
+                     * @param {Member|Composite} obj
+                     * */
+                    isComposite(obj){
+                        return obj instanceof Composite
+                    }
+                }
+            })
+        ;
+
+        window.angular.bootstrap(document, ['demo']);
+    </script>
+
+    <style>
+        dimension-table, category-table {
+            display: inline-block;
+            vertical-align: top;
+        }
+        table{
+            border: 1px solid black;
+            /*padding: 10px;*/
+            /*margin-bottom: 20px;*/
+            text-align: center;
+        }
+        thead{
+            font-weight: bold;
+        }
+        td{
+            padding: 0 10px;
+        }
+        .cell-empty{
+            background: hsl(0, 0%, 99%);
+        }
+
+    </style>
+
+    <div ng-controller="AppController">
+
+        <h2>Fact Table <sup>(input data)</sup></h2>
+        <dimension-table table="factTable"></dimension-table>
+
+        <h2>Dimension Tables <sup>(output data)</sup></h2>
+        <dimension-table table="productTable"></dimension-table>
+
+        <dimension-table table="placeTable"></dimension-table>
+
+        <dimension-table table="markTable"></dimension-table>
+
+        <dimension-table table="yearTable"></dimension-table>
+
+        <dimension-table table="qrTable"></dimension-table>
+
+        <dimension-table table="monthTable"></dimension-table>
+
+        <category-table table="yearQrTable"></category-table>
+
+        <category-table table="yearMonthQrTable"></category-table>
+    </div>
+
+</body>
+</html>

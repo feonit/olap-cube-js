@@ -65,21 +65,21 @@ describe('[ Cube Edit ][ query ]', () => {
 
     describe('should pass all possible query requests', () => {
         const factTable = [
-            { id: 1, point: 'P_1', year: '2017', qr: 'QR1', month: 1, product: 'TV', mark: 'sony', money: 100, cents: 99},
-            { id: 2, point: 'P_2', year: '2017', qr: 'QR2', month: 5, product: 'phone', mark: 'sony', money: 115, cents: 99},
-            { id: 3, point: 'P_1', year: '2017', qr: 'QR3', month: 8, product: 'clock', mark: 'sony', money: 50, cents: 99},
-            { id: 4, point: 'P_1', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 120, cents: 0},
-            { id: 5, point: 'P_2', year: '2018', qr: 'QR2', month: 6, product: 'TV', mark: 'samsung', money: 125, cents: 99},
-            { id: 6, point: 'P_1', year: '2018', qr: 'QR3', month: 7, product: 'TV', mark: 'samsung', money: 125, cents: 90},
-            { id: 7, point: 'P_2', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 122, cents: 99},
-            { id: 8, point: 'P_1', year: '2019', qr: 'QR1', month: 1, product: 'phone', mark: 'LG', money: 100, cents: 99},
-            { id: 9, point: 'P_1', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 120, cents: 99},
-            { id: 10, point: 'P_2', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 130, cents: 90},
-            { id: 11, point: 'P_2', year: '2019', qr: 'QR2', month: 5, product: 'phone', mark: 'LG', money: 140, cents: 0},
-            { id: 12, point: 'P_1', year: '2020', qr: 'QR1', month: 1, product: 'clock', mark: 'LG', money: 110, cents: 99},
-            { id: 13, point: 'P_1', year: '2020', qr: 'QR1', month: 5, product: 'clock', mark: 'LG', money: 130, cents: 99},
-            { id: 14, point: 'P_1', year: '2020', qr: 'QR3', month: 7, product: 'clock', mark: 'LG', money: 110, cents: 99},
-            { id: 15, point: 'P_1', year: '2020', qr: 'QR4', month: 12, product: 'clock', mark: 'LG', money: 110, cents: 90}
+            { id: 1, place: 'P_1', year: '2017', qr: 'QR1', month: 1, product: 'TV', mark: 'sony', money: 100, cents: 99},
+            { id: 2, place: 'P_2', year: '2017', qr: 'QR2', month: 5, product: 'phone', mark: 'sony', money: 115, cents: 99},
+            { id: 3, place: 'P_1', year: '2017', qr: 'QR3', month: 8, product: 'clock', mark: 'sony', money: 50, cents: 99},
+            { id: 4, place: 'P_1', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 120, cents: 0},
+            { id: 5, place: 'P_2', year: '2018', qr: 'QR2', month: 6, product: 'TV', mark: 'samsung', money: 125, cents: 99},
+            { id: 6, place: 'P_1', year: '2018', qr: 'QR3', month: 7, product: 'TV', mark: 'samsung', money: 125, cents: 90},
+            { id: 7, place: 'P_2', year: '2018', qr: 'QR1', month: 2, product: 'TV', mark: 'samsung', money: 122, cents: 99},
+            { id: 8, place: 'P_1', year: '2019', qr: 'QR1', month: 1, product: 'phone', mark: 'LG', money: 100, cents: 99},
+            { id: 9, place: 'P_1', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 120, cents: 99},
+            { id: 10, place: 'P_2', year: '2019', qr: 'QR1', month: 2, product: 'phone', mark: 'LG', money: 130, cents: 90},
+            { id: 11, place: 'P_2', year: '2019', qr: 'QR2', month: 5, product: 'phone', mark: 'LG', money: 140, cents: 0},
+            { id: 12, place: 'P_1', year: '2020', qr: 'QR1', month: 1, product: 'clock', mark: 'LG', money: 110, cents: 99},
+            { id: 13, place: 'P_1', year: '2020', qr: 'QR1', month: 5, product: 'clock', mark: 'LG', money: 130, cents: 99},
+            { id: 14, place: 'P_1', year: '2020', qr: 'QR3', month: 7, product: 'clock', mark: 'LG', money: 110, cents: 99},
+            { id: 15, place: 'P_1', year: '2020', qr: 'QR4', month: 12, product: 'clock', mark: 'LG', money: 110, cents: 90}
         ];
 
         const schema = {
@@ -87,8 +87,8 @@ describe('[ Cube Edit ][ query ]', () => {
             keyProps: ['money', 'cents'],
             dependency: [
                 {
-                    dimension: 'point',
-                    keyProps: ['point']
+                    dimension: 'place',
+                    keyProps: ['place']
                 },
                 {
                     dimension: 'product',
@@ -125,7 +125,7 @@ describe('[ Cube Edit ][ query ]', () => {
 
         it('query request should return list of members for all dimension in first level of hierarchy', () => {
             expect(cube.query('mark').length).toBe(3);
-            expect(cube.query('point').length).toBe(2);
+            expect(cube.query('place').length).toBe(2);
             expect(cube.query('month').length).toBe(13);
         });
 

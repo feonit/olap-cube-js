@@ -61,11 +61,11 @@ describe('[ Cube Edit ][ fill ]', function(){
                 }
             ]
         }
-        const dataArray = [
+        const factTable = [
             { id: 1, x: 0, y: 1, xy: true },
             { id: 2, x: 1, y: 0, xy: true }
         ]
-        const cube = new Cube(dataArray, schema)
+        const cube = new Cube(factTable, schema)
         cube.fill({ xy: false })
 
         expect(_.isEqual(jsonParseStringify(cube.getDataArray()), [

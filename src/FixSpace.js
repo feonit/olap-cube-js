@@ -3,8 +3,15 @@ import {ENTITY_ID} from "./const.js";
 import Cell from "./Cell.js";
 import Star from "./Star.js";
 
+class DimensionDataException extends Error {
+    constructor(data){
+        super();
+        this.message = `data attribute for dimension is "${data}"`;
+    }
+}
 /**
  * Space with fixed dimensions values
+ * @throws {DimensionDataException}
  * */
 export default class FixSpace extends Space {
     constructor(options){
@@ -15,6 +22,9 @@ export default class FixSpace extends Space {
      * @param {object|object[]} data
      * */
     setDimensionTable(dimension, data){
+        if (!data){
+            throw new DimensionDataException()
+        }
         if (!Array.isArray(data)){
             data = [data];
         }
