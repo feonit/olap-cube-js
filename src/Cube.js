@@ -63,7 +63,7 @@ class Cube{
             const idAttribute = Star.genericId(dimension);
             const ids = cells.map( cell => cell[idAttribute]);
 
-            _.uniq = function (items) {
+            const uniq = (items) => {
                 const hash = {};
                 items.forEach((item) => {
                     hash[item] = item
@@ -71,7 +71,7 @@ class Cube{
                 return Object.keys(hash).map(key => hash[key]);
             };
 
-            const uniqueIds = _.uniq(ids);
+            const uniqueIds = uniq(ids);
             const result = [];
             const members = this.space.getDimensionTable(dimension);
 

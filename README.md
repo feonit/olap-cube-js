@@ -20,6 +20,10 @@ This solution is a means for extracting and replenishing data, which together wi
 [3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
 [4]: https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.abx.cub.doc/abx-c-cube-balancedandunbalancedhierarchies.html
 [5]: https://feonit.github.io/olap-cube/spec/
+[6]: https://feonit.github.io/olap-cube/examples/product-table/index.html
+
+[Specification][5]
+[Demo][6]
 
 ## Support:
 - Multidimensional conceptual data representation
@@ -29,7 +33,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - One [fact table][2]
 - OLAP data is typically stored in a [star schema][1] 
 - The ability to edit data
-- [Specification][5]
+
 
 ## Quick Start
 How Cube is work?
