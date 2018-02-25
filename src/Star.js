@@ -1,4 +1,4 @@
-import DimensionTable from "./DimensionTable.js";
+import MemberList from "./MemberList.js";
 import Member from "./Member.js";
 import {ENTITY_ID} from "./const.js";
 import Space from "./Space.js";
@@ -13,36 +13,36 @@ import CellTable from "./CellTable.js";
 export default class Star {
     /**
      * @param {FactTable} factTable - Data array to the analysis of values for dimension
-     * @param {object[]} resolution
+     * @param {object[]} dimensionTableList
      * */
-    constructor(factTable, resolution){
+    constructor(factTable, dimensionTableList){
         const space = new Space();
         const cellTable = new CellTable(factTable);
 
-        resolution.forEach( (table, index) => {
+        dimensionTableList.forEach( (table, index) => {
             const { dimension, keyProps, otherProps, dependencyNames } = table;
-            const isRoot = index === resolution.length - 1;
+            const isRoot = index === dimensionTableList.length - 1;
 
-            let dimensionTable;
+            let memberList;
             const args = [factTable, dimension, keyProps, otherProps, cellTable];
 
             if (!dependencyNames.length){
-                dimensionTable = this._makeDimensionTable.apply(this, args);
+                memberList = this._makeMemberList.apply(this, args);
             } else {
 
                 let entitiesParts = [];
 
                 // todo заменить на один метод
                 if (!isRoot){
-                    entitiesParts = this._mapFilter(dependencyNames, cellTable, space.getDimensionTable(dependencyNames[0]));
-                    dimensionTable = this._makeDimensionTableDependency.apply(this, args.concat([space, dependencyNames, entitiesParts]));
+                    entitiesParts = this._mapFilter(dependencyNames, cellTable, space.getMemberList(dependencyNames[0]));
+                    memberList = this._makeMemberListDependency.apply(this, args.concat([space, dependencyNames, entitiesParts]));
                 } else {
                     entitiesParts = this._mapFilterRoot(dependencyNames, cellTable, space);
-                    dimensionTable = this._makeDimensionTableDependency.apply(this, args.concat([space, dependencyNames, entitiesParts]));
+                    memberList = this._makeMemberListDependency.apply(this, args.concat([space, dependencyNames, entitiesParts]));
                 }
             }
 
-            space.setDimensionTable(dimension, dimensionTable)
+            space.setMemberList(dimension, memberList)
         });
 
         return { space, cellTable };
@@ -55,9 +55,9 @@ export default class Star {
         return entityName + '_' + ENTITY_ID;
     }
 
-    _mapFilter(dimension, cellTable, dimensionTable){
+    _mapFilter(dimension, cellTable, memberList){
         const idAttribute = Star.genericId(dimension);
-        return dimensionTable.map( member => {
+        return memberList.map( member => {
             return cellTable.filter( cell => {
                 return cell[idAttribute] == member[ENTITY_ID];
             });
@@ -69,7 +69,7 @@ export default class Star {
         dimensions.forEach( dimension => {
             let newParts = [];
             cellTables.forEach( cellTable => {
-                const cellTables = this._mapFilter(dimension, cellTable, space.getDimensionTable(dimension));
+                const cellTables = this._mapFilter(dimension, cellTable, space.getMemberList(dimension));
                 cellTables.forEach( cellTable => {
                     newParts.push(cellTable);
                 })
@@ -88,13 +88,13 @@ export default class Star {
      * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
      * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
      * @param {CellTable} cellTable
-     * @return {DimensionTable}
+     * @return {MemberList}
      * @private
      * */
-    _makeDimensionTable(factTable, dimension, keyProps, otherProps, cellTable, startFrom = 0){
+    _makeMemberList(factTable, dimension, keyProps, otherProps, cellTable, startFrom = 0){
         // соотношение созданных id к ключам
         const cache = {};
-        const dimensionTable = new DimensionTable();
+        const memberList = new MemberList();
         // полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
         const totalProps = [].concat(keyProps, otherProps);
 
@@ -108,7 +108,7 @@ export default class Star {
             if (! (surrogateKey in cache) ){
                 const id = cache[surrogateKey] = ++startFrom;
                 const member = new Member(id, totalProps, fact);
-                dimensionTable.push(member);
+                memberList.push(member);
             }
 
             const id = fact[ENTITY_ID];
@@ -126,26 +126,26 @@ export default class Star {
             cell[idAttribute] = value;
         });
 
-        return dimensionTable;
+        return memberList;
     }
 
-    _makeDimensionTableDependency(factTable, dimension, keyProps, otherProps, cellTable, space, dependencyNames, entitiesParts){
+    _makeMemberListDependency(factTable, dimension, keyProps, otherProps, cellTable, space, dependencyNames, entitiesParts){
 
-        let totalDimensionTable = new DimensionTable();
+        let totalMemberList = new MemberList();
 
         let countId = 0;
         entitiesParts.forEach( entitiesPart => {
             if (entitiesPart.length){
-                const dimensionTable = this._makeDimensionTable(entitiesPart, dimension, keyProps, otherProps, cellTable, countId);
-                countId = countId + dimensionTable.length;
+                const memberList = this._makeMemberList(entitiesPart, dimension, keyProps, otherProps, cellTable, countId);
+                countId = countId + memberList.length;
 
-                dimensionTable.forEach( member => {
-                    member[ENTITY_ID] = totalDimensionTable.length + 1;
-                    totalDimensionTable.add(member)
+                memberList.forEach( member => {
+                    member[ENTITY_ID] = totalMemberList.length + 1;
+                    totalMemberList.add(member)
                 });
             }
         });
 
-        return totalDimensionTable;
+        return totalMemberList;
     }
 }

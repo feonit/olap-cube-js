@@ -91,11 +91,11 @@ describe('[ Cube Instance ]', function(){
 
     it('should be equal length of members for specified measurement and result of query request without filter argument', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.query('prices').length).toBe(cube.space.getDimensionTable('prices').length);
-        expect(cube.query('counts').length).toBe(cube.space.getDimensionTable('counts').length);
-        expect(cube.query('cities').length).toBe(cube.space.getDimensionTable('cities').length);
-        expect(cube.query('companies').length).toBe(cube.space.getDimensionTable('companies').length);
-        expect(cube.query('age').length).toBe(cube.space.getDimensionTable('age').length);
+        expect(cube.query('prices').length).toBe(cube.space.getMemberList('prices').length);
+        expect(cube.query('counts').length).toBe(cube.space.getMemberList('counts').length);
+        expect(cube.query('cities').length).toBe(cube.space.getMemberList('cities').length);
+        expect(cube.query('companies').length).toBe(cube.space.getMemberList('companies').length);
+        expect(cube.query('age').length).toBe(cube.space.getMemberList('age').length);
     });
 });
 

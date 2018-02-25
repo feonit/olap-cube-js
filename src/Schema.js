@@ -1,5 +1,4 @@
 import SchemaDimension from "./SchemaDimension.js";
-import DimensionProperties from "./DimensionProperties.js";
 import Tree from "./Tree.js";
 
 export class DimensionException extends Error {
@@ -9,6 +8,18 @@ export class DimensionException extends Error {
     }
 }
 
+const adapter = schema => {
+    const { dependency = [], ...rest } = schema;
+
+    return {
+        value: {
+            ...rest,
+            dependencyNames: dependency.map( dependency => dependency.dimension )
+        },
+        childNodes: dependency.map(adapter)
+    };
+};
+
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
  * @throws {DimensionException}
@@ -16,32 +27,19 @@ export class DimensionException extends Error {
 export class Schema extends Tree{
     constructor(schema){
 
-        const adapter = schema => {
-            const { dependency, ...rest } = schema;
-            let names;
-            if (dependency && dependency.length){
-                names = dependency.map( dependency => dependency.dimension )
-            }
-            return { value: {...rest, dependencyNames: names}, childNodes: dependency && dependency.length && dependency.map(adapter)};
-        };
-
-        const treeData = adapter(schema);
-
-        super(treeData);
+        super(adapter(schema));
 
         this.schema = new SchemaDimension(schema);
 
         this._dimensionsResolutionOrder = [];
-        this._dimensionProperties = {};
-        this._schemaDimension = {};
+        this._dimensionTable = {};
 
-        this.postOrder( (schema) => {
-            const {dimension} = schema;
-            if ( !this._schemaDimension[dimension] ){
-                const {keyProps, otherProps, dimension} = schema;
-                this._schemaDimension[dimension] = schema;
-                this._dimensionProperties[dimension] = new DimensionProperties({keyProps, otherProps})
-                this._dimensionsResolutionOrder.push(this._schemaDimension[dimension])
+        this.postOrder( (dimensionTable) => {
+            const {dimension} = dimensionTable;
+            if ( !this._dimensionTable[dimension] ){
+                const {dimension} = dimensionTable;
+                this._dimensionTable[dimension] = dimensionTable;
+                this._dimensionsResolutionOrder.push(this._dimensionTable[dimension])
             } else {
                 throw new DimensionException(dimension)
             }
@@ -66,10 +64,10 @@ export class Schema extends Tree{
 
     /**
      * @param {string} dimension
-     * @return {DimensionProperties|undefined}
+     * @return {DimensionTable|undefined}
      * */
-    getDimensionProperties(dimension){
-        return this._dimensionProperties[dimension]
+    getDimensionTable(dimension){
+        return this._dimensionTable[dimension]
     }
     /**
      * Take an ordered list of dimensions by dependency resolution

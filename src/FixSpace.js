@@ -21,14 +21,14 @@ export default class FixSpace extends Space {
      * @param {string} dimension
      * @param {object|object[]} data
      * */
-    setDimensionTable(dimension, data){
+    setMemberList(dimension, data){
         if (!data){
             throw new DimensionDataException()
         }
         if (!Array.isArray(data)){
             data = [data];
         }
-        return super.setDimensionTable(dimension, data)
+        return super.setMemberList(dimension, data)
     }
     /**
      * @param {Cell[]} cells - array of data to be filtered
@@ -38,7 +38,7 @@ export default class FixSpace extends Space {
         let filtered = [].concat(cells);
         this.getDimensionList().forEach( dimension => {
             const idAttribute = Star.genericId(dimension);
-            const members = this.getDimensionTable(dimension);
+            const members = this.getMemberList(dimension);
             const totalPart = [];
             members.forEach( member => {
                 const memberId = member[ENTITY_ID];

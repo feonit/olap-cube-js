@@ -6,22 +6,22 @@ export default class Space{
     constructor(options){
         if (options){
             this.getDimensionList.call(options).forEach( dimension => {
-                this.setDimensionTable(dimension, options[dimension])
+                this.setMemberList(dimension, options[dimension])
             })
         }
     }
     /**
      * @param {string} dimension
      * */
-    getDimensionTable(dimension){
+    getMemberList(dimension){
         return this[dimension]
     }
     /**
      * @param {string} dimension
-     * @param {DimensionTable|object[]} dimensionTable
+     * @param {MemberList|object[]} memberList
      * */
-    setDimensionTable(dimension, dimensionTable){
-        this[dimension] = dimensionTable;
+    setMemberList(dimension, memberList){
+        this[dimension] = memberList;
     }
     /**
      * @return {string[]}

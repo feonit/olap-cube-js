@@ -131,46 +131,46 @@ describe('[ Cube Edit ][ add ]', () => {
 
         let cube = new Cube(factTable, schema);
         //
-        expect(cube.space.getDimensionTable('product').length).toBe(2);
-        expect(cube.space.getDimensionTable('money').length).toBe(3);
+        expect(cube.space.getMemberList('product').length).toBe(2);
+        expect(cube.space.getMemberList('money').length).toBe(3);
 
         cube.addMember('product', { product : 'mp3' } );
 
-        expect(cube.space.getDimensionTable('product').length).toBe(3);
-        expect(cube.space.getDimensionTable('money').length).toBe(4);
+        expect(cube.space.getMemberList('product').length).toBe(3);
+        expect(cube.space.getMemberList('money').length).toBe(4);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.space.getDimensionTable('year').length).toBe(1);
-        expect(cube.space.getDimensionTable('money').length).toBe(3);
+        expect(cube.space.getMemberList('year').length).toBe(1);
+        expect(cube.space.getMemberList('money').length).toBe(3);
 
         cube.addMember('year', { year : '2019' } );
 
-        expect(cube.space.getDimensionTable('year').length).toBe(2);
-        expect(cube.space.getDimensionTable('money').length).toBe(5);
+        expect(cube.space.getMemberList('year').length).toBe(2);
+        expect(cube.space.getMemberList('money').length).toBe(5);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.space.getDimensionTable('month').length).toBe(1);
-        expect(cube.space.getDimensionTable('money').length).toBe(3);
+        expect(cube.space.getMemberList('month').length).toBe(1);
+        expect(cube.space.getMemberList('money').length).toBe(3);
 
         cube.addMember('month', { month : 'april' } );
 
-        expect(cube.space.getDimensionTable('month').length).toBe(2);
-        expect(cube.space.getDimensionTable('money').length).toBe(5);
+        expect(cube.space.getMemberList('month').length).toBe(2);
+        expect(cube.space.getMemberList('money').length).toBe(5);
 
         //
         cube = new Cube(factTable, schema);
 
-        expect(cube.space.getDimensionTable('month').length).toBe(1);
-        expect(cube.space.getDimensionTable('money').length).toBe(3);
+        expect(cube.space.getMemberList('month').length).toBe(1);
+        expect(cube.space.getMemberList('money').length).toBe(3);
 
         cube.addMember('month', { month : 'april' } );
 
-        expect(cube.space.getDimensionTable('month').length).toBe(2);
-        expect(cube.space.getDimensionTable('money').length).toBe(5);
+        expect(cube.space.getMemberList('month').length).toBe(2);
+        expect(cube.space.getMemberList('money').length).toBe(5);
     })
 
 

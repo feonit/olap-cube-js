@@ -9,26 +9,8 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import Star from "./Star.js";
+import DimensionTable from "./DimensionTable.js";
 
-class StarDimensionTable {
-    constructor({ dimension, keyProps, dependencyNames = [], otherProps = [] }){
-        if (!dimension || !keyProps || !keyProps.length){
-            throw Error("Bad dimension description at schema, params 'dimension' and 'keyProps' is required");
-        }
-
-        /** Name of the dimension */
-        this.dimension = dimension;
-
-        /** The list of dimensions with which the current dimension is directly related */
-        this.dependencyNames = dependencyNames;
-
-        /** List of key names properties of the entity belonging to the current dimension */
-        this.keyProps = keyProps;
-
-        /** List of additional names properties of the entity belonging to the current dimension */
-        this.otherProps = otherProps;
-    }
-}
 /**
  * It a means to retrieve data
  *
@@ -45,8 +27,8 @@ class Cube{
         Object.defineProperty(this, 'factTable', { value: factTable });
 
         const resolution = schema.getDimensionsResolutionOrder();
-        const starDimensionTables = resolution.map( resolution => new StarDimensionTable(resolution) );
-        const {space, cellTable} = new Star(factTable, starDimensionTables);
+        const dimensionTableList = resolution.map( resolution => new DimensionTable(resolution) );
+        const {space, cellTable} = new Star(factTable, dimensionTableList);
 
         this.space = space;
         this.cellTable = cellTable;
@@ -94,7 +76,7 @@ class Cube{
 
             const uniqueIds = uniq(ids);
             const result = [];
-            const members = this.space.getDimensionTable(dimension);
+            const members = this.space.getMemberList(dimension);
 
             // filtering without loss of order in the array
             members.forEach( member => {
@@ -120,7 +102,7 @@ class Cube{
             const handleDimension = dimensionSchema => {
                 const idAttribute = Star.genericId(dimensionSchema.dimension);
                 const idValue = fact[idAttribute];
-                const member = this.space.getDimensionTable(dimensionSchema.dimension).find( member => {
+                const member = this.space.getMemberList(dimensionSchema.dimension).find( member => {
                     return member[ENTITY_ID] === idValue;
                 });
                 const memberCopy = Object.assign({}, member);
@@ -165,7 +147,7 @@ class DynamicCube extends Cube{
         columns.forEach((dimensionSchema)=>{
             if (dimensionSchema.dimension !== dimension){
                 if (!cellOptions[dimensionSchema.dimension]){
-                    space.setDimensionTable(dimensionSchema.dimension, this.space.getDimensionTable(dimensionSchema.dimension))
+                    space.setMemberList(dimensionSchema.dimension, this.space.getMemberList(dimensionSchema.dimension))
                 }
             }
         });
@@ -179,7 +161,7 @@ class DynamicCube extends Cube{
             const dimensionNamesLength = dimensionNames.length;
 
             if (index !== dimensionNamesLength){
-                const members = space.getDimensionTable(dimensionNames[index]);
+                const members = space.getMemberList(dimensionNames[index]);
 
                 members.forEach( member => {
                     cellOptions[dimensionNames[index]] = member;
@@ -188,7 +170,7 @@ class DynamicCube extends Cube{
                         const queryOptions = { [dimensionNames[index]]: member };
                         const query = this.query(dependency.dimension, queryOptions);
                         const space = new Space();
-                        space.setDimensionTable(dependency.dimension, query);
+                        space.setMemberList(dependency.dimension, query);
 
                         recursivelyForEach(cellOptions, space, 0, true);
                     }
@@ -220,11 +202,11 @@ class DynamicCube extends Cube{
      * */
     removeMember(dimension, member){
         const dependenciesDimensionNames = this.schema.getDependenciesNames(dimension);
-        const index = this.space.getDimensionTable(dimension).indexOf(member);
+        const index = this.space.getMemberList(dimension).indexOf(member);
         if (index === -1){
             throw new Error('represented member was not found in the ' + dimension + ' dimension')
         }
-        this.space.getDimensionTable(dimension).splice(index, 1);
+        this.space.getMemberList(dimension).splice(index, 1);
 
         const filterData = this.cellTable.filter(data => {
             return data[Star.genericId(dimension)] == member[ENTITY_ID];
@@ -264,14 +246,14 @@ class DynamicCube extends Cube{
      * */
     _removeSubModel(normalizeData, dimension){
         // подчистить суб-модельку
-        const filtered = this.space.getDimensionTable(dimension).filter(record => {
+        const filtered = this.space.getMemberList(dimension).filter(record => {
             return record[ENTITY_ID] == normalizeData[Star.genericId(dimension)]
         });
 
         // и подчистить суб-модельку
         filtered.forEach( data => {
-            const index = this.space.getDimensionTable(dimension).indexOf(data);
-            this.space.getDimensionTable(dimension).splice(index, 1);
+            const index = this.space.getMemberList(dimension).indexOf(data);
+            this.space.getMemberList(dimension).splice(index, 1);
         })
     }
     /**
@@ -282,8 +264,8 @@ class DynamicCube extends Cube{
         const names = this.schema.getNames();
         const report = [];
         names.forEach( dimension => {
-            if (this.space.getDimensionTable(dimension).length){
-                const copy = [].concat(this.space.getDimensionTable(dimension));
+            if (this.space.getMemberList(dimension).length){
+                const copy = [].concat(this.space.getMemberList(dimension));
                 // чтобы splice корректно отработал
                 copy.forEach( (member, index) => {
                     const idAttribute = Star.genericId(dimension);
@@ -291,7 +273,7 @@ class DynamicCube extends Cube{
                         return data[idAttribute] == member[ENTITY_ID]
                     });
                     if (!findLink){
-                        this.space.getDimensionTable(dimension).splice(index - (copy.length - this.space.getDimensionTable(dimension).length), 1);
+                        this.space.getMemberList(dimension).splice(index - (copy.length - this.space.getMemberList(dimension).length), 1);
                         report.push(member)
                     }
                 })
@@ -352,7 +334,7 @@ class DynamicCube extends Cube{
         const dimensionsMembers = {};
         const reqursively = (dimensionsMembers, index) => {
             let finalDimension = finalDimensions[index];
-            let members = this.space.getDimensionTable(finalDimension.dimension);
+            let members = this.space.getMemberList(finalDimension.dimension);
             members.forEach( member => {
                 let newDimensionsMembers = Object.assign({}, dimensionsMembers, {[finalDimension.dimension]: member} );
                 if ( Object.keys(newDimensionsMembers).length === finalDimensions.length ){
@@ -378,10 +360,10 @@ class DynamicCube extends Cube{
             throw 'attribute \"dimension\" nor found';
         }
 
-        const {keyProps} = this.schema.getDimensionProperties(dimension);
-        const id = DynamicCube.reduceId(this.space.getDimensionTable(dimension));
+        const {keyProps} = this.schema.getDimensionTable(dimension);
+        const id = DynamicCube.reduceId(this.space.getMemberList(dimension));
         const member = new InputMember(id, keyProps, props);
-        this.space.getDimensionTable(dimension).push(member);
+        this.space.getMemberList(dimension).push(member);
         return member;
     }
     /**

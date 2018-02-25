@@ -24,20 +24,20 @@ describe('[ Cube Edit ][ fill ]', function(){
 
     it('should normalize count of measure for non-normalized data', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.space.getDimensionTable('is').length).toBe(5);
+        expect(cube.space.getMemberList('is').length).toBe(5);
         cube.fill({ is: false });
-        expect(cube.space.getDimensionTable('is').length).toBe(8);
+        expect(cube.space.getMemberList('is').length).toBe(8);
     });
 
     it('should normalize count of measure for non-normalized data with default props', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.space.getDimensionTable('is')[5]).not.toBeDefined();
-        expect(cube.space.getDimensionTable('is')[6]).not.toBeDefined();
-        expect(cube.space.getDimensionTable('is')[7]).not.toBeDefined();
+        expect(cube.space.getMemberList('is')[5]).not.toBeDefined();
+        expect(cube.space.getMemberList('is')[6]).not.toBeDefined();
+        expect(cube.space.getMemberList('is')[7]).not.toBeDefined();
         cube.fill({ is: false });
-        expect(cube.space.getDimensionTable('is')[5]).toBeDefined();
-        expect(cube.space.getDimensionTable('is')[6]).toBeDefined();
-        expect(cube.space.getDimensionTable('is')[7]).toBeDefined();
+        expect(cube.space.getMemberList('is')[5]).toBeDefined();
+        expect(cube.space.getMemberList('is')[6]).toBeDefined();
+        expect(cube.space.getMemberList('is')[7]).toBeDefined();
         const factTableExpectedAfter = factTable.concat([
             { x: 1, y: 0, z: 1,is: false },
             { x: 1, y: 1, z: 0,is: false },

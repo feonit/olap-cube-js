@@ -10,8 +10,8 @@ export default class QueryAdapter {
             const value = fixSpaceOptions[dimension];
 
             const find = (dimension, value) => {
-                const dimensionTable = space.getDimensionTable(dimension);
-                return dimensionTable ? dimensionTable.search(value) : void 0;
+                const memberList = space.getMemberList(dimension);
+                return memberList ? memberList.search(value) : void 0;
             };
 
             if (typeof value === "string"){
