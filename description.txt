@@ -39,6 +39,8 @@ Conformed dimension  junk потому что ключ образуют неск
 
 //todo заменить может быть _getMembersGroupsByMeasurementsFromSchema на идею подкубов
 
+агрегатные данные то что сейчас dimension table
+исходные данные
 
 dimension - year
 dimensions year, product
@@ -58,6 +60,20 @@ Dimension Types пусть будет двух типов, то что обра�
 В одном измерении можно реализовать более одной иерархии - скажем, для времени: {Год, Квартал, Месяц, День} и {Год, Неделя, День}.
 
 
+Tree traversing https://en.wikipedia.org/wiki/Tree_traversal
 
 
 http://www.cfin.ru/itm/olap/glossary.shtml
+
+[
+    'name',
+    ['key-prop1', 'key-prop2'],
+    ['other-prop1', ['other-prop2']
+    [
+        [
+            'name',
+            ['key-prop1', 'key-prop2'],
+            ['other-prop1', ['other-prop2']
+        ]
+    ]
+]

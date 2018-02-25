@@ -10,6 +10,25 @@ import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import Star from "./Star.js";
 
+class StarDimensionTable {
+    constructor({ dimension, keyProps, dependencyNames = [], otherProps = [] }){
+        if (!dimension || !keyProps || !keyProps.length){
+            throw Error("Bad dimension description at schema, params 'dimension' and 'keyProps' is required");
+        }
+
+        /** Name of the dimension */
+        this.dimension = dimension;
+
+        /** The list of dimensions with which the current dimension is directly related */
+        this.dependencyNames = dependencyNames;
+
+        /** List of key names properties of the entity belonging to the current dimension */
+        this.keyProps = keyProps;
+
+        /** List of additional names properties of the entity belonging to the current dimension */
+        this.otherProps = otherProps;
+    }
+}
 /**
  * It a means to retrieve data
  *
@@ -25,7 +44,9 @@ class Cube{
         Object.defineProperty(this, 'schema', { value: schema });
         Object.defineProperty(this, 'factTable', { value: factTable });
 
-        const {space, cellTable} = new Star(factTable, schema);
+        const resolution = schema.getDimensionsResolutionOrder();
+        const starDimensionTables = resolution.map( resolution => new StarDimensionTable(resolution) );
+        const {space, cellTable} = new Star(factTable, starDimensionTables);
 
         this.space = space;
         this.cellTable = cellTable;

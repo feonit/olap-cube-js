@@ -13,31 +13,28 @@ import CellTable from "./CellTable.js";
 export default class Star {
     /**
      * @param {FactTable} factTable - Data array to the analysis of values for dimension
-     * @param {Schema} schema
+     * @param {object[]} resolution
      * */
-    constructor(factTable, schema){
+    constructor(factTable, resolution){
         const space = new Space();
-        const iterator = schema.createIterator();
         const cellTable = new CellTable(factTable);
 
-        let next;
-        while ( !(next = iterator.next()) || !next.done){
-            const isRoot = schema.isRoot(next.value);
-            const {dimension, dependency} = next.value;
-            const { keyProps, otherProps } = schema.getDimensionProperties(dimension);
-            const dependencyNames = schema.getDependencyNames(dependency);
+        resolution.forEach( (table, index) => {
+            const { dimension, keyProps, otherProps, dependencyNames } = table;
+            const isRoot = index === resolution.length - 1;
 
             let dimensionTable;
             const args = [factTable, dimension, keyProps, otherProps, cellTable];
 
-            if (!dependencyNames){
+            if (!dependencyNames.length){
                 dimensionTable = this._makeDimensionTable.apply(this, args);
             } else {
 
                 let entitiesParts = [];
 
+                // todo заменить на один метод
                 if (!isRoot){
-                    entitiesParts = this._mapFilter(dependencyNames, cellTable, space.getDimensionTable(dependencyNames));
+                    entitiesParts = this._mapFilter(dependencyNames, cellTable, space.getDimensionTable(dependencyNames[0]));
                     dimensionTable = this._makeDimensionTableDependency.apply(this, args.concat([space, dependencyNames, entitiesParts]));
                 } else {
                     entitiesParts = this._mapFilterRoot(dependencyNames, cellTable, space);
@@ -46,7 +43,7 @@ export default class Star {
             }
 
             space.setDimensionTable(dimension, dimensionTable)
-        }
+        });
 
         return { space, cellTable };
     }

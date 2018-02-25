@@ -31,7 +31,8 @@ This solution is a means for extracting and replenishing data, which together wi
 - Multi-level hierarchies
 - Multiple hierarchies. One hierarchy for one [dimension][3] 
 - One [fact table][2]
-- OLAP data is typically stored in a [star schema][1] 
+- OLAP data is typically stored in a [star schema][1]
+- Analysis of only the key attributes of the members of the dimensions
 - The ability to edit data
 
 
@@ -201,3 +202,6 @@ Now newDataArray will be:
 
 ## Todo
 - unbalanced, ragged hierarchy
+- multi hierarchy (group spec fact table)
+- Analysis additional attributes of the members of the measurements
+- method delete empty cells
