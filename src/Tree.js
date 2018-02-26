@@ -15,6 +15,20 @@ export default class Tree {
     getRoot(){
         return this._root;
     }
+    createIterator(order){
+        let i = 0;
+
+        return {
+            next: ()=>{
+                let done = (i >= order.length);
+                let value = !done ? order[i++] : void 0;
+                return {
+                    done,
+                    value
+                }
+            }
+        }
+    }
     /**
      * A walk in which each parent node is traversed before its children
      */

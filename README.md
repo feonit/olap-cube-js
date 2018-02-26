@@ -11,10 +11,6 @@ The simplest data analysis tools written in javascript.
 
 This solution is a means for extracting and replenishing data, which together with your data storage means and a means of providing aggregate data, is intended for decision making.
 
-## Principles:
-- Any object analysis
-- Mathematical model
-
 [1]: https://en.wikipedia.org/wiki/Star_schema
 [2]: https://en.wikipedia.org/wiki/Fact_table
 [3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
@@ -23,10 +19,12 @@ This solution is a means for extracting and replenishing data, which together wi
 [6]: https://feonit.github.io/olap-cube/examples/product-table/index.html
 
 [Specification][5]
+
 [Demo][6]
 
 ## Support:
 - Multidimensional conceptual data representation
+- Tree structure for representing hierarchical data
 - [Balanced][4] hierarchies
 - Multi-level hierarchies
 - Multiple hierarchies. One hierarchy for one [dimension][3] 

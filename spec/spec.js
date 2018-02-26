@@ -1,5 +1,5 @@
 import './Schema.spec.js'
-import './Hierarchy.spec.js'
+import './Star.spec.js'
 import './Cube.spec.js'
 import './Cube.query.spec.js'
 import './Cube.fill.spec.js'

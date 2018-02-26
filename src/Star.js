@@ -3,6 +3,8 @@ import Member from "./Member.js";
 import {ENTITY_ID} from "./const.js";
 import Space from "./Space.js";
 import CellTable from "./CellTable.js";
+import FactTable from "./FactTable.js";
+import DimensionTable from "./DimensionTable.js";
 
 /**
  * The main task is to parse the data array into tables
@@ -12,10 +14,22 @@ import CellTable from "./CellTable.js";
  * */
 export default class Star {
     /**
-     * @param {FactTable} factTable - Data array to the analysis of values for dimension
-     * @param {object[]} dimensionTableList
+     * @param {object[]} facts - Data array to the analysis of values for dimension
+     * @param {object[]} dimensionTables
      * */
-    constructor(factTable, dimensionTableList){
+    constructor(facts, dimensionTables){
+        const factTable = new FactTable(facts);
+        const dimensionTableList = dimensionTables.map( dimensionTable => new DimensionTable(dimensionTable) );
+
+        const { space, cellTable } = this.normalize(factTable, dimensionTableList);
+
+        this.space = space;
+        this.cellTable = cellTable;
+
+        Object.defineProperty(this, 'dimensionTableList', { value: dimensionTableList });
+    }
+
+    normalize(factTable, dimensionTableList){
         const space = new Space();
         const cellTable = new CellTable(factTable);
 
@@ -46,6 +60,33 @@ export default class Star {
         });
 
         return { space, cellTable };
+    }
+
+    denormalize(cells = this.cellTable, dimensionTableList = this.dimensionTableList){
+        const factTable = new FactTable();
+        cells.forEach( cell => {
+            factTable.push(Object.assign({}, cell))
+        });
+
+        factTable.forEach( fact => {
+            const handleDimension = dimensionSchema => {
+                const idAttribute = Star.genericId(dimensionSchema.dimension);
+                const idValue = fact[idAttribute];
+                const member = this.space.getMemberList(dimensionSchema.dimension).find( member => {
+                    return member[ENTITY_ID] === idValue;
+                });
+                const memberCopy = Object.assign({}, member);
+                delete memberCopy[ENTITY_ID];
+                delete fact[idAttribute];
+                Object.assign(fact, memberCopy);
+            };
+
+            dimensionTableList.forEach( dimensionTable => {
+                handleDimension(dimensionTable)
+            })
+        });
+
+        return factTable;
     }
 
     /**

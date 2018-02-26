@@ -9,7 +9,6 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import Star from "./Star.js";
-import DimensionTable from "./DimensionTable.js";
 
 /**
  * It a means to retrieve data
@@ -22,13 +21,14 @@ import DimensionTable from "./DimensionTable.js";
 class Cube{
     constructor(facts, dimensionsSchema){
         const schema = new Schema(dimensionsSchema);
-        const factTable = new FactTable(facts);
         Object.defineProperty(this, 'schema', { value: schema });
-        Object.defineProperty(this, 'factTable', { value: factTable });
+        Object.defineProperty(this, 'facts', { value: facts });
 
-        const resolution = schema.getDimensionsResolutionOrder();
-        const dimensionTableList = resolution.map( resolution => new DimensionTable(resolution) );
-        const {space, cellTable} = new Star(factTable, dimensionTableList);
+        const dimensionTables = schema.getDimensionsResolutionOrder();
+        const star = new Star(facts, dimensionTables);
+
+        const {space, cellTable} = star;
+        Object.defineProperty(this, 'star', { value: star });
 
         this.space = space;
         this.cellTable = cellTable;
@@ -93,32 +93,7 @@ class Cube{
      * @public
      * */
     getDataArray(cells = this.cellTable){
-        const factTable = new FactTable();
-        cells.forEach( cell => {
-            factTable.push(Object.assign({}, cell))
-        });
-
-        factTable.forEach( fact => {
-            const handleDimension = dimensionSchema => {
-                const idAttribute = Star.genericId(dimensionSchema.dimension);
-                const idValue = fact[idAttribute];
-                const member = this.space.getMemberList(dimensionSchema.dimension).find( member => {
-                    return member[ENTITY_ID] === idValue;
-                });
-                const memberCopy = Object.assign({}, member);
-                delete memberCopy[ENTITY_ID];
-                delete fact[idAttribute];
-                Object.assign(fact, memberCopy);
-            };
-
-            const iterator = this.schema.createIterator();
-            let next;
-            while ( !(next = iterator.next()) || !next.done){
-                handleDimension(next.value)
-            }
-        });
-
-        return factTable;
+        return this.star.denormalize(cells)
     }
 }
 

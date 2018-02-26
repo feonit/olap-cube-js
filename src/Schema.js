@@ -46,22 +46,6 @@ export class Schema extends Tree{
         });
     }
 
-    createIterator(){
-        let i = 0;
-        let dimension = this.getDimensionsResolutionOrder();
-
-        return {
-            next: ()=>{
-                let done = (i >= dimension.length);
-                let value = !done ? dimension[i++] : void 0;
-                return {
-                    done,
-                    value
-                }
-            }
-        }
-    }
-
     /**
      * @param {string} dimension
      * @return {DimensionTable|undefined}
