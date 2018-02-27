@@ -6,16 +6,14 @@ os: osx
 
 install:
   - npm install
-  - npm install -g codecov
-  - npm install -g istanbul
 
 script:
  - npm run build:spec
- - istanbul cover ./node_modules/.bin/jasmine
+ - ./node_modules/.bin/istanbul cover ./node_modules/.bin/jasmine
+ - ./node_modules/.bin/codecov
 
 after_success:
  - npm run build
- - ./node_modules/.bin/codecov
 
 git:
   depth: 5

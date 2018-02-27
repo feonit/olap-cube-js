@@ -1,7 +1,16 @@
 {
   "name": "olap-cube",
   "version": "1.0.0",
-  "description": "How Cube is work? ```javascript",
+  "description": "OLAP Cube",
+  "keywords": [
+    "OLAP Cube",
+    "hypercube",
+    "cube.js",
+    "dimension",
+    "measure",
+    "fact table",
+    "dimension table"
+  ],
   "main": "index.js",
   "dependencies": {
     "babel-cli": "^6.26.0",
@@ -10,14 +19,15 @@
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
+    "webpack": "^3.10.0"
+  },
+  "devDependencies": {
     "codecov": "^3.0.0",
     "http-server": "^0.10.0",
     "istanbul": "^0.4.5",
     "jasmine": "^2.8.0",
     "jasmine-node": "^1.14.5",
-    "loadash": "^1.0.0",
-    "lodash": "^4.17.4",
-    "webpack": "^3.10.0"
+    "lodash": "^4.17.4"
   },
   "scripts": {
     "test": "npm run build:spec && node_modules/.bin/jasmine",
@@ -29,7 +39,7 @@
     "type": "git",
     "url": "git+https://github.com/feonit/olap-cube.git"
   },
-  "author": "",
+  "author": "Orlov Leonid",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/feonit/olap-cube/issues"
