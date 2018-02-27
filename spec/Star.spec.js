@@ -1,8 +1,5 @@
 import Star from "../src/Star.js";
-
-function jsonParseStringify(data){
-    return JSON.parse(JSON.stringify(data))
-}
+import {isEqual, jsonParseStringify} from './helpers.js'
 
 describe('[ Star ]', () => {
 
@@ -87,7 +84,7 @@ describe('[ Star ]', () => {
             };
 
             star = jsonParseStringify(star);
-            expect(_.isEqual(star, etalon)).toBe(true)
+            expect(isEqual(star, etalon)).toBe(true)
         });
 
         it('should return same array of data', () => {
@@ -100,7 +97,7 @@ describe('[ Star ]', () => {
             ];
 
             let data = jsonParseStringify(star.denormalize());
-            expect(_.isEqual(factTable, data)).toBe(true)
+            expect(isEqual(factTable, data)).toBe(true)
         });
     });
 

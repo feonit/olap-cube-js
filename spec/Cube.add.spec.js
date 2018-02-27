@@ -1,8 +1,7 @@
 import Cube from '../src/Cube.js';
+import {isEqual, jsonParseStringify} from './helpers.js'
 
-function jsonParseStringify(data){
-    return JSON.parse(JSON.stringify(data))
-}
+
 describe('[ Cube Edit ][ add ]', () => {
 
     describe('should add member to cube data', () => {
@@ -36,7 +35,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
         it('target dimension must be changed', ()=>{
             expect(
-                _.isEqual( jsonParseStringify(cube.query('coordinateX')), [
+                isEqual( jsonParseStringify(cube.query('coordinateX')), [
                     { id: 1, x: 0 },
                     { id: 2, x: 1 }
                 ])
@@ -45,7 +44,7 @@ describe('[ Cube Edit ][ add ]', () => {
             cube.addMember('coordinateX', { x: 2 });
 
             expect(
-                _.isEqual( jsonParseStringify(cube.query('coordinateX')), [
+                isEqual( jsonParseStringify(cube.query('coordinateX')), [
                     { id: 1, x: 0 },
                     { id: 2, x: 1 },
                     { id: 3, x: 2 }
@@ -55,7 +54,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
         it('other dimensions must be not changed', ()=>{
             expect(
-                _.isEqual( jsonParseStringify(cube.query('coordinateY')), [
+                isEqual( jsonParseStringify(cube.query('coordinateY')), [
                     { id: 1, y: 0 },
                     { id: 2, y: 1 }
                 ])
@@ -64,7 +63,7 @@ describe('[ Cube Edit ][ add ]', () => {
             cube.addMember('coordinateX', { x: 2 });
 
             expect(
-                _.isEqual( jsonParseStringify(cube.query('coordinateY')), [
+                isEqual( jsonParseStringify(cube.query('coordinateY')), [
                     { id: 1, y: 0 },
                     { id: 2, y: 1 }
                 ])
@@ -73,7 +72,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
         it('fact table must be changed', ()=>{
             expect(
-                _.isEqual( jsonParseStringify(cube.query()), [
+                isEqual( jsonParseStringify(cube.query()), [
                     {id: 1, x: 0, y: 0, value: 10 },
                     {id: 2, x: 0, y: 1, value: 100 },
                     {id: 3, x: 1, y: 0, value: 1000 },
@@ -84,7 +83,7 @@ describe('[ Cube Edit ][ add ]', () => {
             cube.addMember('coordinateX', { x: 2 });
 
             expect(
-                _.isEqual( jsonParseStringify(cube.query()), [
+                isEqual( jsonParseStringify(cube.query()), [
                     {id: 1, x: 0, y: 0, value: 10 },
                     {id: 2, x: 0, y: 1, value: 100 },
                     {id: 3, x: 1, y: 0, value: 1000 },
@@ -97,7 +96,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
         it('measure data must be changed', ()=>{
             expect(
-                _.isEqual( jsonParseStringify(cube.query('valueOfXY')), [
+                isEqual( jsonParseStringify(cube.query('valueOfXY')), [
                     { id: 1, value: 10 },
                     { id: 2, value: 100 },
                     { id: 3, value: 1000 },
@@ -108,7 +107,7 @@ describe('[ Cube Edit ][ add ]', () => {
             cube.addMember('coordinateX', { x: 2 });
 
             expect(
-                _.isEqual( jsonParseStringify(cube.query('valueOfXY')), [
+                isEqual( jsonParseStringify(cube.query('valueOfXY')), [
                     { id: 1, value: 10 },
                     { id: 2, value: 100 },
                     { id: 3, value: 1000 },

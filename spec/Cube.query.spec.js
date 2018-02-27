@@ -1,8 +1,6 @@
 import Cube from '../src/Cube.js';
+import {isEqual, jsonParseStringify} from './helpers.js'
 
-function jsonParseStringify(data){
-    return JSON.parse(JSON.stringify(data))
-}
 
 let factTable = [
     { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
@@ -48,7 +46,7 @@ describe('[ Cube Edit ][ query ]', () => {
             { id: 3, price: "20$" },
             { id: 4, price: "25$" },
         ];
-        expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
+        expect(isEqual( jsonParseStringify(res), expectation)).toBe(true)
     });
 
     it('should return query data with dependency param', () => {
@@ -59,7 +57,7 @@ describe('[ Cube Edit ][ query ]', () => {
         ];
         let city = { id: 3 /** city: "Moscow"*/ }; // other parameters are optional
         let res = cube.query('prices', { 'cities': city });
-        expect(_.isEqual( jsonParseStringify(res), expectation)).toBe(true)
+        expect(isEqual( jsonParseStringify(res), expectation)).toBe(true)
     });
 
     describe('should pass all possible query requests', () => {

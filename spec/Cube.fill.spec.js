@@ -1,8 +1,6 @@
 import Cube from '../src/Cube.js';
+import {isEqual, jsonParseStringify} from './helpers.js'
 
-function jsonParseStringify(data){
-    return JSON.parse(JSON.stringify(data))
-}
 describe('[ Cube Edit ][ fill ]', function(){
     const factTable = [
         { id: 1, x: 0, y: 0, z: 0,is: true },
@@ -43,7 +41,7 @@ describe('[ Cube Edit ][ fill ]', function(){
             { x: 1, y: 1, z: 0,is: false },
             { x: 1, y: 1, z: 1,is: false }
         ]);
-        expect(_.isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true);
+        expect(isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true);
     });
 
     it('should pass for example doc', () => {
@@ -67,7 +65,7 @@ describe('[ Cube Edit ][ fill ]', function(){
         const cube = new Cube(factTable, schema)
         cube.fill({ xy: false })
 
-        expect(_.isEqual(jsonParseStringify(cube.getDataArray()), [
+        expect(isEqual(jsonParseStringify(cube.getDataArray()), [
             { id: 1, x: 0, y: 1, xy: true },
             { id: 2, x: 1, y: 0, xy: true },
             { x: 0, y: 0, xy: false },
