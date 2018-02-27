@@ -1,5 +1,5 @@
 import Star from "../src/Star.js";
-import {isEqual, jsonParseStringify} from './helpers.js'
+import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
 describe('[ Star ]', () => {
 

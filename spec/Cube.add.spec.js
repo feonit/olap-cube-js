@@ -1,5 +1,5 @@
 import Cube from '../src/Cube.js';
-import {isEqual, jsonParseStringify} from './helpers.js'
+import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
 
 describe('[ Cube Edit ][ add ]', () => {
