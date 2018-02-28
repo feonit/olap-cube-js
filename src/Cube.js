@@ -107,48 +107,55 @@ class DynamicCube extends Cube{
     constructor(factTable, dimensionsSchema){
         super(factTable, dimensionsSchema)
     }
+    //todo добавить исключение, когда принадлежность измерения категории не определено
+    // refactor
     /**
-     * @param {string} dimension - dimension in which the member is created
+     * @param {string} targetDimension - dimension in which the member is created
      * @param {object} memberOptions - properties for the created member
      * @param {object} cellOptions -
      * @public
      * */
-    addMember(dimension, memberOptions, cellOptions = {}){
-        const columns = this.schema.getColumns();
+    addMember(targetDimension, memberOptions, cellOptions = {}){
 
+        // взять все листья
+        const externals = this.schema.getExternals();
+
+        // место куда будут складываться
         const space = new Space();
 
         // остальные измерения этого уровня
-        columns.forEach((dimensionSchema)=>{
-            if (dimensionSchema.dimension !== dimension){
-                if (!cellOptions[dimensionSchema.dimension]){
-                    space.setMemberList(dimensionSchema.dimension, this.space.getMemberList(dimensionSchema.dimension))
+        externals.forEach( ({dimension: externalDimension}) => {
+            if (targetDimension !== externalDimension){
+                if (!cellOptions[externalDimension]){
+                    space.setMemberList(externalDimension, this.space.getMemberList(externalDimension))
                 }
             }
         });
 
-        const memberDepOptions = this._createMemberDependency(dimension, memberOptions);
+        const memberDepOptions = this._createMemberDependency(targetDimension, memberOptions);
 
         cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
         const recursivelyForEach = (cellOptions, space, index, isDependency) => {
             const dimensionNames = space.getDimensionList();
             const dimensionNamesLength = dimensionNames.length;
+            const currentDimension = dimensionNames[index];
 
             if (index !== dimensionNamesLength){
-                const members = space.getMemberList(dimensionNames[index]);
+                const members = space.getMemberList(currentDimension);
 
                 members.forEach( member => {
-                    cellOptions[dimensionNames[index]] = member;
-                    let dependency = this.schema.getByDependency(dimensionNames[index]);
-                    if (dependency){
-                        const queryOptions = { [dimensionNames[index]]: member };
-                        const query = this.query(dependency.dimension, queryOptions);
+                    cellOptions[currentDimension] = member;
+                    let parentDimensionTable = this.schema.getByDependency(currentDimension);
+                    if (parentDimensionTable){
+                        const queryOptions = { [currentDimension]: member };
+                        const query = this.query(parentDimensionTable.dimension, queryOptions);
                         const space = new Space();
-                        space.setMemberList(dependency.dimension, query);
+                        space.setMemberList(parentDimensionTable.dimension, query);
 
                         recursivelyForEach(cellOptions, space, 0, true);
                     }
+
                     recursivelyForEach(cellOptions, space, index + 1, isDependency);
 
                     if (isDependency){
@@ -331,18 +338,14 @@ class DynamicCube extends Cube{
      * @private
      * */
     _createMember(dimension, props = {}){
-        if (!dimension){
-            throw 'attribute \"dimension\" nor found';
-        }
-
         const {keyProps} = this.schema.getDimensionTable(dimension);
         const id = DynamicCube.reduceId(this.space.getMemberList(dimension));
         const member = new InputMember(id, keyProps, props);
-        this.space.getMemberList(dimension).push(member);
+        this.space.getMemberList(dimension).add(member);
         return member;
     }
     /**
-     *
+     * create space
      * @private
      * */
     _createMemberDependency(dimension, memberOptions = {}){
@@ -351,6 +354,11 @@ class DynamicCube extends Cube{
             // create
             const member = this._createMember(dimension, memberOptions);
             result[dimension] = member;
+            // check dep
+            let dependency = this.schema.getByDependency(dimension);
+            if (dependency){
+                reqursive(dependency.dimension)
+            }
         };
         reqursive(dimension, memberOptions);
         return result;

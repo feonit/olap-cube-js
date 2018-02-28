@@ -136,6 +136,16 @@
                     $scope.monthTable = $scope.cube.getMonth();
                     $scope.yearQrTable = $scope.cube.getYearQr();
                     $scope.yearMonthQrTable = $scope.cube.getMonthYearQr();
+
+                    $scope.$watch('selectedYear', (value)=>{
+                        $scope.qrTable = $scope.cube.getQr(value);
+                    })
+
+                    $scope.$watch('selectedQr', (value)=>{
+                        $scope.monthTable = $scope.cube.getMonth(value, $scope.selectedYear);
+                    })
+
+
                 }
             })
             .component('dimensionTable', {
@@ -279,7 +289,17 @@
 
         <dimension-table table="yearTable"></dimension-table>
 
+        <h2>Dimension Categories Tables<sup>(output data)</sup></h2>
+
+        <select ng-model="selectedYear" style="display: block">
+            <option ng-repeat="member in yearTable" value="{{member.year}}" >{{member.year}}</option>
+        </select>
+
         <dimension-table table="qrTable"></dimension-table>
+
+        <select ng-model="selectedQr" style="display: block">
+            <option ng-repeat="member in qrTable" value="{{member.qr}}" >{{member.qr}}</option>
+        </select>
 
         <dimension-table table="monthTable"></dimension-table>
 

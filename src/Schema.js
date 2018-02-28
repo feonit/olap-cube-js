@@ -69,7 +69,7 @@ export class Schema extends Tree{
 
             if (dimensionOfDep === dimension){
                 const parent = this.getParentOf(node);
-                if (parent){
+                if (parent && parent !== this._root){
                     find = parent.value;
                 }
             }
@@ -112,16 +112,16 @@ export class Schema extends Tree{
         return root.value;
     }
     /**
-     *
+     * A node with no children.
      * */
-    getColumns(){
-        const columns = [];
+    getExternals(){
+        const externals = [];
         this.postOrder((value, node)=>{
-            if (!node.childNodes || !node.childNodes.length){
-                columns.push(value)
+            if (this.isExternal(node)){
+                externals.push(value)
             }
         });
-        return columns;
+        return externals;
     }
     /**
      * List of all final dimensions forming count of measure
