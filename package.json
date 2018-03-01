@@ -35,7 +35,7 @@
     "build:spec": "node_modules/.bin/webpack --profile --progress --display-modules --config config/webpack.config.spec.js",
     "build": "node_modules/.bin/webpack --profile --progress --display-modules  --config config/webpack.config.app.js",
     "dev": "node_modules/.bin/http-server",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "codecov": "./node_modules/.bin/codecov"
   },
   "repository": {
