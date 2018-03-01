@@ -3,3 +3,6 @@ node_modules
 coverage/
 dist/
 secure/
+.nyc_output/
+package-lock.json
+coverage.lcov
