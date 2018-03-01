@@ -10,9 +10,9 @@ install:
 script:
  - npm run build:spec
  - ./node_modules/.bin/istanbul cover ./node_modules/.bin/jasmine
- - ./node_modules/.bin/codecov
 
 after_success:
+ - npm run coverage
  - npm run build
 
 git:

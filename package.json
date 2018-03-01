@@ -33,7 +33,8 @@
     "test": "npm run build:spec && node_modules/.bin/jasmine",
     "build:spec": "node_modules/.bin/webpack --profile --progress --display-modules --config config/webpack.config.spec.js",
     "build": "node_modules/.bin/webpack --profile --progress --display-modules  --config config/webpack.config.app.js",
-    "dev": "node_modules/.bin/http-server"
+    "dev": "node_modules/.bin/http-server",
+    "coverage": "./node_modules/.bin/codecov"
   },
   "repository": {
     "type": "git",
