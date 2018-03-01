@@ -123,6 +123,9 @@ export class Schema extends Tree{
         });
         return externals;
     }
+    getInternals(){
+
+    }
     /**
      * List of all final dimensions forming count of measure
      * @return {SchemaDimension[]}

@@ -95,6 +95,16 @@ class Cube{
     getDataArray(cells = this.cellTable){
         return this.star.denormalize(cells)
     }
+
+    getCardinalityCount(){
+        return this.schema.getFinal().map( ({dimension}) => dimension).reduce((acc, dimension)=>{
+            return acc * this.query(dimension).length
+        }, 1)
+    }
+
+    getEmptyCount(){
+        return this.getCardinalityCount() - this.query().length;
+    }
 }
 
 /**

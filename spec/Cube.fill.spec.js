@@ -3,11 +3,14 @@ import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
 describe('[ Cube Edit ][ fill ]', function(){
     const factTable = [
-        { id: 1, x: 0, y: 0, z: 0,is: true },
-        { id: 2, x: 0, y: 0, z: 1,is: true },
-        { id: 3, x: 0, y: 1, z: 0,is: true },
-        { id: 4, x: 0, y: 1, z: 1,is: true },
-        { id: 5, x: 1, y: 0, z: 0,is: true },
+        { id: 1, x: 0, y: 0, z: 0, is: true },
+        { id: 2, x: 0, y: 0, z: 1, is: true },
+        { id: 3, x: 0, y: 1, z: 0, is: true },
+        { id: 4, x: 0, y: 1, z: 1, is: true },
+        { id: 5, x: 1, y: 0, z: 0, is: true },
+        // { id: 6, x: 1, y: 0, z: 1, is: true },
+        // { id: 7, x: 1, y: 1, z: 0, is: true },
+        // { id: 8, x: 1, y: 1, z: 1, is: true },
     ];
 
     const schema = {
@@ -22,8 +25,10 @@ describe('[ Cube Edit ][ fill ]', function(){
 
     it('should normalize count of measure for non-normalized data', () => {
         let cube = new Cube(factTable, schema);
+        expect(cube.getCardinalityCount()).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(5);
         cube.fill({ is: false });
+        expect(cube.getCardinalityCount()).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(8);
     });
 
@@ -44,6 +49,69 @@ describe('[ Cube Edit ][ fill ]', function(){
         expect(isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true);
     });
 
+    describe('[should normalize for hierarchy of dimensions]', ()=>{
+        let schema;
+
+        beforeEach(()=>{
+            schema = {
+                dimension: 'humans',
+                keyProps: ['humans'],
+                dependency: [
+                    {
+                        dimension: 'city',
+                        keyProps: ['city'],
+                        dependency: [
+                            {
+                                dimension: 'country',
+                                keyProps: ['country'],
+                                dependency: [
+                                    {
+                                        dimension: 'planet',
+                                        keyProps: ['planet']
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        dimension: 'nationality',
+                        keyProps: ['nationality']
+                    }
+                ]
+            };
+        });
+
+        it('should work level 1', ()=>{
+            const factTable = [
+                {id : 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
+                {id : 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
+            ];
+
+            const cube = new Cube(factTable, schema);
+            expect(cube.getCardinalityCount()).toBe(4);
+            expect(cube.getEmptyCount()).toBe(2);
+            cube.fill();
+            expect(cube.getCardinalityCount()).toBe(4);
+            expect(cube.getEmptyCount()).toBe(0);
+        });
+
+        it('should work level 3', ()=>{
+            const factTable = [
+                {id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
+                {id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
+                {id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
+            ];
+
+            const cube = new Cube(factTable, schema);
+            expect(cube.getCardinalityCount()).toBe(6);
+            expect(cube.getEmptyCount()).toBe(3);
+            cube.fill();
+            expect(cube.getCardinalityCount()).toBe(6);
+            expect(cube.getEmptyCount()).toBe(0);
+        })
+
+    });
+
     it('should pass for example doc', () => {
         const schema = {
             dimension: 'xy',
@@ -57,13 +125,13 @@ describe('[ Cube Edit ][ fill ]', function(){
                     keyProps: ['y']
                 }
             ]
-        }
+        };
         const factTable = [
             { id: 1, x: 0, y: 1, xy: true },
             { id: 2, x: 1, y: 0, xy: true }
-        ]
+        ];
         const cube = new Cube(factTable, schema)
-        cube.fill({ xy: false })
+        cube.fill({ xy: false });
 
         expect(isEqual(jsonParseStringify(cube.getDataArray()), [
             { id: 1, x: 0, y: 1, xy: true },

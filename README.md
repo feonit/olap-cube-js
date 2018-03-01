@@ -203,3 +203,7 @@ Now newDataArray will be:
 - multi hierarchy (group spec fact table)
 - Analysis additional attributes of the members of the measurements
 - method delete empty cells
+- remove responsibility for "id" prop at facts
+- add support for snowflake schema
+- add validation for tree 
+- single keyProp

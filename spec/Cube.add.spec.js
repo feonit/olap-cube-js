@@ -154,44 +154,66 @@ describe('[ Cube Edit ][ add ]', () => {
             };
 
             const factTable = [
-                { id: 1, product: 'telephone', money: '5$', year: '2018', month: 'january', day: '1'},
-                { id: 2, product: 'tv', money: '50$', year: '2018', month: 'january', day: '2' },
-                { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: '2' },
-                { id: 4, product: 'telephone', money: '15$', year: '2018', month: 'january', day: '2' }
+                { id: 1, product: 'telephone', money: '5$', year: '2017', month: 'january', day: 1},
+                { id: 2, product: 'tv', money: '50$', year: '2017', month: 'january', day: 2 },
+                { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: 2 },
+                { id: 4, product: 'telephone', money: '15$', year: '2018', month: 'january', day: 2 }
             ];
 
             cube = new Cube(factTable, schema);
         });
 
         it ('level 1', ()=>{
+            let debug;
 
-            expect(debug=cube.query('day').length).toBe(2);
-            expect(debug=cube.query('money').length).toBe(4);
+            expect(debug=cube.getCardinalityCount()).toBe(6);
 
-            cube.addMember('day', { day : '3' }, { month: { id: 1}, year: { id: 1 } } );
+            // debugger;
+            // cube.fill();
+            // debug=cube.query('money'); // !== 6 (7) bug
 
             expect(debug=cube.query('day').length).toBe(3);
+            expect(debug=cube.query('money').length).toBe(4);
+
+            cube.addMember('day', { day : 3 }, { month: { id: 1 }, year: { id: 1 } } );
+
+            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.query('day').length).toBe(4);
             expect(debug=cube.query('money').length).toBe(6);
         });
 
         it ('level 2', ()=>{
-            expect(debug=cube.query('month').length).toBe(1);
+            let debug;
+
+            expect(debug=cube.getCardinalityCount()).toBe(6);
+            expect(debug=cube.query('month').length).toBe(2);
+            expect(debug=cube.query('day').length).toBe(3);
             expect(debug=cube.query('money').length).toBe(4);
 
             cube.addMember('month', { month : 'april' }, { year: { id: 1 } } );
 
-            expect(debug=cube.query('month').length).toBe(2);
+            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.query('month').length).toBe(3);
+            expect(debug=cube.query('day').length).toBe(4);
             expect(debug=cube.query('money').length).toBe(6);
         });
 
         it ('level 3', ()=>{
-            expect(cube.query('year').length).toBe(1);
-            expect(cube.query('money').length).toBe(4);
+            let debug;
+
+            expect(debug=cube.getCardinalityCount()).toBe(6);
+            expect(debug=cube.query('year').length).toBe(2);
+            expect(debug=cube.query('month').length).toBe(2);
+            expect(debug=cube.query('day').length).toBe(3);
+            expect(debug=cube.query('money').length).toBe(4);
 
             cube.addMember('year', { year : '2019' } );
 
-            expect(cube.query('year').length).toBe(2);
-            expect(cube.query('money').length).toBe(6);
+            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.query('year').length).toBe(3);
+            expect(debug=cube.query('month').length).toBe(3);
+            expect(debug=cube.query('day').length).toBe(4);
+            expect(debug=cube.query('money').length).toBe(6);
         });
 
     })
