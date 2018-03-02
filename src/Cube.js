@@ -32,6 +32,16 @@ class Cube{
 
         this.space = space;
         this.cellTable = cellTable;
+
+        const count = this.countOfResiduals();
+        if (count > 0){
+            console.warn('Fact table has residuals')
+        }
+
+        const final = this.schema.getFinal();
+        if (final.length == 0){
+            console.warn('Fact table not has final dimension')
+        }
     }
     /**
      * A method that allows you to find all members of a specified dimension
@@ -96,14 +106,14 @@ class Cube{
         return this.star.denormalize(cells)
     }
 
-    getCardinalityCount(){
+    countOfCardinality(){
         return this.schema.getFinal().map( ({dimension}) => dimension).reduce((acc, dimension)=>{
             return acc * this.query(dimension).length
         }, 1)
     }
 
     getEmptyCount(){
-        return this.getCardinalityCount() - this.query().length;
+        return this.countOfCardinality() - this.query().length;
     }
 }
 
@@ -285,21 +295,23 @@ class DynamicCube extends Cube{
      * @public
      * */
     fill(props){
-        const measureName = this.schema.getMeasure().dimension;
-        const combinations = this._createTupleTable();
-        const emptyMemberOptions = [];
-        combinations.forEach( combination => {
-            const unique = this.query(measureName, combination );
-            if ( !unique.length ){
-                emptyMemberOptions.push( combination );
-            }
-        });
+        if (!this.countOfResiduals()){
+            const measureName = this.schema.getMeasure().dimension;
+            const tuples = this._createTupleTable();
+            const emptyMemberOptions = [];
+            tuples.forEach( combination => {
+                const unique = this.query(measureName, combination );
+                if ( !unique.length ){
+                    emptyMemberOptions.push( combination );
+                }
+            });
 
-        emptyMemberOptions.forEach( cellOptions => {
-            const member = this._createMemberDependency( measureName, props );
-            const options = Object.assign({}, cellOptions, member );
-            this._createNormalizeData(options);
-        });
+            emptyMemberOptions.forEach( cellOptions => {
+                const member = this._createMemberDependency( measureName, props );
+                const options = Object.assign({}, cellOptions, member );
+                this._createNormalizeData(options);
+            });
+        }
     }
     /**
      *
@@ -384,6 +396,21 @@ class DynamicCube extends Cube{
         } else {
             return 1;
         }
+    }
+
+    countOfResiduals(){
+        const tuples = this._createTupleTable();
+        return tuples.reduce( (acc, tuple) => {
+            const members = this.query(tuple);
+            return members.length > 1 ? ++acc : acc;
+        }, 0);
+    }
+    countOfUnfilled(){
+        const tuples = this._createTupleTable();
+        return tuples.reduce( (acc, tuple) => {
+            const members = this.query(tuple);
+            return members.length == 0 ? ++acc : acc;
+        }, 0);
     }
 }
 

@@ -207,3 +207,4 @@ Now newDataArray will be:
 - add support for snowflake schema
 - add validation for tree 
 - single keyProp
+- fact table without final dimension

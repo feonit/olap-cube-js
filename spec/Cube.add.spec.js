@@ -166,18 +166,14 @@ describe('[ Cube Edit ][ add ]', () => {
         it ('level 1', ()=>{
             let debug;
 
-            expect(debug=cube.getCardinalityCount()).toBe(6);
-
-            // debugger;
-            // cube.fill();
-            // debug=cube.query('money'); // !== 6 (7) bug
+            expect(debug=cube.countOfCardinality()).toBe(6);
 
             expect(debug=cube.query('day').length).toBe(3);
             expect(debug=cube.query('money').length).toBe(4);
 
             cube.addMember('day', { day : 3 }, { month: { id: 1 }, year: { id: 1 } } );
 
-            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.countOfCardinality()).toBe(8);
             expect(debug=cube.query('day').length).toBe(4);
             expect(debug=cube.query('money').length).toBe(6);
         });
@@ -185,14 +181,14 @@ describe('[ Cube Edit ][ add ]', () => {
         it ('level 2', ()=>{
             let debug;
 
-            expect(debug=cube.getCardinalityCount()).toBe(6);
+            expect(debug=cube.countOfCardinality()).toBe(6);
             expect(debug=cube.query('month').length).toBe(2);
             expect(debug=cube.query('day').length).toBe(3);
             expect(debug=cube.query('money').length).toBe(4);
 
             cube.addMember('month', { month : 'april' }, { year: { id: 1 } } );
 
-            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.countOfCardinality()).toBe(8);
             expect(debug=cube.query('month').length).toBe(3);
             expect(debug=cube.query('day').length).toBe(4);
             expect(debug=cube.query('money').length).toBe(6);
@@ -201,7 +197,7 @@ describe('[ Cube Edit ][ add ]', () => {
         it ('level 3', ()=>{
             let debug;
 
-            expect(debug=cube.getCardinalityCount()).toBe(6);
+            expect(debug=cube.countOfCardinality()).toBe(6);
             expect(debug=cube.query('year').length).toBe(2);
             expect(debug=cube.query('month').length).toBe(2);
             expect(debug=cube.query('day').length).toBe(3);
@@ -209,7 +205,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
             cube.addMember('year', { year : '2019' } );
 
-            expect(debug=cube.getCardinalityCount()).toBe(8);
+            expect(debug=cube.countOfCardinality()).toBe(8);
             expect(debug=cube.query('year').length).toBe(3);
             expect(debug=cube.query('month').length).toBe(3);
             expect(debug=cube.query('day').length).toBe(4);

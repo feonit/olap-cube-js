@@ -11,45 +11,45 @@ describe('[ Cube Static ]', function(){
     });
 
     describe('[ API ]',()=>{
-        let cube;
-
-        beforeEach(()=>{
-            cube = new Cube([{id: 1, name: 'me'}], {
-                dimension: 'name',
-                keyProps: ['name']
-            });
-        });
 
         it('should define query', ()=> {
-            expect(cube.query).toBeDefined();
+            expect(Cube.prototype.query).toBeDefined();
         });
 
-        it('should define getCardinalityCount', ()=> {
-            expect(cube.getCardinalityCount).toBeDefined();
+        it('should define countOfCardinality', ()=> {
+            expect(Cube.prototype.countOfCardinality).toBeDefined();
         });
 
         it('should define getEmptyCount', ()=> {
-            expect(cube.getEmptyCount).toBeDefined();
+            expect(Cube.prototype.getEmptyCount).toBeDefined();
         });
 
         it('should define getDataArray', ()=> {
-            expect(cube.getDataArray).toBeDefined();
+            expect(Cube.prototype.getDataArray).toBeDefined();
         });
 
         it('should define addMember', ()=> {
-            expect(cube.addMember).toBeDefined();
+            expect(Cube.prototype.addMember).toBeDefined();
         });
 
         it('should define removeMember', ()=> {
-            expect(cube.removeMember).toBeDefined();
+            expect(Cube.prototype.removeMember).toBeDefined();
         });
 
         it('should define fill', ()=> {
-            expect(cube.fill).toBeDefined();
+            expect(Cube.prototype.fill).toBeDefined();
+        });
+
+        it('should define countOfResiduals', ()=> {
+            expect(Cube.prototype.countOfResiduals).toBeDefined();
+        });
+
+        it('should define countOfUnfilled', ()=> {
+            expect(Cube.prototype.countOfUnfilled).toBeDefined();
         });
     });
 
-    describe('[ analytical tools ]', ()=>{
+    describe('[ Analytical tools ]', ()=>{
         let cube;
 
         beforeEach(()=>{
@@ -86,7 +86,7 @@ describe('[ Cube Static ]', function(){
         });
 
         it('should return cardinality count', ()=>{
-            const result = cube.getCardinalityCount();
+            const result = cube.countOfCardinality();
             expect(result).toBe(8)
         });
 
@@ -94,6 +94,38 @@ describe('[ Cube Static ]', function(){
             const result = cube.getEmptyCount();
             expect(result).toBe(3)
         });
-    })
+
+    });
+
+    describe('[ Validation ]', ()=>{
+
+        it('has non normalized fact data over declared dimension tables', ()=>{
+            const factTable = [
+                { id: 1, x: 0, y: 0, xy: null },
+                { id: 2, x: 1, y: 1, xy: null },
+                { id: 3, x: 1, y: 1, xy: null }, // <- bad record
+            ];
+
+            const schema = {
+                dimension: 'xy',
+                keyProps: ['xy'],
+                dependency: [
+                    {
+                        dimension: 'x',
+                        keyProps: ['x']
+                    },
+                    {
+                        dimension: 'y',
+                        keyProps: ['y']
+                    }
+                ]
+            };
+
+            const cube = new Cube(factTable, schema);
+            const result = cube.countOfResiduals();
+            expect(result === 1).toBe(true);
+        })
+
+    });
 
 });

@@ -25,10 +25,10 @@ describe('[ Cube Edit ][ fill ]', function(){
 
     it('should normalize count of measure for non-normalized data', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.getCardinalityCount()).toBe(8);
+        expect(cube.countOfCardinality()).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(5);
         cube.fill({ is: false });
-        expect(cube.getCardinalityCount()).toBe(8);
+        expect(cube.countOfCardinality()).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(8);
     });
 
@@ -88,10 +88,10 @@ describe('[ Cube Edit ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(cube.getCardinalityCount()).toBe(4);
+            expect(cube.countOfCardinality()).toBe(4);
             expect(cube.getEmptyCount()).toBe(2);
             cube.fill();
-            expect(cube.getCardinalityCount()).toBe(4);
+            expect(cube.countOfCardinality()).toBe(4);
             expect(cube.getEmptyCount()).toBe(0);
         });
 
@@ -103,10 +103,10 @@ describe('[ Cube Edit ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(cube.getCardinalityCount()).toBe(6);
+            expect(cube.countOfCardinality()).toBe(6);
             expect(cube.getEmptyCount()).toBe(3);
             cube.fill();
-            expect(cube.getCardinalityCount()).toBe(6);
+            expect(cube.countOfCardinality()).toBe(6);
             expect(cube.getEmptyCount()).toBe(0);
         })
 
