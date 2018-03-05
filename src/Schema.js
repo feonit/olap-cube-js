@@ -85,6 +85,37 @@ export class Schema extends Tree{
     getNames(){
         return this._dimensionsResolutionOrder.map( schema => schema.dimension );
     }
+
+    traceUp(dimension, callback){
+        let find = false;
+        let order = [];
+        this.postOrder( ({ dimension: currentDimension }, node) => {
+            if (dimension === currentDimension){
+                find = node;
+            }
+        });
+
+        const req = (node) => {
+            order.push(node);
+            const parent = this.getParentOf(node);
+            if (parent){
+
+                if (parent === this.getRoot()){
+                    return;
+                }
+                req(parent)
+            }
+        };
+
+        if (find){
+            req(find);
+        }
+
+        order.forEach( node => {
+            callback(node.value)
+        })
+    }
+
     /**
      * Get a list of all dimension related to the selected dimension
      * @return {string[]}

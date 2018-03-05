@@ -79,6 +79,9 @@ export default class Tree {
         return this._root === node;
     }
     getParentOf(node){
+        // if (node === this._root){
+        //     return null;
+        // }
         let find = false;
         this.preOrder((value, currentNode)=>{
             if (currentNode.childNodes && currentNode.childNodes.length && currentNode.childNodes.indexOf(node) !== -1){

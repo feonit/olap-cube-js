@@ -156,45 +156,47 @@ class DynamicCube extends Cube{
 
         cellOptions = Object.assign({}, cellOptions, memberDepOptions);
 
-        const recursivelyForEach = (cellOptions, space, index, isDependency) => {
+
+        const createCell = (cellOptions)=>{
+            const measureName = this.schema.getMeasure().dimension;
+            const member = this._createMember(measureName);
+            cellOptions = Object.assign({}, cellOptions, { [measureName]: member });
+            this._createNormalizeData(Object.assign({}, cellOptions));
+        };
+
+
+        const recursivelyForEach = (space, index) => {
             const dimensionNames = space.getDimensionList();
             const dimensionNamesLength = dimensionNames.length;
             const currentDimension = dimensionNames[index];
+            const members = space.getMemberList(currentDimension);
 
-            if (index !== dimensionNamesLength){
-                const members = space.getMemberList(currentDimension);
+            const cells = [];
 
-                members.forEach( member => {
-                    cellOptions[currentDimension] = member;
-                    let parentDimensionTable = this.schema.getByDependency(currentDimension);
-                    if (parentDimensionTable){
-                        const queryOptions = { [currentDimension]: member };
-                        const query = this.query(parentDimensionTable.dimension, queryOptions);
-                        const space = new Space();
-                        space.setMemberList(parentDimensionTable.dimension, query);
+            members.forEach( member => {
+                cellOptions[currentDimension] = member;
+                let parentDimensionTable = this.schema.getByDependency(currentDimension);
+                if (parentDimensionTable){
+                    const query = this.query(parentDimensionTable.dimension, { [currentDimension]: member });
+                    const space = new Space();
+                    space.setMemberList(parentDimensionTable.dimension, query);
 
-                        recursivelyForEach(cellOptions, space, 0, true);
-                    }
+                    recursivelyForEach(space, 0);
+                }
 
-                    recursivelyForEach(cellOptions, space, index + 1, isDependency);
+                if ( (index + 1) === dimensionNamesLength ){
+                    cells.push(Object.assign({}, cellOptions))
+                } else {
+                    recursivelyForEach(space, index + 1);
+                }
+            });
 
-                    if (isDependency){
-                        return;
-                    }
-
-                    if ( (index + 1) === dimensionNamesLength ){
-                        // create cell
-                        const measureName = this.schema.getMeasure().dimension;
-                        const member = this._createMember(measureName);
-                        const options = Object.assign({}, cellOptions, { [measureName]: member });
-                        this._createNormalizeData(options);
-                    }
-                })
-
-            }
+            cells.forEach((cellOptions)=>{
+                createCell(cellOptions)
+            })
         };
 
-        recursivelyForEach(cellOptions, space, 0);
+        recursivelyForEach(space, 0);
     }
     /**
      *
@@ -372,17 +374,12 @@ class DynamicCube extends Cube{
      * */
     _createMemberDependency(dimension, memberOptions = {}){
         const result = {};
-        const reqursive = (dimension, memberOptions = {}) => {
-            // create
-            const member = this._createMember(dimension, memberOptions);
-            result[dimension] = member;
-            // check dep
-            let dependency = this.schema.getByDependency(dimension);
-            if (dependency){
-                reqursive(dependency.dimension)
-            }
-        };
-        reqursive(dimension, memberOptions);
+        const rootDimension = this.schema.getRoot().value.dimension;
+
+        this.schema.traceUp(dimension, ({dimension}) => {
+            result[dimension] = this._createMember(dimension, memberOptions);
+        });
+
         return result;
     }
     /**
