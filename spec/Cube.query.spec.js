@@ -60,7 +60,7 @@ describe('[ Cube Edit ][ query ]', () => {
         expect(isEqual( jsonParseStringify(res), expectation)).toBe(true)
     });
 
-    describe('should pass all possible query requests', () => {
+    describe('should pass all possible queries', () => {
         const factTable = [
             { id: 1, place: 'P_1', year: '2017', qr: 'QR1', month: 1, product: 'TV', mark: 'sony', money: 100, cents: 99},
             { id: 2, place: 'P_2', year: '2017', qr: 'QR2', month: 5, product: 'phone', mark: 'sony', money: 115, cents: 99},
@@ -120,22 +120,22 @@ describe('[ Cube Edit ][ query ]', () => {
             cube = new Cube(factTable, schema);
         });
 
-        it('query request should return list of members for all dimension in first level of hierarchy', () => {
+        it('query should return list of members for all dimension in first level of hierarchy', () => {
             expect(cube.query('mark').length).toBe(3);
             expect(cube.query('place').length).toBe(2);
             expect(cube.query('month').length).toBe(13);
         });
 
-        it('query request should return list of members for all dimension in other levels of hierarchy', () => {
+        it('query should return list of members for all dimension in other levels of hierarchy', () => {
             expect(cube.query('year').length).toBe(4);
             expect(cube.query('qr').length).toBe(11);
         });
 
-        it('query request should return list of members for dimension of cells', () => {
+        it('query should return list of members for dimension of cells', () => {
             expect(cube.query('money').length).toBe(15);
         });
 
-        it('query request should return list of members for dimension with space option including one dimension', () => {
+        it('query should return list of members for dimension with space option including one dimension', () => {
             expect(cube.query('mark', {
                 product: { id: 1 }
             }).length).toBe(2);
@@ -145,37 +145,44 @@ describe('[ Cube Edit ][ query ]', () => {
             }).length).toBe(3);
         });
 
-        it('query request should return list of members for dimension with space option including more than one dimension', () => {
+        it('query should return list of members for dimension with space option including more than one dimension', () => {
             expect(cube.query('mark', {
                 product: { id: 1 },
                 year: { id: 1 }
             }).length).toBe(1);
         });
 
-        it('query request without any arguments should return list of members for dimension of all cells', () => {
+        it('query without any arguments should return list of members for dimension of all cells', () => {
             expect(cube.query().length).toBe(15);
             expect(cube.query(null).length).toBe(15);
         });
 
-        it('query request with the space option as the second arguments should return list of members for dimension of relevant cells', () => {
+        it('query with the space option as the second arguments should return list of members for dimension of relevant cells', () => {
             expect(cube.query(null, { mark: { id: 1} }).length).toBe(3);
         });
 
-        it('query request with the space option as the first argument should return list of members for dimension of relevant cells', () => {
+        it('query with the space option as the first argument should return list of members for dimension of relevant cells', () => {
             expect(cube.query({ mark: { id: 1 } }).length).toBe(3);
         });
 
-        it('query request with the space option in which there can be a list of members of the dimension', () => {
+        it('query with the space option in which there can be a list of members of the dimension', () => {
             expect(cube.query({ mark: [{ id: 1 }, { id: 2 }] }).length).toBe(7);
         });
 
-        it('query request with the space option in which there may be a plurality of terms of dimension determined by the represented value', () => {
+        it('query with the space option in which there may be a plurality of terms of dimension determined by the represented value', () => {
             expect(cube.query({ mark: 'sony' }).length).toBe(3);
             expect(cube.query({ mark: 'samsung' }).length).toBe(4);
         });
 
-        it('query request with the space option in which there may be a plurality of terms of dimension determined by the represented values', () => {
+        it('query with the space option in which there may be a plurality of terms of dimension determined by the represented values', () => {
             expect(cube.query({ mark: ['sony', 'samsung'] }).length).toBe(7);
         });
+
+        it('query with empty the space option', ()=>{
+            const res = cube.query('mark');
+            const expectation = cube.query('mark', { product: void 0, place: void 0 });
+            const check = isEqual( jsonParseStringify(res), jsonParseStringify(expectation) );
+            expect(check).toBe(true);
+        })
     })
 });

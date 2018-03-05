@@ -79,35 +79,35 @@
                 return this.query('mark')
             }
             getMonth(qr, year){
-                const query = {};
-                if (qr){
-                    query['qr'] = qr;
-                }
-                if (year){
-                    query['year'] = year;
-                }
-                return this.query('month', query)
+                return this.query('month', { 'qr': qr, 'year': year })
             }
             getQr(year){
-                const query = {};
-
-                if (year){
-                    query['year'] = year;
-                }
-                return this.query('qr', query)
+                return this.query('qr', { 'year': year })
+            }
+            getQrMonth(){
+                return this.getQr().map( qr => {
+                    const composite = new Composite({
+                        member: qr,
+                        category: this.getMonth(qr)
+                    });
+                    return composite;
+                })
             }
             getYear(){
                 return this.query('year')
             }
             getYearQr(){
                 return this.getYear().map( year => {
-                    const composite = new Composite({ member: year,  category: this.getQr(year) });
+                    const composite = new Composite({
+                        member: year,
+                        category: this.getQr(year)
+                    });
                     return composite;
                 })
             }
             // todo: add that functional in Cube
-            getMonthYearQr(){
-                return this.getYearQr().map( composite => {
+            getYearQrMonth(){
+                const monthYearQr = this.getYearQr().map( composite => {
                     const newComposite = {
                         member: composite.member,
                         category: composite.category.map( qr => {
@@ -119,7 +119,8 @@
                         })
                     };
                     return newComposite;
-                })
+                });
+                return monthYearQr
             }
         }
 
@@ -128,33 +129,45 @@
                 constructor($scope){
                     $scope.factTable = factTable;
                     $scope.cube = new ProductTable(factTable, schema);
-                    $scope.placeTable = $scope.cube.getPlace();
-                    $scope.productTable = $scope.cube.getProduct();
-                    $scope.markTable = $scope.cube.getMark();
-                    $scope.yearTable = $scope.cube.getYear();
-                    $scope.qrTable = $scope.cube.getQr();
-                    $scope.monthTable = $scope.cube.getMonth();
-                    $scope.yearQrTable = $scope.cube.getYearQr();
-                    $scope.yearMonthQrTable = $scope.cube.getMonthYearQr();
+                    $scope.placeTable = angular.copy($scope.cube.getPlace());
+                    $scope.productTable = angular.copy($scope.cube.getProduct());
+                    $scope.markTable = angular.copy($scope.cube.getMark());
+                    $scope.monthTable = angular.copy($scope.cube.getMonth());
+                    $scope.yearQrMonthTable = angular.copy($scope.cube.getYearQrMonth());
+                    $scope.yearQrTable = angular.copy($scope.cube.getYearQr());
+                    $scope.yearTable = angular.copy($scope.cube.getYear());
+                    $scope.qrMonthTable = angular.copy($scope.cube.getQrMonth());
+                    $scope.qrTable = angular.copy($scope.cube.getQr());
 
+                    $scope.selectedYear = "";
                     $scope.$watch('selectedYear', (value)=>{
-                        $scope.qrTable = $scope.cube.getQr(value);
-                    })
+                        $scope.qrTable = angular.copy($scope.cube.getQr(value));
+                    });
 
+                    $scope.selectedQr = "";
                     $scope.$watch('selectedQr', (value)=>{
-                        $scope.monthTable = $scope.cube.getMonth(value, $scope.selectedYear);
+                        $scope.monthTable = angular.copy($scope.cube.getMonth(value, $scope.selectedYear));
                     })
-
-
                 }
             })
             .component('dimensionTable', {
                 bindings: {
                     "table": "="
                 },
+                controllerAs: '$ctrl',
+                controller: class DimensionTableController {
+                    getKeys(obj){
+                        const keys = Object.keys(obj).sort();
+                        let index;
+                        if (index = keys.indexOf('$$hashKey') !== -1){
+                            keys.splice(index, 1);
+                        }
+                        return keys;
+                    }
+                },
                 template: (
-                    `
-                    <table ng-init="keys=$ctrl.getKeys($ctrl.etalon)">
+                        `
+                    <table ng-init="keys=$ctrl.getKeys($ctrl.table[0])">
                         <thead>
                             <tr>
                                 <td ng-repeat="key in keys">{{ key }}</td>
@@ -168,11 +181,13 @@
 
                     </table>`
                 ),
+            })
+            .component('categoryTable', {
+                bindings: {
+                    "table": "="
+                },
                 controllerAs: '$ctrl',
-                controller: class DimensionTableController {
-                    $onInit(){
-                        this.etalon = this.table[0];
-                    }
+                controller: class CategoryTableController {
                     getKeys(obj){
                         const keys = Object.keys(obj).sort();
                         let index;
@@ -181,15 +196,16 @@
                         }
                         return keys;
                     }
-                }
-            })
-            .component('categoryTable', {
-                bindings: {
-                    "table": "="
+                    /**
+                     * @param {Member|Composite} obj
+                     * */
+                    isComposite(obj){
+                        return obj instanceof Composite
+                    }
                 },
                 template: (
-                    `
-                    <table ng-init="memberKeys=$ctrl.getKeys($ctrl.etalon.member)">
+                        `
+                    <table ng-init="memberKeys=$ctrl.getKeys($ctrl.table[0].member)">
                         <thead>
                             <tr>
                                 <td ng-repeat="memberKey in memberKeys">{{ memberKey }}</td>
@@ -206,46 +222,20 @@
 
                                     <dimension-table
                                         ng-if="!$ctrl.isComposite(record.category[0])"
-                                        table="$ctrl.clear(record.category)">
+                                        table="record.category">
                                     </dimension-table>
 
                                     <category-table
                                         ng-if="$ctrl.isComposite(record.category[0])"
-                                        table="$ctrl.clear(record.category)">
+                                        table="record.category">
                                     </category-table>
 
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-
 `
                 ),
-                controllerAs: '$ctrl',
-                controller: class CategoryTableController {
-                    $onInit(){
-                        this.etalon = this.table[0];
-                    }
-                    getKeys(obj){
-                        const keys = Object.keys(obj).sort();
-                        let index;
-                        if (index = keys.indexOf('$$hashKey') !== -1){
-                            keys.splice(index, 1);
-                        }
-                        return keys;
-                    }
-                    clear(arr){
-                        return arr.map( item => {
-                            return angular.fromJson(angular.toJson(item))
-                        })
-                    }
-                    /**
-                     * @param {Member|Composite} obj
-                     * */
-                    isComposite(obj){
-                        return obj instanceof Composite
-                    }
-                }
             })
         ;
 
@@ -273,6 +263,10 @@
             background: hsl(0, 0%, 99%);
         }
 
+        section{
+            display: inline-block;
+        }
+
     </style>
 
     <div ng-controller="AppController">
@@ -287,25 +281,36 @@
 
         <dimension-table table="markTable"></dimension-table>
 
-        <dimension-table table="yearTable"></dimension-table>
 
         <h2>Dimension Categories Tables<sup>(output data)</sup></h2>
 
-        <select ng-model="selectedYear" style="display: block">
-            <option ng-repeat="member in yearTable" value="{{member.year}}" >{{member.year}}</option>
-        </select>
-
-        <dimension-table table="qrTable"></dimension-table>
-
-        <select ng-model="selectedQr" style="display: block">
-            <option ng-repeat="member in qrTable" value="{{member.qr}}" >{{member.qr}}</option>
-        </select>
-
-        <dimension-table table="monthTable"></dimension-table>
+        <category-table table="yearQrMonthTable"></category-table>
 
         <category-table table="yearQrTable"></category-table>
 
-        <category-table table="yearMonthQrTable"></category-table>
+        <dimension-table table="yearTable"></dimension-table>
+
+        <category-table table="qrMonthTable"></category-table>
+
+        <section>
+            <select ng-model="selectedYear" style="display: block">
+                <option value="" selected>ALL</option>
+                <option ng-repeat="member in yearTable" value="{{member.year}}" >{{member.year}}</option>
+            </select>
+
+            <dimension-table table="qrTable"></dimension-table>
+        </section>
+
+        <section>
+            <select ng-model="selectedQr" style="display: block">
+                <option value="" selected>ALL</option>
+                <option ng-repeat="member in qrTable" value="{{member.qr}}" >{{member.qr}}</option>
+            </select>
+
+            <dimension-table table="monthTable"></dimension-table>
+        </section>
+
+
     </div>
 
 </body>

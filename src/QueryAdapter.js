@@ -6,6 +6,8 @@ export default class QueryAdapter {
      * @param {Space} space
      * */
     applyAdapter(fixSpaceOptions, space){
+        this.removeEmptyFilds(fixSpaceOptions);
+
         Object.keys(fixSpaceOptions).forEach( dimension => {
             const value = fixSpaceOptions[dimension];
 
@@ -29,6 +31,18 @@ export default class QueryAdapter {
                 }
             }
         });
+        return fixSpaceOptions;
+    }
+    /**
+     * { field: undefined } => {}
+     * */
+    removeEmptyFilds(fixSpaceOptions){
+        Object.keys(fixSpaceOptions).reduce((fixSpaceOptions, prop)=>{
+            if (!fixSpaceOptions[prop]){
+                delete fixSpaceOptions[prop];
+            }
+            return fixSpaceOptions;
+        }, fixSpaceOptions);
         return fixSpaceOptions;
     }
 }
