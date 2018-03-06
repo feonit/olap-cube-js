@@ -132,7 +132,14 @@ describe('[ Cube Edit ][ add ]', () => {
                 dependency: [
                     {
                         dimension: 'product',
-                        keyProps: ['product']
+                        keyProps: ['product'],
+                        // todo fix
+                        // dependency: [
+                        //     {
+                        //         dimension: 'category',
+                        //         keyProps: ['category']
+                        //     }
+                        // ]
                     },
                     {
                         dimension: 'day',
@@ -154,10 +161,10 @@ describe('[ Cube Edit ][ add ]', () => {
             };
 
             const factTable = [
-                { id: 1, product: 'telephone', money: '5$', year: '2017', month: 'january', day: 1},
-                { id: 2, product: 'tv', money: '50$', year: '2017', month: 'january', day: 2 },
-                { id: 3, product: 'telephone', money: '10$', year: '2018', month: 'january', day: 2 },
-                { id: 4, product: 'telephone', money: '15$', year: '2018', month: 'january', day: 2 }
+                { id: 1, product: 'telephone', category: 'electronic', money: '5$', year: '2017', month: 'january', day: 1},
+                { id: 2, product: 'tv', category: 'electronic', money: '50$', year: '2017', month: 'january', day: 2 },
+                { id: 3, product: 'telephone', category: 'electronic', money: '10$', year: '2018', month: 'january', day: 2 },
+                { id: 4, product: 'telephone', category: 'electronic', money: '15$', year: '2018', month: 'january', day: 2 }
             ];
 
             cube = new Cube(factTable, schema);

@@ -208,3 +208,4 @@ Now newDataArray will be:
 - add validation for tree 
 - single keyProp
 - fact table without final dimension
+- ES5/ES6 umd

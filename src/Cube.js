@@ -130,12 +130,12 @@ class DynamicCube extends Cube{
     //todo добавить исключение, когда принадлежность измерения категории не определено
     // refactor
     /**
-     * @param {string} targetDimension - dimension in which the member is created
+     * @param {string} dimension - dimension in which the member is created
      * @param {object} memberOptions - properties for the created member
-     * @param {object} cellOptions -
+     * @param {object} categorySpace - space of category for current dimension
      * @public
      * */
-    addMember(targetDimension, memberOptions, cellOptions = {}){
+    addMember(dimension, memberOptions, categorySpace = {}){
 
         // взять все листья
         const externals = this.schema.getExternals();
@@ -145,17 +145,16 @@ class DynamicCube extends Cube{
 
         // остальные измерения этого уровня
         externals.forEach( ({dimension: externalDimension}) => {
-            if (targetDimension !== externalDimension){
-                if (!cellOptions[externalDimension]){
+            if (dimension !== externalDimension){
+                if (!categorySpace[externalDimension]){
                     space.setMemberList(externalDimension, this.space.getMemberList(externalDimension))
                 }
             }
         });
 
-        const memberDepOptions = this._createMemberDependency(targetDimension, memberOptions);
+        const memberDepOptions = this._createMemberDependency(dimension, memberOptions);
 
-        cellOptions = Object.assign({}, cellOptions, memberDepOptions);
-
+        const cellSpace = Object.assign({}, categorySpace, memberDepOptions);
 
         const createCell = (cellOptions)=>{
             const measureName = this.schema.getMeasure().dimension;
@@ -165,29 +164,26 @@ class DynamicCube extends Cube{
         };
 
 
-        const recursivelyForEach = (space, index) => {
-            const dimensionNames = space.getDimensionList();
+        const recursivelyForEach = (dimensionNames, membersList, index, cellSpace) => {
             const dimensionNamesLength = dimensionNames.length;
             const currentDimension = dimensionNames[index];
-            const members = space.getMemberList(currentDimension);
-
             const cells = [];
+            const cellSpaceCopy = Object.assign({}, cellSpace);
 
-            members.forEach( member => {
-                cellOptions[currentDimension] = member;
+            membersList[index].forEach( member => {
+                cellSpaceCopy[currentDimension] = member;
                 let parentDimensionTable = this.schema.getByDependency(currentDimension);
-                if (parentDimensionTable){
-                    const query = this.query(parentDimensionTable.dimension, { [currentDimension]: member });
-                    const space = new Space();
-                    space.setMemberList(parentDimensionTable.dimension, query);
 
-                    recursivelyForEach(space, 0);
+                if (parentDimensionTable){
+                    const members = this.query(parentDimensionTable.dimension, { [currentDimension]: member });
+
+                    recursivelyForEach([parentDimensionTable.dimension], [members], 0);
                 }
 
                 if ( (index + 1) === dimensionNamesLength ){
-                    cells.push(Object.assign({}, cellOptions))
+                    cells.push(Object.assign({}, cellSpaceCopy))
                 } else {
-                    recursivelyForEach(space, index + 1);
+                    recursivelyForEach(dimensionNames, index + 1);
                 }
             });
 
@@ -196,7 +192,9 @@ class DynamicCube extends Cube{
             })
         };
 
-        recursivelyForEach(space, 0);
+        const dimensions = space.getDimensionList();
+        const membersList = dimensions.map(dimension => space.getMemberList(dimension));
+        recursivelyForEach(dimensions, membersList, 0, cellSpace);
     }
     /**
      *
