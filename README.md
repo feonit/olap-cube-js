@@ -15,8 +15,8 @@ This solution is a means for extracting and replenishing data, which together wi
 [2]: https://en.wikipedia.org/wiki/Fact_table
 [3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
 [4]: https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.abx.cub.doc/abx-c-cube-balancedandunbalancedhierarchies.html
-[5]: https://feonit.github.io/olap-cube/spec/
-[6]: https://feonit.github.io/olap-cube/examples/product-table/index.html
+[5]: https://feonit.github.io/olap-cube-js/spec/
+[6]: https://feonit.github.io/olap-cube-js/examples/product-table/index.html
 
 [Specification][5]
 
