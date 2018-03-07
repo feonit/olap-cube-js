@@ -209,3 +209,4 @@ Now newDataArray will be:
 - single keyProp
 - fact table without final dimension
 - ES5/ES6 umd
+- dist folder/ version/ npm
