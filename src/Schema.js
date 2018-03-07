@@ -157,6 +157,31 @@ export class Schema extends Tree{
     getInternals(){
 
     }
+
+    getChildDimensionList(dimension){
+        let parentNode;
+        let order = [];
+        this.postOrder( ({dimension: currentDimension}, node) => {
+            if (currentDimension === dimension){
+                parentNode = node;
+            }
+        });
+
+        const reqursive = (node)=>{
+            if (node && node.childNodes.length){
+                node.childNodes.forEach(childNode =>{
+                    order.push(childNode.value.dimension);
+                    reqursive(childNode)
+                })
+            }
+        };
+
+        if (parentNode){
+            reqursive(parentNode)
+        }
+
+        return order;
+    }
     /**
      * List of all final dimensions forming count of measure
      * @return {SchemaDimension[]}

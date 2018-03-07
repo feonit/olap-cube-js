@@ -1,8 +1,88 @@
 import Cube from '../src/Cube.js';
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
-
+import { NotCompletelySpaceException, AddDimensionOfCellException } from '../src/errors.js';
 
 describe('[ Cube Edit ][ add ]', () => {
+
+    describe('[ validation data to add ]', () => {
+
+        let cube;
+
+        beforeEach(()=>{
+
+            const schema = {
+                dimension: 'xxxx',
+                keyProps: ['xxxx'],
+                dependency: [
+                    {
+                        dimension: 'xxx',
+                        keyProps: ['xxx'],
+                        dependency: [
+                            {
+                                dimension: 'xx',
+                                keyProps: ['xx'],
+                                dependency: [
+                                    {
+                                        dimension: 'x',
+                                        keyProps: ['x'],
+                                    }
+                                ]
+                            }
+                        ]
+                    },{
+                        dimension: 'z',
+                        keyProps: ['z']
+                    }
+                ]
+            };
+
+            const factTable = [
+                { id: 1, x: 0, xx: 0, xxx: 0 , xxxx: 0, z: 0 },
+            ];
+
+            cube = new Cube(factTable, schema);
+
+        });
+
+        it('should throw whet defined not completely space for added member level 1', ()=>{
+            expect(() => {
+                cube.addMember('xxx', { xxx: 1 } )
+            }).toThrow();
+        });
+
+        it('should throw whet defined not completely space for added member level 2', ()=>{
+            expect(() => {
+                cube.addMember('xx', { xx: 1 } )
+            }).toThrow();
+        });
+
+        it('should throw specified error whet defined not completely space for added member', ()=>{
+            let err;
+            try {
+                cube.addMember('xxx', { xxx: 1 } )
+            } catch (error) {
+                err = error;
+            }
+            expect( err instanceof NotCompletelySpaceException).toBe(true);
+        });
+
+        it('should throw whet was try to add a second member to the dimension for the cell ', ()=>{
+            expect(() => {
+                cube.addMember('xxxx', { xxxx: 1 } )
+            }).toThrow();
+        });
+
+        it('should throw specified error whet was try to add a second member to the dimension for the cell ', ()=>{
+            let err;
+            try {
+                cube.addMember('xxxx', { xxxx: 1 } )
+            } catch (error) {
+                err = error;
+            }
+            expect( err instanceof AddDimensionOfCellException).toBe(true);
+        });
+
+    });
 
     describe('[should add member to cube data]', () => {
 

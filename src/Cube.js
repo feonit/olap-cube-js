@@ -9,6 +9,7 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import Star from "./Star.js";
+import { NotCompletelySpaceException, AddDimensionOfCellException } from './errors.js';
 
 /**
  * It a means to retrieve data
@@ -136,6 +137,7 @@ class DynamicCube extends Cube{
      * @public
      * */
     addMember(dimension, memberOptions, categorySpace = {}){
+        this._validateAddMemberParams(dimension, memberOptions, categorySpace);
 
         // взять все листья
         const externals = this.schema.getExternals();
@@ -183,7 +185,7 @@ class DynamicCube extends Cube{
                 if ( (index + 1) === dimensionNamesLength ){
                     cells.push(Object.assign({}, cellSpaceCopy))
                 } else {
-                    recursivelyForEach(dimensionNames, index + 1);
+                    recursivelyForEach(dimensionNames, membersList, index + 1);
                 }
             });
 
@@ -195,6 +197,27 @@ class DynamicCube extends Cube{
         const dimensions = space.getDimensionList();
         const membersList = dimensions.map(dimension => space.getMemberList(dimension));
         recursivelyForEach(dimensions, membersList, 0, cellSpace);
+    }
+    _validateAddMemberParams(dimension, memberOptions, categorySpace){
+        const measureDimension = this.schema.getMeasure().dimension;
+        if (dimension === measureDimension){
+            throw new AddDimensionOfCellException(dimension)
+        }
+
+        const addSpaceOptions = {
+            [dimension]: memberOptions,
+            ...categorySpace
+        };
+
+        const childDimensionList = this.schema.getChildDimensionList(dimension);
+        if (childDimensionList.length){
+            const find = childDimensionList.find( childDimension => {
+                return addSpaceOptions[childDimension] ? false : childDimension;
+            });
+            if (find){
+                throw new NotCompletelySpaceException(find)
+            }
+        }
     }
     /**
      *
