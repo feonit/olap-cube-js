@@ -22,31 +22,36 @@
             .controller('AppController', class DimensionTableController{
                 constructor($scope){
                     $scope.factTable = factTable;
+                    $scope.schema = schema;
                     $scope.cube = new ProductTable(factTable, schema);
-                    $scope.placeTable = angular.copy($scope.cube.getPlace());
-                    $scope.productTable = angular.copy($scope.cube.getProduct());
-                    $scope.markTable = angular.copy($scope.cube.getMark());
-                    $scope.monthTable = angular.copy($scope.cube.getMonth());
-                    $scope.yearQrMonthTable = angular.copy($scope.cube.getYearQrMonth());
-                    $scope.yearQrTable = angular.copy($scope.cube.getYearQr());
-                    $scope.yearTable = angular.copy($scope.cube.getYear());
-                    $scope.qrMonthTable = angular.copy($scope.cube.getQrMonth());
-                    $scope.qrTable = angular.copy($scope.cube.getQr());
+                    $scope.placeTable = $scope.cube.getPlace();
+                    $scope.productTable = $scope.cube.getProduct();
+                    $scope.markTable = $scope.cube.getMark();
+                    $scope.monthTable = $scope.cube.getMonth();
+                    $scope.yearTable = $scope.cube.getYear();
+                    $scope.qrMonthTable = $scope.cube.getQrMonth();
+                    $scope.qrTable = $scope.cube.getQr();
+                    $scope.yearQrMonthTable = $scope.cube.getYearQrMonth();
+                    $scope.yearQrTable = $scope.cube.getYearQr();
 
                     $scope.qr_selectedYear = "";
                     $scope.$watch('qr_selectedYear', (value)=>{
-                        $scope.qrTable = angular.copy($scope.cube.getQr(value));
+                        $scope.qrTable = $scope.cube.getQr(value);
                     });
 
                     $scope.month_selectedQr = "";
                     $scope.$watch('month_selectedQr', (month_selectedQr)=>{
-                        $scope.monthTable = angular.copy($scope.cube.getMonth(month_selectedQr, $scope.month_selectedYear));
+                        $scope.monthTable = $scope.cube.getMonth(month_selectedQr, $scope.month_selectedYear);
                     });
 
                     $scope.month_selectedYear = "";
                     $scope.$watch('month_selectedYear', (month_selectedYear)=>{
-                        $scope.monthTable = angular.copy($scope.cube.getMonth($scope.month_selectedQr, month_selectedYear));
+                        $scope.monthTable = $scope.cube.getMonth($scope.month_selectedQr, month_selectedYear);
                     });
+
+                    $scope.$watch('cube', () => {
+                        $scope.outputData = $scope.cube.getDataArray()
+                    }, true);
                 }
             });
 
@@ -55,62 +60,107 @@
 
     <div ng-controller="AppController">
 
-        <h2>Fact Table <sup>(input data)</sup></h2>
         <section>
+            <h2>Fact Table <sup>(input data)</sup></h2>
             <dimension-table table="factTable"></dimension-table>
         </section>
 
-        <h2>Dimension Tables <sup>(output data)</sup></h2>
-
         <section>
-            <dimension-table table="productTable"></dimension-table>
+            <h2>Fact Table <sup>(output data)</sup></h2>
+            <dimension-table ng-if="outputData" table="outputData"></dimension-table>
         </section>
 
-        <section>
-            <dimension-table table="placeTable"></dimension-table>
-        </section>
+        <details open>
+            <summary>
+                Dimension Tables <sup>(output data)</sup>
+            </summary>
+            <section>
+                <dimension-table table="productTable"></dimension-table>
+            </section>
 
-        <section>
-            <dimension-table table="markTable"></dimension-table>
-        </section>
+            <section>
+                <dimension-table table="placeTable"></dimension-table>
+            </section>
 
-        <section>
-            <dimension-table table="yearTable"></dimension-table>
-        </section>
+            <section>
+                <dimension-table table="markTable"></dimension-table>
+            </section>
 
-        <section>
-            <dimension-table table="qrTable"></dimension-table>
-            <select ng-model="qr_selectedYear">
-                <option value="" selected>ALL</option>
-                <option ng-repeat="member in yearTable" value="{{member.year}}" >{{member.year}}</option>
-            </select>
-        </section>
+            <section>
+                <dimension-table table="yearTable"></dimension-table>
+            </section>
+        </details>
 
-        <section>
-            <dimension-table table="monthTable"></dimension-table>
-            <select ng-model="month_selectedQr">
-                <option value="" selected>ALL</option>
-                <option ng-repeat="member in qrTable" value="{{member.qr}}" >{{member.qr}}</option>
-            </select>
-            <select ng-model="month_selectedYear">
-                <option value="" selected>ALL</option>
-                <option ng-repeat="member in yearTable" value="{{member.year}}" >{{member.year}}</option>
-            </select>
-        </section>
+        <details open>
+            <summary>
+                Specialized Dimension Tables <sup>(output data)</sup>
+            </summary>
 
-        <h2>Dimension Categories Tables<sup>(output data)</sup></h2>
+            <section>
+                <dimension-table table="qrTable"></dimension-table>
+                <label>
+                    <strong>year</strong>
+                    <select ng-model="qr_selectedYear">
+                        <option value="" selected>ALL</option>
+                        <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
+                    </select>
+                </label>
+            </section>
 
-        <section>
-            <category-table table="yearQrMonthTable"></category-table>
-        </section>
+            <section>
+                <dimension-table table="monthTable"></dimension-table>
+                <label>
+                    <strong>qr</strong>
+                    <select ng-model="month_selectedQr">
+                        <option value="" selected>ALL</option>
+                        <option ng-repeat="member in qrTable track by $index" value="{{member.qr}}" >{{member.qr}}</option>
+                    </select>
+                </label>
+                <label>
+                    <strong>year</strong>
+                    <select ng-model="month_selectedYear">
+                        <option value="" selected>ALL</option>
+                        <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
+                    </select>
+                </label>
 
-        <section>
-            <category-table table="yearQrTable"></category-table>
-        </section>
+            </section>
+        </details>
 
-        <section>
-            <category-table table="qrMonthTable"></category-table>
-        </section>
+        <details open>
+            <summary>
+                Dimension Categories Tables<sup>(output data)</sup>
+            </summary>
+
+            <section>
+                <category-table table="yearQrMonthTable"></category-table>
+            </section>
+
+            <section>
+                <category-table table="yearQrTable"></category-table>
+            </section>
+
+            <section>
+                <category-table table="qrMonthTable"></category-table>
+            </section>
+
+        </details>
+
+        <details open>
+            <summary>
+                Schema - aggregate data<sup>(input data)</sup>
+            </summary>
+            Dimension Hierarchy:
+            <code style="white-space: pre">
+                money
+                |- month
+                |- qr
+                |- year
+                |- product
+                |- place
+                |- mark
+            </code>
+        </details>
 
     </div>
 </body>

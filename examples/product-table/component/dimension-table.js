@@ -14,15 +14,23 @@ export default {
 		}
 	},
 	template: (`
+		<label style="color:#ccc">
+			<input type="checkbox" ng-init="isEdit=false" ng-model="isEdit"/>
+			Enable edit mode
+		</label>
 		<table ng-init="keys=$ctrl.getKeys($ctrl.table[0])">
 			<thead>
 				<tr>
-					<td ng-repeat="key in keys">{{ key }}</td>
+					<td ng-repeat="key in keys track by $index">{{ key }}</td>
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="record in $ctrl.table">
-					<td ng-repeat="key in keys">{{ record[key] }}</td>
+				<tr ng-repeat="record in $ctrl.table track by $index">
+					<td ng-repeat="key in keys track by $index">
+						<span ng-if="$index===0">{{record[key]}}</span>
+						<input ng-if="$index!==0 && isEdit" ng-model="record[key]">
+						<span ng-if="$index!==0 && !isEdit">{{record[key]}}</span>
+					</td>
 				</tr>
 			</tbody>
 		</table>

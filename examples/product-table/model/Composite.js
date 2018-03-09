@@ -1,5 +1,6 @@
 export default class Composite {
-	constructor(options){
-		Object.assign(this, options)
+	constructor({member, category}){
+		this.member = member;
+		this.category = category;
 	}
 }
