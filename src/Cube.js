@@ -50,10 +50,11 @@ class Cube{
      *
      * @public
      * @param {(string|null|object)?} dimension - dimension from which the member will be found
-     * @param {object?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-     * @return {Member[]|FactTable} returns members
+     * @param {(object|null)?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
+     * @param {boolean?} raw - return cell of fact data
+     * @return {Member[]|FactTable|CellTable} returns members
      * */
-    query(dimension, fixSpaceOptions){
+    query(dimension, fixSpaceOptions, raw = false){
         const args = [].slice.call(arguments);
         if (args.length > 0 && args[0]){
             if (typeof args[0] === "object"){
@@ -72,7 +73,7 @@ class Cube{
         }
 
         if (!dimension){
-            return this.getDataArray(cells);
+            return raw ? cells : this.getDataArray(cells);
         } else {
             const idAttribute = Star.genericId(dimension);
             const ids = cells.map( cell => cell[idAttribute]);
@@ -108,9 +109,11 @@ class Cube{
     }
 
     countOfCardinality(){
-        return this.schema.getFinal().map( ({dimension}) => dimension).reduce((acc, dimension)=>{
+        const final = this.schema.getFinal();
+        const count = final.map( ({dimension}) => dimension).reduce((acc, dimension)=>{
             return acc * this.query(dimension).length
-        }, 1)
+        }, 1);
+        return count;
     }
 
     getEmptyCount(){
@@ -357,25 +360,67 @@ class DynamicCube extends Cube{
         const callback = (item) => {
             tupleTable.add(item)
         };
-        const finalDimensions = this.schema.getFinal();
-        const dimensionsMembers = {};
-        const reqursively = (dimensionsMembers, index) => {
-            let finalDimension = finalDimensions[index];
-            let members = this.space.getMemberList(finalDimension.dimension);
+        const branches = this.schema.getBranches();
+        // without root
+        const size = this.schema.getNames().length - 1;
+
+        const reqursively = (space = {}, branchIndex = 0) => {
+            const currentBranch = branches[branchIndex];
+            const externalDimensionTable = currentBranch[0];
+            const { dimension } = externalDimensionTable;
+            const members = this.space.getMemberList(dimension);
+
             members.forEach( member => {
-                let newDimensionsMembers = Object.assign({}, dimensionsMembers, {[finalDimension.dimension]: member} );
-                if ( Object.keys(newDimensionsMembers).length === finalDimensions.length ){
-                    callback(newDimensionsMembers)
+                const newSpace = Object.assign({}, space);
+                const finalSpace = {[dimension]: member};
+
+                Object.assign(newSpace, finalSpace);
+
+                if (branches[branchIndex].length > 1){
+                    const categorySpace = this._mapToCategorySpace(finalSpace, currentBranch);
+                    Object.assign(newSpace, categorySpace);
+                }
+
+                if ( Object.keys(newSpace).length === size ){
+                    callback(newSpace)
                 } else {
-                    dimensionsMembers[finalDimension.dimension] = member;
-                    reqursively(dimensionsMembers, index + 1);
+
+                    if (branches[branchIndex + 1]){
+                        reqursively(newSpace, branchIndex + 1);
+                    }
                 }
             });
         };
 
-        reqursively(dimensionsMembers, 0);
+        reqursively();
 
         return tupleTable;
+    }
+
+    _mapToCategorySpace(finalSpace, branch){
+        let categorySpace = {};
+
+        //hack (may be need change star schema to snowflake)
+        const cells = this.query(finalSpace, null, true);
+        const etalonCell = cells[0];
+
+        let i = 1;
+        while(branch[i]){
+            const currentDimension = branch[i].dimension;
+            const idName = Star.genericId(currentDimension);
+            const id = etalonCell[ idName ];
+            const members = this.space.getMemberList(currentDimension);
+            const find = members.find( member => {
+                return member.id === id;
+            });
+            if (find){
+                categorySpace[currentDimension] = find;
+            }
+            i += 1;
+        }
+
+        return categorySpace;
+
     }
     /**
      * @param {string} dimension
@@ -425,10 +470,11 @@ class DynamicCube extends Cube{
     }
     countOfUnfilled(){
         const tuples = this._createTupleTable();
-        return tuples.reduce( (acc, tuple) => {
+        const unfilledTuples = tuples.reduce( (acc, tuple) => {
             const members = this.query(tuple);
             return members.length == 0 ? ++acc : acc;
         }, 0);
+        return unfilledTuples;
     }
 }
 

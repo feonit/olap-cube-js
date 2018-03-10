@@ -190,7 +190,30 @@ export class Schema extends Tree{
         return this.getRoot().childNodes.map( childNode => childNode.value);
     }
 
+    getBranches(){
+        const final = this.getRoot().childNodes.map( childNode => childNode );
+        return final.map( node => {
+            const branch = [];
+
+            const recursive = (node)=>{
+                branch.push(node.value);
+
+                if (node.childNodes.length){
+                    node.childNodes.forEach((node)=>{
+                        recursive(node)
+                    })
+                }
+            };
+
+            recursive(node);
+
+            return branch;
+        })
+    }
+
     isRoot(schemaDimension){
         return schemaDimension === this.getRoot().value;
     }
+
+
 }

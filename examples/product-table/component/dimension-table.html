@@ -1,0 +1,27 @@
+<label
+        ng-if="$ctrl.editable"
+        style="color:#ccc"
+>
+    <input
+            type="checkbox"
+            ng-model="$ctrl.isEdit"
+    />
+    Enable edit mode
+</label>
+<br/>
+<table>
+    <thead>
+    <tr>
+        <td ng-repeat="key in $ctrl.tableKeys track by $index">{{ key }}</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="record in $ctrl.table track by $index">
+        <td ng-repeat="key in $ctrl.tableKeys track by $index">
+            <span ng-if="$index===0">{{record[key]}}</span>
+            <input ng-if="$index!==0 && $ctrl.isEdit" ng-model="record[key]">
+            <span ng-if="$index!==0 && !$ctrl.isEdit">{{record[key]}}</span>
+        </td>
+    </tr>
+    </tbody>
+</table>

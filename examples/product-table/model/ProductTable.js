@@ -3,8 +3,8 @@ import Composite from './Composite.js'
 
 // todo: add some functional in Cube
 export default class ProductTable extends Cube{
-	getPlace(){
-		return this.query('place')
+    getMarket(){
+		return this.query('market')
 	}
 	getProduct(){
 		return this.query('product')
@@ -49,5 +49,13 @@ export default class ProductTable extends Cube{
 				})
 			};
 		})
+	}
+	addProduct(value){
+        if (value){
+            this.addMember('product', { product: value })
+		}
+	}
+    addMarket(){
+
 	}
 }

@@ -3,8 +3,8 @@ export default {
 	keyProps: ['money', 'cents'],
 	dependency: [
 		{
-			dimension: 'place',
-			keyProps: ['place']
+			dimension: 'market',
+			keyProps: ['market']
 		},
 		{
 			dimension: 'product',

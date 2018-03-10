@@ -43,6 +43,19 @@ export default class Tree {
         };
         reqursively(this.getRoot());
     }
+    preOrderQueue(){
+        const queue = [];
+        const reqursively = node => {
+            queue.push(node);
+            if (node.childNodes.length){
+                node.childNodes.forEach( childNode => {
+                    reqursively(childNode)
+                })
+            }
+        };
+        reqursively(this.getRoot());
+        return queue;
+    }
     /**
      * A walk in which the children are traversed before their respective parents are traversed
      * */

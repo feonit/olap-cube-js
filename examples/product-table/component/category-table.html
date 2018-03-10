@@ -1,0 +1,36 @@
+<label style="color:#ccc">
+    <input type="checkbox" ng-model="$ctrl.isEdit"/>
+    Enable edit mode
+</label>
+<table>
+    <thead>
+    <tr>
+        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">{{ memberKey }}</td>
+        <td> - </td>
+    </tr>
+    </thead>
+    <tbody ng-repeat="record in $ctrl.table">
+    <tr>
+        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">
+            <span ng-if="$index===0 || ($index!==0 && !$ctrl.isEdit)">{{ record.member[memberKey] }}</span>
+            <input ng-if="$index!==0 && $ctrl.isEdit" ng-model="record.member[memberKey]">
+        </td>
+    </tr>
+    <tr>
+        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index" class="cell-empty"></td>
+        <td>
+            <div
+                    ng-if="!$ctrl.isComposite(record.category[0])"
+                    ng-init="table=record.category"
+            >
+                <dimension-table table="table"></dimension-table>
+            </div>
+
+            <category-table
+                    ng-if="$ctrl.isComposite(record.category[0])"
+                    table="record.category">
+            </category-table>
+        </td>
+    </tr>
+    </tbody>
+</table>

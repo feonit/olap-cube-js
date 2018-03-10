@@ -2,6 +2,8 @@ import Cube from '../src/Cube.js';
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
 describe('[ Cube Edit ][ fill ]', function(){
+    let debug;
+
     const factTable = [
         { id: 1, x: 0, y: 0, z: 0, is: true },
         { id: 2, x: 0, y: 0, z: 1, is: true },
@@ -88,11 +90,11 @@ describe('[ Cube Edit ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(cube.countOfCardinality()).toBe(4);
-            expect(cube.getEmptyCount()).toBe(2);
+            expect(debug=cube.countOfCardinality()).toBe(4);
+            expect(debug=cube.getEmptyCount()).toBe(2);
             cube.fill();
-            expect(cube.countOfCardinality()).toBe(4);
-            expect(cube.getEmptyCount()).toBe(0);
+            expect(debug=cube.countOfCardinality()).toBe(4);
+            expect(debug=cube.getEmptyCount()).toBe(0);
         });
 
         it('should work level 3', ()=>{
@@ -103,11 +105,30 @@ describe('[ Cube Edit ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(cube.countOfCardinality()).toBe(6);
-            expect(cube.getEmptyCount()).toBe(3);
+            expect(debug=cube.countOfCardinality()).toBe(6);
+            expect(debug=cube.getEmptyCount()).toBe(3);
             cube.fill();
-            expect(cube.countOfCardinality()).toBe(6);
-            expect(cube.getEmptyCount()).toBe(0);
+            expect(debug=cube.countOfCardinality()).toBe(6);
+            expect(debug=cube.getEmptyCount()).toBe(0);
+        })
+
+        it('should work for cells in hierarchy', ()=>{
+            const factTable = [
+                {id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
+                {id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
+                {id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
+            ];
+
+            const cube = new Cube(factTable, schema);
+            cube.fill();
+
+            let factTableExpectedAfter = [].concat(factTable).concat([
+                {planet: "Earth", country: "Russia", city: "Moscow", nationality: "French", humans: null},
+                {planet: "Earth", country: "France", city: "Paris", nationality: "Russian", humans: null},
+                {planet: "Mars", country: "France", city: "Paris", nationality: "Russian", humans: null}
+            ]);
+
+            expect(isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true)
         })
 
     });

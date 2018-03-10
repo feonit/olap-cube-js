@@ -24,7 +24,7 @@
                     $scope.factTable = factTable;
                     $scope.schema = schema;
                     $scope.cube = new ProductTable(factTable, schema);
-                    $scope.placeTable = $scope.cube.getPlace();
+                    $scope.marketTable = $scope.cube.getMarket();
                     $scope.productTable = $scope.cube.getProduct();
                     $scope.markTable = $scope.cube.getMark();
                     $scope.monthTable = $scope.cube.getMonth();
@@ -52,6 +52,12 @@
                     $scope.$watch('cube', () => {
                         $scope.outputData = $scope.cube.getDataArray()
                     }, true);
+
+                    $scope.toAdd = {
+                        product: '',
+                        market: '',
+                    };
+
                 }
             });
 
@@ -62,12 +68,15 @@
 
         <section>
             <h2>Fact Table <sup>(input data)</sup></h2>
-            <dimension-table table="factTable"></dimension-table>
+            <dimension-table editable="false" table="factTable"></dimension-table>
         </section>
 
         <section>
             <h2>Fact Table <sup>(output data)</sup></h2>
-            <dimension-table ng-if="outputData" table="outputData"></dimension-table>
+            <button ng-click="cube.fill()">Make filling</button>
+            Count of unfilling cells {{ cube.countOfUnfilled() }}
+            <br/>
+            <dimension-table editable="false" ng-if="outputData" table="outputData"></dimension-table>
         </section>
 
         <details open>
@@ -75,19 +84,33 @@
                 Dimension Tables <sup>(output data)</sup>
             </summary>
             <section>
-                <dimension-table table="productTable"></dimension-table>
+                <label ng-init="isAdd1=false" style="color:#ccc">
+                    <input type="checkbox" ng-model="isAdd1"/>
+                    Enable add mode
+                    <input ng-if="isAdd1" ng-model="toAdd.product" placeholder="value to add" />
+                    <button ng-if="isAdd1" ng-click="cube.addProduct(toAdd.product)">add</button>
+                </label>
+                <br/>
+                <dimension-table editable="true" table="productTable"></dimension-table>
             </section>
 
             <section>
-                <dimension-table table="placeTable"></dimension-table>
+                <label ng-init="isAdd2=false" style="color:#ccc">
+                    <input type="checkbox" ng-model="isAdd2"/>
+                    Enable add mode
+                    <input ng-if="isAdd2" ng-model="toAdd.market" placeholder="value to add" />
+                    <button ng-if="isAdd2" ng-click="cube.addMarket(toAdd.market)">add</button>
+                </label>
+                <br/>
+                <dimension-table editable="true" table="marketTable"></dimension-table>
             </section>
 
             <section>
-                <dimension-table table="markTable"></dimension-table>
+                <dimension-table editable="true" table="markTable"></dimension-table>
             </section>
 
             <section>
-                <dimension-table table="yearTable"></dimension-table>
+                <dimension-table editable="true" table="yearTable"></dimension-table>
             </section>
         </details>
 
@@ -97,7 +120,7 @@
             </summary>
 
             <section>
-                <dimension-table table="qrTable"></dimension-table>
+                <dimension-table editable="true" table="qrTable"></dimension-table>
                 <label>
                     <strong>year</strong>
                     <select ng-model="qr_selectedYear">
@@ -108,7 +131,7 @@
             </section>
 
             <section>
-                <dimension-table table="monthTable"></dimension-table>
+                <dimension-table editable="true" table="monthTable"></dimension-table>
                 <label>
                     <strong>qr</strong>
                     <select ng-model="month_selectedQr">
@@ -133,15 +156,15 @@
             </summary>
 
             <section>
-                <category-table table="yearQrMonthTable"></category-table>
+                <category-table editable="true" table="yearQrMonthTable"></category-table>
             </section>
 
             <section>
-                <category-table table="yearQrTable"></category-table>
+                <category-table editable="true" table="yearQrTable"></category-table>
             </section>
 
             <section>
-                <category-table table="qrMonthTable"></category-table>
+                <category-table editable="true" table="qrMonthTable"></category-table>
             </section>
 
         </details>
@@ -153,12 +176,12 @@
             Dimension Hierarchy:
             <code style="white-space: pre">
                 money
-                |- month
-                |- qr
-                |- year
-                |- product
-                |- place
-                |- mark
+                    |- month
+                        |- qr
+                            |- year
+                    |- product
+                    |- market
+                    |- mark
             </code>
         </details>
 
