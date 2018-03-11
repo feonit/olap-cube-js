@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
-describe('[ Cube Edit ][ fill ]', function(){
+describe('[ Cube ][ fill ]', function(){
     let debug;
 
     const factTable = [

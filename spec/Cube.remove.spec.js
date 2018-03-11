@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
-describe('[ Cube Edit ][ remove ]', () => {
+describe('[ Cube ][ remove ]', () => {
     const factTable = [
         { id: 1, xxx: 0.49, xx: 0.5, x: 0, y: 0, z: 0, is: true },
         { id: 2, xxx: 1.18, xx: 1.2, x: 1, y: 0, z: 1, is: true },

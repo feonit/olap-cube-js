@@ -9,7 +9,7 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import Star from "./Star.js";
-import { NotCompletelySpaceException, AddDimensionOfCellException } from './errors.js';
+import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMemberRollupException } from './errors.js';
 
 /**
  * It a means to retrieve data
@@ -136,47 +136,71 @@ class DynamicCube extends Cube{
     /**
      * @param {string} dimension - dimension in which the member is created
      * @param {object} memberOptions - properties for the created member
-     * @param {object} categorySpace - space of category for current dimension
+     * @param {object} rollupCoordinatesData
      * @public
      * */
-    addMember(dimension, memberOptions, categorySpace = {}){
-        this._validateAddMemberParams(dimension, memberOptions, categorySpace);
+    addMember(dimension, memberOptions, rollupCoordinatesData = {}){
+        this._validateAddMemberParams(dimension, memberOptions, rollupCoordinatesData);
 
-        // взять все листья
+        const rollupCoordinates = {};
+        Object.keys(rollupCoordinatesData).forEach( dimension => {
+            const memberData = rollupCoordinatesData[dimension];
+            const memberList = this.query(dimension);
+            const id = memberData[ENTITY_ID];
+            const find = memberList.find( member => {
+                return id === member[ENTITY_ID]
+            });
+            if ( !find ){
+                throw new CantAddMemberRollupException(dimension, id)
+            } else {
+                rollupCoordinates[dimension] = find;
+            }
+        });
+
+        const drillDownCoordinates = {};
+        this.schema.traceUp(dimension, ({dimension: currentDimension}) => {
+            let member;
+            if (currentDimension === dimension){
+                member = this._createMember(currentDimension, memberOptions)
+            } else {
+                member = this._createMember(currentDimension)
+            }
+            drillDownCoordinates[currentDimension] = member;
+        });
+
+        const coordinates = Object.assign({}, rollupCoordinates, drillDownCoordinates);
+
+        // leafs
         const externals = this.schema.getExternals();
+
+        // filter for not defined tables
+        const missedDimensionTables = externals.filter(({dimension: externalDimension}) => {
+            return dimension !== externalDimension && !rollupCoordinates[externalDimension]
+        });
 
         // место куда будут складываться
         const space = new Space();
 
-        // остальные измерения этого уровня
-        externals.forEach( ({dimension: externalDimension}) => {
-            if (dimension !== externalDimension){
-                if (!categorySpace[externalDimension]){
-                    space.setMemberList(externalDimension, this.space.getMemberList(externalDimension))
-                }
-            }
+        missedDimensionTables.forEach(({dimension})=>{
+            space.setMemberList(dimension, this.space.getMemberList(dimension))
         });
 
-        const memberDepOptions = this._createMemberDependency(dimension, memberOptions);
-
-        const cellSpace = Object.assign({}, categorySpace, memberDepOptions);
-
-        const createCell = (cellOptions)=>{
-            const measureName = this.schema.getMeasure().dimension;
-            const member = this._createMember(measureName);
-            cellOptions = Object.assign({}, cellOptions, { [measureName]: member });
-            this._createNormalizeData(Object.assign({}, cellOptions));
+        const createCell = (coordinates) => {
+            const dimension = this.schema.getMeasure().dimension;
+            const member = this._createMember(dimension);
+            const value = { [ dimension ]: member };
+            const cellData = Object.assign( {}, coordinates, value );
+            this._createNormalizeData(cellData);
         };
 
-
-        const recursivelyForEach = (dimensionNames, membersList, index, cellSpace) => {
+        const recursivelyForEach = (dimensionNames, membersList, index, coordinates) => {
             const dimensionNamesLength = dimensionNames.length;
             const currentDimension = dimensionNames[index];
             const cells = [];
-            const cellSpaceCopy = Object.assign({}, cellSpace);
+            const coordinatesCopy = Object.assign({}, coordinates);
 
             membersList[index].forEach( member => {
-                cellSpaceCopy[currentDimension] = member;
+                coordinatesCopy[currentDimension] = member;
                 let parentDimensionTable = this.schema.getByDependency(currentDimension);
 
                 if (parentDimensionTable){
@@ -186,7 +210,7 @@ class DynamicCube extends Cube{
                 }
 
                 if ( (index + 1) === dimensionNamesLength ){
-                    cells.push(Object.assign({}, cellSpaceCopy))
+                    cells.push(Object.assign({}, coordinatesCopy))
                 } else {
                     recursivelyForEach(dimensionNames, membersList, index + 1);
                 }
@@ -199,7 +223,7 @@ class DynamicCube extends Cube{
 
         const dimensions = space.getDimensionList();
         const membersList = dimensions.map(dimension => space.getMemberList(dimension));
-        recursivelyForEach(dimensions, membersList, 0, cellSpace);
+        recursivelyForEach(dimensions, membersList, 0, coordinates);
     }
     _validateAddMemberParams(dimension, memberOptions, categorySpace){
         const measureDimension = this.schema.getMeasure().dimension;
@@ -366,8 +390,8 @@ class DynamicCube extends Cube{
 
         const reqursively = (space = {}, branchIndex = 0) => {
             const currentBranch = branches[branchIndex];
-            const externalDimensionTable = currentBranch[0];
-            const { dimension } = externalDimensionTable;
+            const finalDimensionTable = currentBranch[0];
+            const { dimension } = finalDimensionTable;
             const members = this.space.getMemberList(dimension);
 
             members.forEach( member => {
@@ -440,7 +464,6 @@ class DynamicCube extends Cube{
      * */
     _createMemberDependency(dimension, memberOptions = {}){
         const result = {};
-        const rootDimension = this.schema.getRoot().value.dimension;
 
         this.schema.traceUp(dimension, ({dimension}) => {
             result[dimension] = this._createMember(dimension, memberOptions);

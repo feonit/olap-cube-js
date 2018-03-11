@@ -103,4 +103,39 @@ export default class Tree {
         });
         return find;
     }
+    search(data){
+
+    }
+
+    getBranches(){
+        const final = this.getRoot().childNodes.map( childNode => childNode );
+        return final.map( node => {
+            const branch = [];
+
+            const recursive = (node)=>{
+                branch.push(node.value);
+
+                if (node.childNodes.length){
+                    node.childNodes.forEach((node)=>{
+                        recursive(node)
+                    })
+                }
+            };
+
+            recursive(node);
+
+            return branch;
+        })
+    }
+
+    getLeafs(){
+        const nodes = this.preOrderQueue();
+        const leafs = [];
+        nodes.forEach( node => {
+            if (node.childNodes.length){
+                leafs.push(node);
+            }
+        });
+        return leafs;
+    }
 }

@@ -35,7 +35,7 @@ let schema = {
     ]
 }
 
-describe('[ Cube Edit ][ query ]', () => {
+describe('[ Cube ][ query ]', () => {
 
     it('should return query data', () => {
         let cube = new Cube(factTable, schema);

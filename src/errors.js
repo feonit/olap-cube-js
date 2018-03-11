@@ -11,3 +11,10 @@ export class AddDimensionOfCellException extends Error {
         this.message = `You can not add a second member to the dimension for the cell: "${dimension}"`;
     }
 }
+
+export class CantAddMemberRollupException extends Error {
+    constructor(dimension, id){
+        super();
+        this.message = `Can't add member, rollup dimension: ${dimension} with id: ${id} not found`;
+    }
+}

@@ -1,6 +1,6 @@
 import Cube from '../src/Cube.js';
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
-import { NotCompletelySpaceException, AddDimensionOfCellException } from '../src/errors.js';
+import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMemberRollupException } from '../src/errors.js';
 
 describe('[ Cube Edit ][ add ]', () => {
 
@@ -44,19 +44,19 @@ describe('[ Cube Edit ][ add ]', () => {
 
         });
 
-        it('should throw whet defined not completely space for added member level 1', ()=>{
+        it('should throw when defined not completely space for added member level 1', ()=>{
             expect(() => {
                 cube.addMember('xxx', { xxx: 1 } )
             }).toThrow();
         });
 
-        it('should throw whet defined not completely space for added member level 2', ()=>{
+        it('should throw when defined not completely space for added member level 2', ()=>{
             expect(() => {
                 cube.addMember('xx', { xx: 1 } )
             }).toThrow();
         });
 
-        it('should throw specified error whet defined not completely space for added member', ()=>{
+        it('should throw specified error when defined not completely space for added member', ()=>{
             let err;
             try {
                 cube.addMember('xxx', { xxx: 1 } )
@@ -66,13 +66,13 @@ describe('[ Cube Edit ][ add ]', () => {
             expect( err instanceof NotCompletelySpaceException).toBe(true);
         });
 
-        it('should throw whet was try to add a second member to the dimension for the cell ', ()=>{
+        it('should throw when was try to add a second member to the dimension for the cell ', ()=>{
             expect(() => {
                 cube.addMember('xxxx', { xxxx: 1 } )
             }).toThrow();
         });
 
-        it('should throw specified error whet was try to add a second member to the dimension for the cell ', ()=>{
+        it('should throw specified error when was try to add a second member to the dimension for the cell ', ()=>{
             let err;
             try {
                 cube.addMember('xxxx', { xxxx: 1 } )
@@ -80,6 +80,22 @@ describe('[ Cube Edit ][ add ]', () => {
                 err = error;
             }
             expect( err instanceof AddDimensionOfCellException).toBe(true);
+        });
+
+        it('should throw when was try add member with not existed rollup member', ()=>{
+            expect(() => {
+                cube.addMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+            }).toThrow();
+        });
+
+        it('should throw specified error when was try add member with not existed rollup member', ()=>{
+            let err;
+            try {
+                cube.addMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+            } catch (error) {
+                err = error;
+            }
+            expect( err instanceof CantAddMemberRollupException).toBe(true);
         });
 
     });
