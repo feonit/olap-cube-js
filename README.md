@@ -1,11 +1,11 @@
 <div align="center">
   <a href="https://github.com/feonit/olap-cube">
-    <img width="200" height="200" src="https://raw.githubusercontent.com/feonit/olap-cube/master/cube.jpg">
+    <img width="200" height="200" src="https://raw.githubusercontent.com/feonit/olap-cube-js/master/cube.jpg">
   </a>
 </div>
 
-[![Build Status](https://travis-ci.org/feonit/olap-cube.svg?branch=master)](https://travis-ci.org/feonit/olap-cube)
-[![codecov](https://codecov.io/gh/feonit/olap-cube/branch/master/graph/badge.svg)](https://codecov.io/gh/feonit/olap-cube)
+[![Build Status](https://travis-ci.org/feonit/olap-cube-js.svg?branch=master)](https://travis-ci.org/feonit/olap-cube-js)
+[![codecov](https://codecov.io/gh/feonit/olap-cube-js/branch/master/graph/badge.svg)](https://codecov.io/gh/feonit/olap-cube-js)
 
 The simplest data analysis tools written in javascript.
 
