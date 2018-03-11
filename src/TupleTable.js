@@ -10,4 +10,7 @@ export default class TupleTable extends Array {
     add(data){
         this.push(new Tuple(data))
     }
+    forEach(){
+        return super.forEach.apply(this, arguments)
+    }
 }

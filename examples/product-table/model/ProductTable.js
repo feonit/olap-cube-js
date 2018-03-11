@@ -50,12 +50,4 @@ export default class ProductTable extends Cube{
 			};
 		})
 	}
-	addProduct(value){
-        if (value){
-            this.addMember('product', { product: value })
-		}
-	}
-    addMarket(){
-
-	}
 }

@@ -20,8 +20,8 @@ describe('[ Cube Static ]', function(){
             expect(Cube.prototype.countOfCardinality).toBeDefined();
         });
 
-        it('should define getEmptyCount', ()=> {
-            expect(Cube.prototype.getEmptyCount).toBeDefined();
+        it('should define countOfEmpty', ()=> {
+            expect(Cube.prototype.countOfEmpty).toBeDefined();
         });
 
         it('should define getDataArray', ()=> {
@@ -91,7 +91,7 @@ describe('[ Cube Static ]', function(){
         });
 
         it('should return empty count', ()=>{
-            const result = cube.getEmptyCount();
+            const result = cube.countOfEmpty();
             expect(result).toBe(3)
         });
 

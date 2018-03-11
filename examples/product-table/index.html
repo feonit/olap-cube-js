@@ -24,15 +24,6 @@
                     $scope.factTable = factTable;
                     $scope.schema = schema;
                     $scope.cube = new ProductTable(factTable, schema);
-                    $scope.marketTable = $scope.cube.getMarket();
-                    $scope.productTable = $scope.cube.getProduct();
-                    $scope.markTable = $scope.cube.getMark();
-                    $scope.monthTable = $scope.cube.getMonth();
-                    $scope.yearTable = $scope.cube.getYear();
-                    $scope.qrMonthTable = $scope.cube.getQrMonth();
-                    $scope.qrTable = $scope.cube.getQr();
-                    $scope.yearQrMonthTable = $scope.cube.getYearQrMonth();
-                    $scope.yearQrTable = $scope.cube.getYearQr();
 
                     $scope.qr_selectedYear = "";
                     $scope.$watch('qr_selectedYear', (value)=>{
@@ -50,13 +41,50 @@
                     });
 
                     $scope.$watch('cube', () => {
-                        $scope.outputData = $scope.cube.getDataArray()
+                        $scope.outputData = $scope.cube.getDataArray();
+
+                        $scope.marketTable = $scope.cube.getMarket();
+                        $scope.productTable = $scope.cube.getProduct();
+                        $scope.markTable = $scope.cube.getMark();
+                        $scope.monthTable = $scope.cube.getMonth();
+                        $scope.yearTable = $scope.cube.getYear();
+                        $scope.qrMonthTable = $scope.cube.getQrMonth();
+                        $scope.qrTable = $scope.cube.getQr();
+                        $scope.yearQrMonthTable = $scope.cube.getYearQrMonth();
+                        $scope.yearQrTable = $scope.cube.getYearQr();
                     }, true);
 
                     $scope.toAdd = {
                         product: '',
                         market: '',
+                        mark: '',
+                        year: '',
                     };
+
+                    $scope.addProduct = () => {
+                        if ($scope.toAdd.product){
+                            $scope.cube.addMember('product', { product: $scope.toAdd.product });
+                            $scope.toAdd.product = '';
+                        }
+                    };
+                    $scope.addMarket = () => {
+                        if ($scope.toAdd.market){
+                            $scope.cube.addMember('market', { market: $scope.toAdd.market });
+                            $scope.toAdd.market = '';
+                        }
+                    };
+                    $scope.addMark = () => {
+                        if ($scope.toAdd.mark){
+                            $scope.cube.addMember('mark', { mark: $scope.toAdd.mark });
+                            $scope.toAdd.mark = '';
+                        }
+                    };
+                    $scope.addYear = () => {
+                        if ($scope.toAdd.year){
+                            $scope.cube.addMember('year', { year: $scope.toAdd.year });
+                            $scope.toAdd.year = '';
+                        }
+                    }
 
                 }
             });
@@ -74,7 +102,9 @@
         <section>
             <h2>Fact Table <sup>(output data)</sup></h2>
             <button ng-click="cube.fill()">Make filling</button>
-            Count of unfilling cells {{ cube.countOfUnfilled() }}
+            <p>Current size: {{ cube.countOfPresent() }}</p>
+            <p>Size of table after filling: {{ cube.countOfCardinality() }}</p>
+            <p>Count of unfilling cells: {{ cube.countOfUnfilled() }}</p>
             <br/>
             <dimension-table editable="false" ng-if="outputData" table="outputData"></dimension-table>
         </section>
@@ -84,32 +114,50 @@
                 Dimension Tables <sup>(output data)</sup>
             </summary>
             <section>
-                <label ng-init="isAdd1=false" style="color:#ccc">
-                    <input type="checkbox" ng-model="isAdd1"/>
-                    Enable add mode
-                    <input ng-if="isAdd1" ng-model="toAdd.product" placeholder="value to add" />
-                    <button ng-if="isAdd1" ng-click="cube.addProduct(toAdd.product)">add</button>
-                </label>
-                <br/>
+                <form>
+                    <label ng-init="isAdd1=false" style="color:#ccc">
+                        <input type="checkbox" ng-model="isAdd1"/>
+                        Enable add mode
+                        <input ng-if="isAdd1" ng-model="toAdd.product" placeholder="value to add" />
+                        <button ng-if="isAdd1" ng-click="addProduct()">add</button>
+                    </label>
+                </form>
                 <dimension-table editable="true" table="productTable"></dimension-table>
             </section>
 
             <section>
-                <label ng-init="isAdd2=false" style="color:#ccc">
-                    <input type="checkbox" ng-model="isAdd2"/>
-                    Enable add mode
-                    <input ng-if="isAdd2" ng-model="toAdd.market" placeholder="value to add" />
-                    <button ng-if="isAdd2" ng-click="cube.addMarket(toAdd.market)">add</button>
-                </label>
-                <br/>
+                <form>
+                    <label ng-init="isAdd2=false" style="color:#ccc">
+                        <input type="checkbox" ng-model="isAdd2"/>
+                        Enable add mode
+                        <input ng-if="isAdd2" ng-model="toAdd.market" placeholder="value to add" />
+                        <button ng-if="isAdd2" ng-click="addMarket()">add</button>
+                    </label>
+                </form>
                 <dimension-table editable="true" table="marketTable"></dimension-table>
             </section>
 
             <section>
+                <form>
+                    <label ng-init="isAdd3=false" style="color:#ccc">
+                        <input type="checkbox" ng-model="isAdd3"/>
+                        Enable add mode
+                        <input ng-if="isAdd3" ng-model="toAdd.mark" placeholder="value to add" />
+                        <button ng-if="isAdd3" ng-click="addMark()">add</button>
+                    </label>
+                </form>
                 <dimension-table editable="true" table="markTable"></dimension-table>
             </section>
 
             <section>
+                <form>
+                    <label ng-init="isAdd4=false" style="color:#ccc">
+                        <input type="checkbox" ng-model="isAdd4"/>
+                        Enable add mode
+                        <input ng-if="isAdd4" ng-model="toAdd.year" placeholder="value to add" />
+                        <button ng-if="isAdd4" ng-click="addYear()">add</button>
+                    </label>
+                </form>
                 <dimension-table editable="true" table="yearTable"></dimension-table>
             </section>
         </details>

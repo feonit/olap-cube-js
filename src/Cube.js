@@ -108,6 +108,126 @@ class Cube{
         return this.star.denormalize(cells)
     }
 
+    /**
+     *
+     * @private
+     * */
+    _createTupleTable(){
+        const tupleTable = new TupleTable();
+        const callback = (item) => {
+            tupleTable.add(item)
+        };
+        const branches = this.schema.getBranches();
+        // without root
+        const size = this.schema.getNames().length - 1;
+
+        const reqursively = (space = {}, branchIndex = 0) => {
+            const currentBranch = branches[branchIndex];
+            const finalDimensionTable = currentBranch[0];
+            const { dimension } = finalDimensionTable;
+            const members = this.space.getMemberList(dimension);
+
+            members.forEach( member => {
+                const newSpace = Object.assign({}, space);
+                const finalSpace = {[dimension]: member};
+
+                Object.assign(newSpace, finalSpace);
+
+                if (branches[branchIndex].length > 1){
+                    const categorySpace = this._mapToCategorySpace(finalSpace, currentBranch);
+                    Object.assign(newSpace, categorySpace);
+                }
+
+                if ( Object.keys(newSpace).length === size ){
+                    callback(newSpace)
+                } else {
+
+                    if (branches[branchIndex + 1]){
+                        reqursively(newSpace, branchIndex + 1);
+                    }
+                }
+            });
+        };
+
+        reqursively();
+
+        return tupleTable;
+    }
+
+    _mapToCategorySpace(finalSpace, branch){
+        let categorySpace = {};
+
+        //hack (may be need change star schema to snowflake)
+        const cells = this.query(finalSpace, null, true);
+        const etalonCell = cells[0];
+
+        let i = 1;
+        while(branch[i]){
+            const currentDimension = branch[i].dimension;
+            const idName = Star.genericId(currentDimension);
+            const id = etalonCell[ idName ];
+            const members = this.space.getMemberList(currentDimension);
+            const find = members.find( member => {
+                return member.id === id;
+            });
+            if (find){
+                categorySpace[currentDimension] = find;
+            }
+            i += 1;
+        }
+
+        return categorySpace;
+
+    }
+
+    /**
+     * Residuals - кортеж, в соответствии которому стоит более одного члена
+     * */
+    residuals(){
+        const tuples = this._createTupleTable();
+        const residuals = [];
+        tuples.forEach( (tuple) => {
+            const members = this.query(tuple);
+            if (members.length > 1){
+                residuals.push(tuple)
+            }
+        });
+        return residuals;
+    }
+
+    /**
+     * Unfilled - кортеж, в соответсвии которому не стоит ни одного члена
+     * */
+    unfilled(){
+        const tuples = this._createTupleTable();
+        const unfilled = [];
+
+        tuples.forEach( (tuple) => {
+            const members = this.query(tuple);
+            if (members.length === 0 ){
+                unfilled.push(tuple)
+            }
+        });
+        return unfilled;
+    }
+
+    present(){
+        const present = this.query();
+        return present;
+    }
+
+    countOfPresent(){
+        return this.present().length;
+    }
+
+    countOfResiduals(){
+        return this.residuals().length;
+    }
+
+    countOfUnfilled(){
+        return this.unfilled().length;
+    }
+
     countOfCardinality(){
         const final = this.schema.getFinal();
         const count = final.map( ({dimension}) => dimension).reduce((acc, dimension)=>{
@@ -116,7 +236,7 @@ class Cube{
         return count;
     }
 
-    getEmptyCount(){
+    countOfEmpty(){
         return this.countOfCardinality() - this.query().length;
     }
 }
@@ -142,6 +262,10 @@ class DynamicCube extends Cube{
     addMember(dimension, memberOptions, rollupCoordinatesData = {}){
         this._validateAddMemberParams(dimension, memberOptions, rollupCoordinatesData);
 
+        const addedCoordinates = {
+            [dimension]: this._createMember(dimension, memberOptions)
+        };
+
         const rollupCoordinates = {};
         Object.keys(rollupCoordinatesData).forEach( dimension => {
             const memberData = rollupCoordinatesData[dimension];
@@ -159,16 +283,10 @@ class DynamicCube extends Cube{
 
         const drillDownCoordinates = {};
         this.schema.traceUp(dimension, ({dimension: currentDimension}) => {
-            let member;
-            if (currentDimension === dimension){
-                member = this._createMember(currentDimension, memberOptions)
-            } else {
-                member = this._createMember(currentDimension)
-            }
-            drillDownCoordinates[currentDimension] = member;
+            drillDownCoordinates[currentDimension] = this._createMember(currentDimension);
         });
 
-        const coordinates = Object.assign({}, rollupCoordinates, drillDownCoordinates);
+        const coordinates = Object.assign({}, addedCoordinates, rollupCoordinates, drillDownCoordinates);
 
         // leafs
         const externals = this.schema.getExternals();
@@ -193,26 +311,31 @@ class DynamicCube extends Cube{
             this._createNormalizeData(cellData);
         };
 
-        const recursivelyForEach = (dimensionNames, membersList, index, coordinates) => {
-            const dimensionNamesLength = dimensionNames.length;
-            const currentDimension = dimensionNames[index];
+        const size = this.schema.getNames().length - 1;
+
+        const recursivelyForEach = (dimensions, membersList, index, coordinates) => {
+            const dimensionsLength = dimensions.length;
+            const currentDimension = dimensions[index];
             const cells = [];
-            const coordinatesCopy = Object.assign({}, coordinates);
+            const parentDimensionTable = this.schema.getByDependency(currentDimension);
 
             membersList[index].forEach( member => {
+                const coordinatesCopy = Object.assign({}, coordinates);
                 coordinatesCopy[currentDimension] = member;
-                let parentDimensionTable = this.schema.getByDependency(currentDimension);
 
                 if (parentDimensionTable){
+                    // debugger;
                     const members = this.query(parentDimensionTable.dimension, { [currentDimension]: member });
 
-                    recursivelyForEach([parentDimensionTable.dimension], [members], 0);
+                    recursivelyForEach([parentDimensionTable.dimension], [members], 0, coordinatesCopy);
                 }
 
-                if ( (index + 1) === dimensionNamesLength ){
-                    cells.push(Object.assign({}, coordinatesCopy))
+                if ( (index + 1) === dimensionsLength ){
+                    if ( Object.keys(coordinatesCopy).length ===  size ){
+                        cells.push(coordinatesCopy)
+                    }
                 } else {
-                    recursivelyForEach(dimensionNames, membersList, index + 1);
+                    recursivelyForEach(dimensions, membersList, index + 1, coordinatesCopy);
                 }
             });
 
@@ -376,77 +499,6 @@ class DynamicCube extends Cube{
         this.cellTable.push(newNormaliseData);
     }
     /**
-     *
-     * @private
-     * */
-    _createTupleTable(){
-        const tupleTable = new TupleTable();
-        const callback = (item) => {
-            tupleTable.add(item)
-        };
-        const branches = this.schema.getBranches();
-        // without root
-        const size = this.schema.getNames().length - 1;
-
-        const reqursively = (space = {}, branchIndex = 0) => {
-            const currentBranch = branches[branchIndex];
-            const finalDimensionTable = currentBranch[0];
-            const { dimension } = finalDimensionTable;
-            const members = this.space.getMemberList(dimension);
-
-            members.forEach( member => {
-                const newSpace = Object.assign({}, space);
-                const finalSpace = {[dimension]: member};
-
-                Object.assign(newSpace, finalSpace);
-
-                if (branches[branchIndex].length > 1){
-                    const categorySpace = this._mapToCategorySpace(finalSpace, currentBranch);
-                    Object.assign(newSpace, categorySpace);
-                }
-
-                if ( Object.keys(newSpace).length === size ){
-                    callback(newSpace)
-                } else {
-
-                    if (branches[branchIndex + 1]){
-                        reqursively(newSpace, branchIndex + 1);
-                    }
-                }
-            });
-        };
-
-        reqursively();
-
-        return tupleTable;
-    }
-
-    _mapToCategorySpace(finalSpace, branch){
-        let categorySpace = {};
-
-        //hack (may be need change star schema to snowflake)
-        const cells = this.query(finalSpace, null, true);
-        const etalonCell = cells[0];
-
-        let i = 1;
-        while(branch[i]){
-            const currentDimension = branch[i].dimension;
-            const idName = Star.genericId(currentDimension);
-            const id = etalonCell[ idName ];
-            const members = this.space.getMemberList(currentDimension);
-            const find = members.find( member => {
-                return member.id === id;
-            });
-            if (find){
-                categorySpace[currentDimension] = find;
-            }
-            i += 1;
-        }
-
-        return categorySpace;
-
-    }
-    /**
      * @param {string} dimension
      * @param {object?} props
      * @private
@@ -465,8 +517,10 @@ class DynamicCube extends Cube{
     _createMemberDependency(dimension, memberOptions = {}){
         const result = {};
 
+        result[dimension] = this._createMember(dimension, memberOptions);
+
         this.schema.traceUp(dimension, ({dimension}) => {
-            result[dimension] = this._createMember(dimension, memberOptions);
+            result[dimension] = this._createMember(dimension);
         });
 
         return result;
@@ -484,21 +538,7 @@ class DynamicCube extends Cube{
         }
     }
 
-    countOfResiduals(){
-        const tuples = this._createTupleTable();
-        return tuples.reduce( (acc, tuple) => {
-            const members = this.query(tuple);
-            return members.length > 1 ? ++acc : acc;
-        }, 0);
-    }
-    countOfUnfilled(){
-        const tuples = this._createTupleTable();
-        const unfilledTuples = tuples.reduce( (acc, tuple) => {
-            const members = this.query(tuple);
-            return members.length == 0 ? ++acc : acc;
-        }, 0);
-        return unfilledTuples;
-    }
+
 }
 
 export default DynamicCube;

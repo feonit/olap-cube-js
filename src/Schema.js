@@ -96,13 +96,13 @@ export class Schema extends Tree{
         });
 
         const req = (node) => {
-            order.push(node);
             const parent = this.getParentOf(node);
             if (parent){
 
                 if (parent === this.getRoot()){
                     return;
                 }
+                order.push(parent);
                 req(parent)
             }
         };
