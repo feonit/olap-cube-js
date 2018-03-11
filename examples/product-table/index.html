@@ -40,9 +40,7 @@
                         $scope.monthTable = $scope.cube.getMonth($scope.month_selectedQr, month_selectedYear);
                     });
 
-                    $scope.$watch('cube', () => {
-                        $scope.outputData = $scope.cube.getDataArray();
-
+                    const reset = () => {
                         $scope.marketTable = $scope.cube.getMarket();
                         $scope.productTable = $scope.cube.getProduct();
                         $scope.markTable = $scope.cube.getMark();
@@ -52,6 +50,12 @@
                         $scope.qrTable = $scope.cube.getQr();
                         $scope.yearQrMonthTable = $scope.cube.getYearQrMonth();
                         $scope.yearQrTable = $scope.cube.getYearQr();
+                    };
+
+                    reset();
+
+                    $scope.$watch('cube', () => {
+                        $scope.outputData = $scope.cube.getDataArray();
                     }, true);
 
                     $scope.toAdd = {
@@ -65,24 +69,28 @@
                         if ($scope.toAdd.product){
                             $scope.cube.addMember('product', { product: $scope.toAdd.product });
                             $scope.toAdd.product = '';
+                            reset();
                         }
                     };
                     $scope.addMarket = () => {
                         if ($scope.toAdd.market){
                             $scope.cube.addMember('market', { market: $scope.toAdd.market });
                             $scope.toAdd.market = '';
+                            reset();
                         }
                     };
                     $scope.addMark = () => {
                         if ($scope.toAdd.mark){
                             $scope.cube.addMember('mark', { mark: $scope.toAdd.mark });
                             $scope.toAdd.mark = '';
+                            reset();
                         }
                     };
                     $scope.addYear = () => {
                         if ($scope.toAdd.year){
                             $scope.cube.addMember('year', { year: $scope.toAdd.year });
                             $scope.toAdd.year = '';
+                            reset();
                         }
                     }
 

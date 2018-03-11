@@ -251,8 +251,6 @@ class DynamicCube extends Cube{
     constructor(factTable, dimensionsSchema){
         super(factTable, dimensionsSchema)
     }
-    //todo добавить исключение, когда принадлежность измерения категории не определено
-    // refactor
     /**
      * @param {string} dimension - dimension in which the member is created
      * @param {object} memberOptions - properties for the created member
