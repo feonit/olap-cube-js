@@ -9,7 +9,7 @@ export default {
 	controller: class CategoryTableController extends TableController{
         constructor(){
         	super();
-            this.isEdit = false;
+            this.editEnabled = false;
         }
         $onInit(){
             this.tableKeys = this.getSortedObjectKeys(this.table[0].member);

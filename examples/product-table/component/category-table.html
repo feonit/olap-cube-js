@@ -1,5 +1,5 @@
 <label style="color:#ccc">
-    <input type="checkbox" ng-model="$ctrl.isEdit"/>
+    <input type="checkbox" ng-model="$ctrl.editEnabled"/>
     Enable edit mode
 </label>
 <table>
@@ -12,8 +12,8 @@
     <tbody ng-repeat="record in $ctrl.table">
     <tr>
         <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">
-            <span ng-if="$index===0 || ($index!==0 && !$ctrl.isEdit)">{{ record.member[memberKey] }}</span>
-            <input ng-if="$index!==0 && $ctrl.isEdit" ng-model="record.member[memberKey]">
+            <span ng-if="$index===0 || ($index!==0 && !$ctrl.editEnabled)">{{ record.member[memberKey] }}</span>
+            <input ng-if="$index!==0 && $ctrl.editEnabled" ng-model="record.member[memberKey]">
         </td>
     </tr>
     <tr>

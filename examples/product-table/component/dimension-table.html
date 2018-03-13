@@ -1,14 +1,26 @@
-<label
-        ng-if="$ctrl.editable"
-        style="color:#ccc"
->
-    <input
-            type="checkbox"
-            ng-model="$ctrl.isEdit"
-    />
-    Enable edit mode
-</label>
-<br/>
+<details ng-if="$ctrl.added || $ctrl.editable || $ctrl.removable">
+    <summary>options</summary>
+    <form>
+        <label ng-if="$ctrl.added" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.addEnabled"/>
+            Enable add mode
+            <input ng-if="$ctrl.addEnabled" ng-model="$ctrl.valueToAdd" placeholder="value to add" />
+            <button ng-if="$ctrl.addEnabled" ng-click="$ctrl.onAdd({ data: $ctrl.valueToAdd })">add</button>
+        </label>
+    </form>
+    <form>
+        <label ng-if="$ctrl.editable" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.editEnabled"/>
+            Enable editable mode
+        </label>
+    </form>
+    <form>
+        <label ng-if="$ctrl.removable" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.removeEnabled"/>
+            Enable removable mode
+        </label>
+    </form>
+</details>
 <table>
     <thead>
     <tr>
@@ -18,9 +30,10 @@
     <tbody>
     <tr ng-repeat="record in $ctrl.table track by $index">
         <td ng-repeat="key in $ctrl.tableKeys track by $index">
+            <button ng-if="$index===0 && $ctrl.removeEnabled" ng-click="$ctrl.onRemove({data: record})">remove</button>
             <span ng-if="$index===0">{{record[key]}}</span>
-            <input ng-if="$index!==0 && $ctrl.isEdit" ng-model="record[key]">
-            <span ng-if="$index!==0 && !$ctrl.isEdit">{{record[key]}}</span>
+            <input ng-if="$index!==0 && $ctrl.editEnabled" ng-model="record[key]">
+            <span ng-if="$index!==0 && !$ctrl.editEnabled">{{record[key]}}</span>
         </td>
     </tr>
     </tbody>
