@@ -24,11 +24,22 @@ td{
 }
 
 section{
-    display: inline-block;
+    display: table;
     padding: 10px;
     background: lightslategray;
+    margin-bottom: 30px;
 }
 
 .cell-empty{
     background: hsl(0, 0%, 99%);
+}
+
+.parent {
+    display: flex;
+    align-items: center;
+}
+
+.parent > div {
+    flex: 1;
+    align-self: flex-start;
 }

@@ -66,140 +66,170 @@
 
     <div ng-controller="AppController">
 
-        <section>
-            <h2>Fact Table <sup>(input data)</sup></h2>
-            <dimension-table editable="false" table="factTable"></dimension-table>
-        </section>
+        <div class="parent">
+            <div class="left">
+                <section>
+                    <h2>Fact Table <sup>(input data)</sup></h2>
+                    <dimension-table
+                            editable="false"
+                            table="factTable"
+                    ></dimension-table>
+                </section>
+                <section>
+                    <h2>Fact Table <sup>(output data)</sup></h2>
+                    <button ng-click="cube.fill()">Make filling</button>
+                    <p>Current size: {{ cube.countOfPresent() }}</p>
+                    <p>Size of table after filling: {{ cube.countOfCardinality() }}</p>
+                    <p>Count of unfilling cells: {{ cube.countOfUnfilled() }}</p>
+                    <br/>
+                    <dimension-table
+                            editable="false"
+                            ng-if="outputData"
+                            table="outputData"
+                    ></dimension-table>
+                </section>
+            </div>
+            <div class="right">
+                <details open>
+                    <summary>
+                        Dimension Tables <sup>(output data)</sup>
+                    </summary>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="productTable"
+                        ></category-table>
+                    </section>
 
-        <section>
-            <h2>Fact Table <sup>(output data)</sup></h2>
-            <button ng-click="cube.fill()">Make filling</button>
-            <p>Current size: {{ cube.countOfPresent() }}</p>
-            <p>Size of table after filling: {{ cube.countOfCardinality() }}</p>
-            <p>Count of unfilling cells: {{ cube.countOfUnfilled() }}</p>
-            <br/>
-            <dimension-table editable="false" ng-if="outputData" table="outputData"></dimension-table>
-        </section>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="marketTable"
+                        ></category-table>
+                    </section>
 
-        <details open>
-            <summary>
-                Dimension Tables <sup>(output data)</sup>
-            </summary>
-            <section>
-                <dimension-table
-                        added="true"
-                        editable="true"
-                        removable="true"
-                        table="productTable"
-                        on-remove="cube.removeMember('product', data ); reset()"
-                        on-add="cube.addMember('product', { product: data }); reset()"
-                ></dimension-table>
-            </section>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="markTable"
+                        ></category-table>
+                    </section>
 
-            <section>
-                <dimension-table
-                        added="true"
-                        editable="true"
-                        removable="true"
-                        table="marketTable"
-                        on-remove="cube.removeMember('market', data ); reset()"
-                        on-add="cube.addMember('market', { market: data }); reset()"
-                ></dimension-table>
-            </section>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="yearTable"
+                        ></category-table>
+                    </section>
+                </details>
 
-            <section>
-                <dimension-table
-                        added="true"
-                        editable="true"
-                        removable="true"
-                        table="markTable"
-                        on-remove="cube.removeMember('mark', data ); reset()"
-                        on-add="cube.addMember('mark', { mark: data }); reset()"
-                ></dimension-table>
-            </section>
+                <details open>
+                    <summary>
+                        Specialized Dimension Tables <sup>(output data)</sup>
+                    </summary>
 
-            <section>
-                <dimension-table
-                        added="true"
-                        editable="true"
-                        removable="true"
-                        table="yearTable"
-                        on-remove="cube.removeMember('year', data ); reset()"
-                        on-add="cube.addMember('year', { year: data }); reset()"
-                ></dimension-table>
-            </section>
-        </details>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="qrTable"
+                        ></category-table>
+                        <label>
+                            <strong>year</strong>
+                            <select ng-model="qr_selectedYear">
+                                <option value="" selected>ALL</option>
+                                <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
+                            </select>
+                        </label>
+                    </section>
 
-        <details open>
-            <summary>
-                Specialized Dimension Tables <sup>(output data)</sup>
-            </summary>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="monthTable"
+                        ></category-table>
+                        <label>
+                            <strong>qr</strong>
+                            <select ng-model="month_selectedQr">
+                                <option value="" selected>ALL</option>
+                                <option ng-repeat="member in qrTable track by $index" value="{{member.qr}}" >{{member.qr}}</option>
+                            </select>
+                        </label>
+                        <label>
+                            <strong>year</strong>
+                            <select ng-model="month_selectedYear">
+                                <option value="" selected>ALL</option>
+                                <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
+                            </select>
+                        </label>
+                    </section>
+                </details>
 
-            <section>
-                <dimension-table editable="true" table="qrTable"></dimension-table>
-                <label>
-                    <strong>year</strong>
-                    <select ng-model="qr_selectedYear">
-                        <option value="" selected>ALL</option>
-                        <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
-                    </select>
-                </label>
-            </section>
+                <details open>
+                    <summary>
+                        Dimension Categories Tables<sup>(output data)</sup>
+                    </summary>
 
-            <section>
-                <dimension-table editable="true" table="monthTable"></dimension-table>
-                <label>
-                    <strong>qr</strong>
-                    <select ng-model="month_selectedQr">
-                        <option value="" selected>ALL</option>
-                        <option ng-repeat="member in qrTable track by $index" value="{{member.qr}}" >{{member.qr}}</option>
-                    </select>
-                </label>
-                <label>
-                    <strong>year</strong>
-                    <select ng-model="month_selectedYear">
-                        <option value="" selected>ALL</option>
-                        <option ng-repeat="member in yearTable track by $index" value="{{member.year}}" >{{member.year}}</option>
-                    </select>
-                </label>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="yearQrMonthTable"
+                        ></category-table>
+                    </section>
 
-            </section>
-        </details>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="yearQrTable"
+                        ></category-table>
+                    </section>
 
-        <details open>
-            <summary>
-                Dimension Categories Tables<sup>(output data)</sup>
-            </summary>
+                    <section>
+                        <category-table
+                                added="true"
+                                editable="true"
+                                removable="true"
+                                table-data="qrMonthTable"
+                        ></category-table>
+                    </section>
 
-            <section>
-                <category-table editable="true" table="yearQrMonthTable"></category-table>
-            </section>
+                </details>
 
-            <section>
-                <category-table editable="true" table="yearQrTable"></category-table>
-            </section>
+                <details open>
+                    <summary>
+                        Schema - aggregate data<sup>(input data)</sup>
+                    </summary>
+                    Dimension Hierarchy:
+                    <p>
+                        <code style="white-space: pre">
+[money]
+&#9;\- [month]
+&#9;&#9;\- [qr]
+&#9;&#9;&#9;\- [year]
+&#9;\- [product]
+&#9;\- [market]
+&#9;\- [mark]
+                        </code>
+                    </p>
 
-            <section>
-                <category-table editable="true" table="qrMonthTable"></category-table>
-            </section>
-
-        </details>
-
-        <details open>
-            <summary>
-                Schema - aggregate data<sup>(input data)</sup>
-            </summary>
-            Dimension Hierarchy:
-            <code style="white-space: pre">
-                money
-                    |- month
-                        |- qr
-                            |- year
-                    |- product
-                    |- market
-                    |- mark
-            </code>
-        </details>
+                </details>
+            </div>
+        </div>
 
     </div>
 </body>

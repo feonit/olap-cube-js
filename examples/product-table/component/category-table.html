@@ -1,36 +1,76 @@
-<label style="color:#ccc">
-    <input type="checkbox" ng-model="$ctrl.editEnabled"/>
-    Enable edit mode
-</label>
+<details ng-if="$ctrl.added || $ctrl.editable || $ctrl.removable" style="text-align: left">
+    <summary>options</summary>
+    <form>
+        <label ng-if="$ctrl.added" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.addEnabled"/>
+            Enable add mode
+            <input ng-if="$ctrl.addEnabled" ng-model="$ctrl.valueToAdd" placeholder="value to add" />
+            <button ng-if="$ctrl.addEnabled" ng-click="$ctrl.onAdd($ctrl.tableData[0], $ctrl.valueToAdd)">add</button>
+        </label>
+    </form>
+    <form>
+        <label ng-if="$ctrl.editable" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.editEnabled"/>
+            Enable editable mode
+        </label>
+    </form>
+    <form>
+        <label ng-if="$ctrl.removable" style="color:#ccc">
+            <input type="checkbox" ng-model="$ctrl.removeEnabled"/>
+            Enable removable mode
+        </label>
+    </form>
+</details>
+
 <table>
     <thead>
-    <tr>
-        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">{{ memberKey }}</td>
-        <td> - </td>
-    </tr>
+        <tr>
+            <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">{{ memberKey }}</td>
+            <td> {{ $ctrl.tableData[0].name }} </td>
+        </tr>
     </thead>
-    <tbody ng-repeat="record in $ctrl.table">
-    <tr>
-        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">
-            <span ng-if="$index===0 || ($index!==0 && !$ctrl.editEnabled)">{{ record.member[memberKey] }}</span>
-            <input ng-if="$index!==0 && $ctrl.editEnabled" ng-model="record.member[memberKey]">
-        </td>
-    </tr>
-    <tr>
-        <td ng-repeat="memberKey in $ctrl.tableKeys track by $index" class="cell-empty"></td>
-        <td>
-            <div
-                    ng-if="!$ctrl.isComposite(record.category[0])"
-                    ng-init="table=record.category"
-            >
-                <dimension-table table="table"></dimension-table>
-            </div>
+    <tbody ng-repeat="composite in $ctrl.tableData">
+        <tr>
+            <td ng-repeat="memberKey in $ctrl.tableKeys track by $index">
+                <span>{{ composite.member[memberKey] }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td ng-repeat="memberKey in $ctrl.tableKeys track by $index" class="cell-empty"></td>
+            <td>
 
-            <category-table
-                    ng-if="$ctrl.isComposite(record.category[0])"
-                    table="record.category">
-            </category-table>
-        </td>
-    </tr>
+                <category-table
+                    ng-if="$ctrl.isComposite(composite.category[0])"
+                    table-data="composite.category"
+                    added="$ctrl.added"
+                    editable="$ctrl.editable"
+                    removable="$ctrl.removable"
+                    on-remove="$ctrl.onRemove({ data: data })"
+                    on-add="$ctrl.onAdd({ data: data })"
+                >
+                </category-table>
+
+                <div ng-if="!$ctrl.isComposite(composite.category[0])" >
+                    <table>
+                        <thead>
+                        <tr>
+                            <td ng-repeat="key in $ctrl.getSortedObjectKeys(composite.category[0]) track by $index">{{ key }}</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="record in composite.category track by $index">
+                            <td ng-repeat="key in $ctrl.getSortedObjectKeys(composite.category[0]) track by $index">
+                                <button ng-if="$index===0 && $ctrl.removeEnabled" ng-click="$ctrl.onRemove(composite, record)">remove</button>
+                                <span ng-if="$index===0">{{record[key]}}</span>
+                                <input ng-if="$index!==0 && $ctrl.editEnabled" ng-model="record[key]">
+                                <span ng-if="$index!==0 && !$ctrl.editEnabled">{{record[key]}}</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </td>
+        </tr>
     </tbody>
 </table>
