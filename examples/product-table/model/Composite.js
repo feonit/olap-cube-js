@@ -1,8 +1,9 @@
 export default class Composite {
-	constructor({member = {}, category, name, remove, ...rest}){
+	constructor({member = {}, category, headerName, categoryName, remove, ...rest}){
 		this.member = member;
 		this.category = category;
-		this.name = name;
+		this.headerName = headerName;
+		this.categoryName = categoryName;
 		this.remove = remove;
 		Object.assign(this, rest)
 	}

@@ -253,11 +253,15 @@ class DynamicCube extends Cube{
     }
     /**
      * @param {string} dimension - dimension in which the member is created
-     * @param {object} memberOptions - properties for the created member
-     * @param {object} rollupCoordinatesData
+     * @param {object?} memberOptions - properties for the created member
+     * @param {object?} rollupCoordinatesData
      * @public
      * */
-    addMember(dimension, memberOptions, rollupCoordinatesData = {}){
+    addMember(dimension, memberOptions = {}, rollupCoordinatesData = {}){
+        if (typeof dimension !== "string"){
+            throw Error(`parameter dimension expects as string: ${dimension}`)
+        }
+
         this._validateAddMemberParams(dimension, memberOptions, rollupCoordinatesData);
 
         const addedCoordinates = {

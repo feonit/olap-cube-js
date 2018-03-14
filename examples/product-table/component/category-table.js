@@ -7,6 +7,7 @@ export default {
 		"editable": "=",
 		"removable": "=",
 		"added": "=",
+		"onChange": "&"
 	},
 	controllerAs: '$ctrl',
 	controller: class CategoryTableController extends TableController{
@@ -19,7 +20,11 @@ export default {
         }
         $onInit(){
 			this.tableKeys = this.getSortedObjectKeys(this.tableData[0].member);
-			this.hasOnlyOneColumn = !!this.tableKeys.length;
+			this.isCompositen = this.isComposite(this.tableData[0].category[0]);
+
+			this.header = this.tableData[0].headerName;
+			this.categoryName = this.tableData[0].categoryName;
+			this.category = this.tableData[0].category;
         }
 		/**
 		 * @param {Member|Composite} obj
@@ -29,11 +34,17 @@ export default {
 		}
 
 		onRemove(composite, item){
-			composite.remove(item)
+			composite.remove(item);
+			if (this.onChange){
+				this.onChange();
+			}
 		}
 
 		onAdd(composite, item){
-			composite.add(item)
+			composite.add(item);
+			if (this.onChange){
+				this.onChange();
+			}
 		}
 	},
 	templateUrl: './component/category-table.html',
