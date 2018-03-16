@@ -1,4 +1,3 @@
-import Composite from '../model/Composite.js'
 import TableController from "./TableController.js";
 
 export default {
@@ -7,7 +6,8 @@ export default {
 		"editable": "<",
 		"removable": "<",
 		"added": "<",
-		"onChange": "&"
+		"onChange": "&",
+		"selectedData": "<"
 	},
 	controllerAs: '$ctrl',
 	controller: class CategoryTableController extends TableController{
@@ -16,7 +16,6 @@ export default {
 			this.editEnabled = false;
 			this.addEnabled = false;
 			this.removeEnabled = false;
-			this.valueToAdd = '';
 		}
 
 		$onInit(){
@@ -29,9 +28,8 @@ export default {
 		}
 
 		$onChanges(changesObj){
-			if (changesObj){
+			if (changesObj.tableData){
 				if (changesObj.tableData.currentValue !== changesObj.tableData.previousValue){
-					this.tableData = changesObj.tableData.currentValue;
 					this._reset();
 				}
 			}
@@ -45,8 +43,9 @@ export default {
 		}
 
 		onAdd(composite, item){
-			composite.add(item);
-			if (this.onChange){
+			composite.add(item, this.selectedData);
+            this.valuesToAdd = {};
+            if (this.onChange){
 				this.onChange();
 			}
 		}

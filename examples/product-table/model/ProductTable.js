@@ -53,27 +53,27 @@ export default class ProductTable extends Cube{
 	getMonth(qr, year){
 		return new Composite({
 			headerName: "Month",
-			rows: this.query('month', { 'qr': qr, 'year': year }).map( member => {
+			rows: this.query('month', { qr, year }).map( member => {
 				return new Composite({ member: member })
 			}),
 			remove: (member)=>{ this.removeMember('month', member ) },
-			add: (member)=>{ this.addMember('month', member ) }
+			add: (member, space)=>{ this.addMember('month', member, space ) }
 		})
 	}
 	getQr(year){
 		return new Composite({
 			headerName: "Qr",
-			rows: this.query('qr', { 'year': year }).map( member => {
+			rows: this.query('qr', { year }).map( member => {
 				return new Composite({ member: member })
 			}),
 			remove: (member)=>{ this.removeMember('qr', member ) },
-			add: (member)=>{ this.addMember('qr', member ) }
+			add: (member, space)=>{ this.addMember('qr', member, space ) }
 		})
 	}
-	getYear(){
+	getYear(qr){
 		return new Composite({
 			headerName: "Year",
-			rows: this.query('year').map( member => {
+			rows: this.query('year', {qr}).map( member => {
 				return new Composite({ member: member })
 			}),
 			remove: (member)=>{ this.removeMember('year', member ) },
@@ -92,7 +92,7 @@ export default class ProductTable extends Cube{
 				return new Composite({
 					headerName: "Month",
 					member: qr,
-					add: (member)=>{ this.addMember('market', member, space ) },
+					add: (member, parentSpace)=>{ this.addMember('market', member, Object.assign({}, parentSpace, space) ) },
 					remove: (member)=>{ this.removeMember('market', member ) },
 					rows: this.query('month', space).map( member => {
 						return new Composite({ member: member })

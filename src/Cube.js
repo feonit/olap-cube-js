@@ -262,7 +262,7 @@ class DynamicCube extends Cube{
             throw Error(`parameter dimension expects as string: ${dimension}`)
         }
 
-        this._validateAddMemberParams(dimension, memberOptions, rollupCoordinatesData);
+        this._validateDimension(dimension);
 
         const addedCoordinates = {
             [dimension]: this._createMember(dimension, memberOptions)
@@ -282,6 +282,8 @@ class DynamicCube extends Cube{
                 rollupCoordinates[dimension] = find;
             }
         });
+
+        this._validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData);
 
         const drillDownCoordinates = {};
         this.schema.traceUp(dimension, ({dimension: currentDimension}) => {
@@ -350,15 +352,16 @@ class DynamicCube extends Cube{
         const membersList = dimensions.map(dimension => space.getMemberList(dimension));
         recursivelyForEach(dimensions, membersList, 0, coordinates);
     }
-    _validateAddMemberParams(dimension, memberOptions, categorySpace){
+    _validateDimension(dimension){
         const measureDimension = this.schema.getMeasure().dimension;
         if (dimension === measureDimension){
             throw new AddDimensionOfCellException(dimension)
         }
-
+    }
+    _validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData){
         const addSpaceOptions = {
             [dimension]: memberOptions,
-            ...categorySpace
+            ...rollupCoordinatesData
         };
 
         const childDimensionList = this.schema.getChildDimensionList(dimension);

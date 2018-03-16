@@ -24,18 +24,35 @@
 					$scope.factTable = $scope.cube.getFactTable();
 
 					$scope.qr_selectedYear = "";
-					$scope.$watch('qr_selectedYear', (value)=>{
-						$scope.qrTable = $scope.cube.getQr(value);
+					$scope.$watch('qr_selectedYear', (year)=>{
+						year = angular.copy(year);
+						$scope.qrTable = $scope.cube.getQr(year);
+						$scope.fotQrTable = { year: year };
 					});
 
 					$scope.month_selectedQr = "";
+					$scope.monthYearTableRows = $scope.cube.getYear().rows;
 					$scope.$watch('month_selectedQr', (month_selectedQr)=>{
+						month_selectedQr = angular.copy(month_selectedQr);
+						if (month_selectedQr){
+							$scope.monthYearTableRows = $scope.cube.getYear(month_selectedQr).rows;
+							// if ($scope.monthYearTableRows.length === 1){
+							// 	$scope.month_selectedYear = $scope.monthYearTableRows[0].member
+							// }
+						}
 						$scope.monthTable = $scope.cube.getMonth(month_selectedQr, $scope.month_selectedYear);
+						$scope.forMonthTable = { qr: month_selectedQr, year: angular.copy($scope.month_selectedYear) }
 					});
 
 					$scope.month_selectedYear = "";
+					$scope.monthQrTableRows = $scope.cube.getQr().rows;
 					$scope.$watch('month_selectedYear', (month_selectedYear)=>{
+						month_selectedYear = angular.copy(month_selectedYear)
+						if (month_selectedYear){
+							$scope.monthQrTableRows = $scope.cube.getQr(month_selectedYear).rows;
+						}
 						$scope.monthTable = $scope.cube.getMonth($scope.month_selectedQr, month_selectedYear);
+						$scope.forMonthTable = { qr: angular.copy($scope.month_selectedQr), year: month_selectedYear }
 					});
 
 					const reset = () => {
@@ -186,12 +203,13 @@
 							removable="true"
 							table-data="qrTable"
 							on-change="reset()"
+							selected-data="fotQrTable"
 						></category-table>
 						<label>
 							<strong>year</strong>
 							<select ng-model="qr_selectedYear">
 								<option value="" selected>ALL</option>
-								<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>
+								<option ng-repeat="row in yearTable.rows track by $index" ng-value="{{row.member}}" >{{row.member.year}}</option>
 							</select>
 						</label>
 					</section>
@@ -203,19 +221,20 @@
 							removable="true"
 							table-data="monthTable"
 							on-change="reset()"
+							selected-data="forMonthTable"
 						></category-table>
 						<label>
 							<strong>qr</strong>
 							<select ng-model="month_selectedQr">
 								<option value="" selected>ALL</option>
-								<option ng-repeat="member in qrTable[0].category track by $index" value="{{member.qr}}" >{{member.qr}}</option>
+								<option ng-repeat="row in monthQrTableRows track by $index" ng-value="{{row.member}}" >{{row.member.qr}}</option>
 							</select>
 						</label>
 						<label>
 							<strong>year</strong>
 							<select ng-model="month_selectedYear">
 								<option value="" selected>ALL</option>
-								<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>
+								<option ng-repeat="row in monthYearTableRows track by $index" ng-value="{{row.member}}" >{{row.member.year}}</option>
 							</select>
 						</label>
 					</section>

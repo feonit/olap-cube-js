@@ -296,7 +296,7 @@ describe('[ Cube Edit ][ add ]', () => {
             { id: 2, product: 'tv' }
         ];
 
-        it ('level 1, where node has not hierarhy', () => {
+        it ('level 1, where node has not hierarchy', () => {
             cube.addMember('product', { product: 'clock' } );
 
             // product

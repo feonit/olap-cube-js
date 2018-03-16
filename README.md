@@ -199,14 +199,20 @@ Now newDataArray will be:
 ```
 
 ## Todo
+- method delete empty cells
+- method delete empty cells to example
+- dist folder/ version/ npm
+- ES5/ES6 umd
+- update readme file
+- add package to npm
+
+## For the future
 - unbalanced, ragged hierarchy
 - multi hierarchy (group spec fact table)
 - Analysis additional attributes of the members of the measurements
-- method delete empty cells
 - remove responsibility for "id" prop at facts
 - add support for snowflake schema
 - add validation for tree 
 - single keyProp
-- fact table without final dimension
-- ES5/ES6 umd
-- dist folder/ version/ npm
+- addMember without rollup options (then more than one member will be added)
+
