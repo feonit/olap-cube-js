@@ -38,4 +38,9 @@ section{
 .parent > div {
     flex: 1;
     align-self: flex-start;
+    padding: 10px;
+}
+
+p{
+    margin: 0;
 }

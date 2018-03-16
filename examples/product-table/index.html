@@ -17,7 +17,7 @@
 
 		window.angular.module('demo', [])
 			.component('categoryTable', CategoryTable)
-			.controller('AppController', class DimensionTableController{
+			.controller('AppController', ['$scope', class DimensionTableController{
 				constructor($scope){
 					$scope.schema = schema;
 					$scope.cube = new ProductTable(factTable, schema);
@@ -54,18 +54,17 @@
 					reset();
 
 					$scope.$watch('cube', () => {
-						$scope.outputData = $scope.cube.getDataArray();
+						$scope.outputData = $scope.cube.getFactTableOutput();
 					}, true);
 				}
-			});
+			}]);
 
 		window.angular.bootstrap(document, ['demo']);
 	</script>
 
 	<div ng-controller="AppController">
-
 		<div class="parent">
-			<div class="left">
+			<div>
 				<section>
 					<h2>Input data</h2>
 					<category-table
@@ -87,99 +86,8 @@
 					></category-table>
 				</section>
 			</div>
-			<div class="right">
-				<!--<details open>-->
-					<!--<summary>-->
-						<!--Dimension Tables <sup>(output data)</sup>-->
-					<!--</summary>-->
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="productTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
 
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="marketTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
-
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="markTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
-
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="yearTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
-				<!--</details>-->
-
-				<!--<details open>-->
-					<!--<summary>-->
-						<!--Specialized Dimension Tables <sup>(output data)</sup>-->
-					<!--</summary>-->
-
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="qrTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-						<!--<label>-->
-							<!--<strong>year</strong>-->
-							<!--<select ng-model="qr_selectedYear">-->
-								<!--<option value="" selected>ALL</option>-->
-								<!--<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>-->
-							<!--</select>-->
-						<!--</label>-->
-					<!--</section>-->
-
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="monthTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-						<!--<label>-->
-							<!--<strong>qr</strong>-->
-							<!--<select ng-model="month_selectedQr">-->
-								<!--<option value="" selected>ALL</option>-->
-								<!--<option ng-repeat="member in qrTable[0].category track by $index" value="{{member.qr}}" >{{member.qr}}</option>-->
-							<!--</select>-->
-						<!--</label>-->
-						<!--<label>-->
-							<!--<strong>year</strong>-->
-							<!--<select ng-model="month_selectedYear">-->
-								<!--<option value="" selected>ALL</option>-->
-								<!--<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>-->
-							<!--</select>-->
-						<!--</label>-->
-					<!--</section>-->
-				<!--</details>-->
-
+			<div>
 				<details open>
 					<summary>
 						Dimension Categories Tables<sup>(output data)</sup>
@@ -195,49 +103,144 @@
 						></category-table>
 					</section>
 
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="yearQrTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="yearQrTable"
+							on-change="reset()"
+						></category-table>
+					</section>
 
-					<!--<section>-->
-						<!--<category-table-->
-							<!--added="true"-->
-							<!--editable="true"-->
-							<!--removable="true"-->
-							<!--table-data="qrMonthTable"-->
-							<!--on-change="reset()"-->
-						<!--&gt;</category-table>-->
-					<!--</section>-->
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="qrMonthTable"
+							on-change="reset()"
+						></category-table>
+					</section>
 
 				</details>
+			</div>
 
+			<div>
 				<details open>
 					<summary>
-						Schema - aggregate data<sup>(input data)</sup>
+						Dimension Tables <sup>(output data)</sup>
 					</summary>
-					Dimension Hierarchy:
-					<p>
-						<code style="white-space: pre">
-[money]
-&#9;\- [month]
-&#9;&#9;\- [qr]
-&#9;&#9;&#9;\- [year]
-&#9;\- [product]
-&#9;\- [market]
-&#9;\- [mark]
-						</code>
-					</p>
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="productTable"
+							on-change="reset()"
+						></category-table>
+					</section>
 
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="marketTable"
+							on-change="reset()"
+						></category-table>
+					</section>
+
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="markTable"
+							on-change="reset()"
+						></category-table>
+					</section>
+
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="yearTable"
+							on-change="reset()"
+						></category-table>
+					</section>
+				</details>
+			</div>
+
+			<div>
+				<details open>
+					<summary>
+						Specialized Dimension Tables <sup>(output data)</sup>
+					</summary>
+
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="qrTable"
+							on-change="reset()"
+						></category-table>
+						<label>
+							<strong>year</strong>
+							<select ng-model="qr_selectedYear">
+								<option value="" selected>ALL</option>
+								<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>
+							</select>
+						</label>
+					</section>
+
+					<section>
+						<category-table
+							added="true"
+							editable="true"
+							removable="true"
+							table-data="monthTable"
+							on-change="reset()"
+						></category-table>
+						<label>
+							<strong>qr</strong>
+							<select ng-model="month_selectedQr">
+								<option value="" selected>ALL</option>
+								<option ng-repeat="member in qrTable[0].category track by $index" value="{{member.qr}}" >{{member.qr}}</option>
+							</select>
+						</label>
+						<label>
+							<strong>year</strong>
+							<select ng-model="month_selectedYear">
+								<option value="" selected>ALL</option>
+								<option ng-repeat="member in yearTable[0].category track by $index" value="{{member.year}}" >{{member.year}}</option>
+							</select>
+						</label>
+					</section>
 				</details>
 			</div>
 		</div>
 
+		<details open>
+			<summary>
+				Schema - aggregate data<sup>(input data)</sup>
+			</summary>
+			Dimension Hierarchy:
+			<p>
+				<code style="white-space: pre">
+					[money]
+					&#9;\- [month]
+					&#9;&#9;\- [qr]
+					&#9;&#9;&#9;\- [year]
+					&#9;\- [product]
+					&#9;\- [market]
+					&#9;\- [mark]
+				</code>
+			</p>
+
+		</details>
 	</div>
 </body>
 </html>

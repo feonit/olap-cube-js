@@ -4,146 +4,156 @@ import Composite from './Composite.js'
 // todo: add some functional in Cube
 export default class ProductTable extends Cube{
 	getFactTable(){
-		return [
-			new Composite({
-				headerName: "Fact Table",
-				category: this.facts,
-				//todo methods for add/remove rows of fact table
-			})
-		]
+		return new Composite({
+			headerName: "Fact Table",
+			rows: this.facts.map( member =>{
+				return new Composite({ member: member })
+			}),
+			//todo methods for add/remove rows of fact table
+		})
 	}
-	getDataArray(){
-		return [
-			new Composite({
-				headerName: "Fact Table",
-				category: super.getDataArray()
+	getFactTableOutput(){
+		return new Composite({
+			headerName: "Fact Table",
+			rows: super.getDataArray().map( member =>{
+				return new Composite({ member: member })
 			})
-		]
+		})
 	}
 	getProduct(){
-		return [
-			new Composite({
-				headerName: "Product",
-				category: this.query('product'),
-				remove: (member)=>{ this.removeMember('product', member ) },
-				add: (member)=>{ this.addMember('product', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Product",
+			rows: this.query('product').map( member => {
+				return new Composite({ member: member })
+			}),
+			add: (member)=>{ this.addMember('product', member ) },
+			remove: (member)=>{ this.removeMember('product', member ) }
+		})
 	}
 	getMarket(){
-		return [
-			new Composite({
-				headerName: "Market",
-				category: this.query('market'),
-				remove: (member)=>{ this.removeMember('market', member ) },
-				add: (member)=>{ this.addMember('market', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Market",
+			rows: this.query('market').map( member => {
+				return new Composite({ member: member })
+			}),
+			add: (member)=>{ this.addMember('market', member ) },
+			remove: (member)=>{ this.removeMember('market', member ) }
+		})
 	}
 	getMark(){
-		return [
-			new Composite({
-				headerName: "Mark",
-				category: this.query('mark'),
-				remove: (member)=>{ this.removeMember('mark', member ) },
-				add: (member)=>{ this.addMember('mark', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Mark",
+			rows: this.query('mark').map( member => {
+				return new Composite({ member: member })
+			}),
+			remove: (member)=>{ this.removeMember('mark', member ) },
+			add: (member)=>{ this.addMember('mark', member ) }
+		})
 	}
 	getMonth(qr, year){
-		return [
-			new Composite({
-				headerName: "Month",
-				category: this.query('month', { 'qr': qr, 'year': year }),
-				remove: (member)=>{ this.removeMember('month', member ) },
-				add: (member)=>{ this.addMember('month', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Month",
+			rows: this.query('month', { 'qr': qr, 'year': year }).map( member => {
+				return new Composite({ member: member })
+			}),
+			remove: (member)=>{ this.removeMember('month', member ) },
+			add: (member)=>{ this.addMember('month', member ) }
+		})
 	}
 	getQr(year){
-		return [
-			new Composite({
-				headerName: "Qr",
-				category: this.query('qr', { 'year': year }),
-				remove: (member)=>{ this.removeMember('qr', member ) },
-				add: (member)=>{ this.addMember('qr', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Qr",
+			rows: this.query('qr', { 'year': year }).map( member => {
+				return new Composite({ member: member })
+			}),
+			remove: (member)=>{ this.removeMember('qr', member ) },
+			add: (member)=>{ this.addMember('qr', member ) }
+		})
 	}
 	getYear(){
-		return [
-			new Composite({
-				headerName: "Year",
-				category: this.query('year'),
-				remove: (member)=>{ this.removeMember('year', member ) },
-				add: (member)=>{ this.addMember('year', member ) }
-			})
-		]
+		return new Composite({
+			headerName: "Year",
+			rows: this.query('year').map( member => {
+				return new Composite({ member: member })
+			}),
+			remove: (member)=>{ this.removeMember('year', member ) },
+			add: (member)=>{ this.addMember('year', member ) }
+		})
 	}
 	getQrMonth(){
-		return [
-			new Composite({
-				headerName: "Qr",
-				category: this.query('qr').map( qr => {
-					return new Composite({
-						headerName: "Month",
-						member: qr,
-						category: this.query('month', { qr: qr }),
-						remove: (member)=>{ this.removeMember('market', member ) },
-						add: (member)=>{ this.addMember('market', member ) }
+		return new Composite({
+			headerName: "Qr",
+			categoryName: "Qr category",
+			add: (member)=>{ this.addMember('qr', member ) },
+			remove: (member)=>{ this.removeMember('qr', member ) },
+			rows: this.query('qr').map( qr => {
+				const space = { qr };
+
+				return new Composite({
+					headerName: "Month",
+					member: qr,
+					add: (member)=>{ this.addMember('market', member, space ) },
+					remove: (member)=>{ this.removeMember('market', member ) },
+					rows: this.query('month', space).map( member => {
+						return new Composite({ member: member })
 					})
 				})
 			})
-		]
+		})
 	}
 	getYearQr(){
-		return [
-			new Composite({
-				headerName: "Year",
-				category: this.query('year').map( year => {
-					return new Composite({
-						headerName: "Year Tables",
-						member: year,
-						category: this.query('qr', { year: year }),
-						remove: (member)=>{ this.removeMember('qr', member ) },
-						add: (member)=>{ this.addMember('qr', member ) }
-					});
-				}),
-				remove: (member)=>{ this.removeMember('year', member ) },
-				add: (member)=>{ this.addMember('year', member ) }
+		return new Composite({
+			headerName: "Year",
+			categoryName: "Year category",
+			add: (member)=>{ this.addMember('year', member ) },
+			remove: (member)=>{ this.removeMember('year', member ) },
+			rows: this.query('year').map( year => {
+				const space = { year };
+
+				return new Composite({
+					headerName: "Year Tables",
+					member: year,
+					add: (member)=>{ this.addMember('qr', member, space ) },
+					remove: (member)=>{ this.removeMember('qr', member ) },
+					rows: this.query('qr', space).map( member => {
+						return new Composite({ member: member })
+					})
+				});
 			})
-		]
+		})
 	}
 	getYearQrMonth(){
-		return [
-			new Composite({
-				headerName: "Year",
-				categoryName: "Year category",
-				remove: (member)=>{ this.removeMember('year', member ) },
-				add: (member)=>{ this.addMember('year', member ) },
-				category: this.query('year').map( year => {
-					const space = { year: year };
+		return new Composite({
+			headerName: "Year",
+			categoryName: "Year category",
+			add: (member)=>{ this.addMember('year', member ) },
+			remove: (member)=>{ this.removeMember('year', member ) },
+			rows: this.query('year').map( year => {
+				const space = { year };
 
-					return new Composite({
-						headerName: "Qr",
-						categoryName: "Qr category",
-						member: year,
-						remove: (member)=>{ this.removeMember('qr', member) },
-						add: (member)=>{ this.addMember('qr', member, space ) },
-						category: this.query('qr', space).map( qr => {
-							const space = { qr: qr, year: year };
+				return new Composite({
+					member: year,
+					headerName: "Qr",
+					categoryName: "Qr category",
+					remove: (member)=>{ this.removeMember('qr', member) },
+					add: (member)=>{ this.addMember('qr', member, space ) },
+					rows: this.query('qr', space).map( qr => {
+						const space = { qr, year };
 
-							return new Composite({
-								headerName: "Month",
-								member: qr,
-								category: this.query('month', space),
-								remove: (member)=>{ this.removeMember('month', member ) },
-								add: (member)=>{ this.addMember('month', member, space ) }
+						return new Composite({
+							member: qr,
+							headerName: "Month",
+							remove: (member)=>{ this.removeMember('month', member ) },
+							add: (member)=>{ this.addMember('month', member, space ) },
+							rows: this.query('month', space).map( month => {
+								return new Composite({
+									member: month
+								})
 							})
 						})
 					})
 				})
 			})
-		]
+		})
 	}
 }

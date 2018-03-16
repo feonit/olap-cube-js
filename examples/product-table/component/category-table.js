@@ -3,34 +3,38 @@ import TableController from "./TableController.js";
 
 export default {
 	bindings: {
-		"tableData": "=",
-		"editable": "=",
-		"removable": "=",
-		"added": "=",
+		"tableData": "<",
+		"editable": "<",
+		"removable": "<",
+		"added": "<",
 		"onChange": "&"
 	},
 	controllerAs: '$ctrl',
 	controller: class CategoryTableController extends TableController{
-        constructor(){
-        	super();
+		constructor(){
+			super();
 			this.editEnabled = false;
 			this.addEnabled = false;
 			this.removeEnabled = false;
 			this.valueToAdd = '';
-        }
-        $onInit(){
-			this.tableKeys = this.getSortedObjectKeys(this.tableData[0].member);
-			this.isCompositen = this.isComposite(this.tableData[0].category[0]);
+		}
 
-			this.header = this.tableData[0].headerName;
-			this.categoryName = this.tableData[0].categoryName;
-			this.category = this.tableData[0].category;
-        }
-		/**
-		 * @param {Member|Composite} obj
-		 * */
-		isComposite(obj){
-			return obj instanceof Composite
+		$onInit(){
+			this._reset();
+		}
+
+		_reset(){
+			this.isCompositen = !!this.tableData.categoryName;
+			this.keys = this.getSortedObjectKeys(this.tableData.rows[0].member);
+		}
+
+		$onChanges(changesObj){
+			if (changesObj){
+				if (changesObj.tableData.currentValue !== changesObj.tableData.previousValue){
+					this.tableData = changesObj.tableData.currentValue;
+					this._reset();
+				}
+			}
 		}
 
 		onRemove(composite, item){
