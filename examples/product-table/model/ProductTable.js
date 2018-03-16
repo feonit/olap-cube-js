@@ -92,8 +92,8 @@ export default class ProductTable extends Cube{
 				return new Composite({
 					headerName: "Month",
 					member: qr,
-					add: (member, parentSpace)=>{ this.addMember('market', member, Object.assign({}, parentSpace, space) ) },
-					remove: (member)=>{ this.removeMember('market', member ) },
+					add: (member, parentSpace)=>{ this.addMember('month', member, Object.assign({}, parentSpace, space) ) },
+					remove: (member)=>{ this.removeMember('month', member ) },
 					rows: this.query('month', space).map( member => {
 						return new Composite({ member: member })
 					})

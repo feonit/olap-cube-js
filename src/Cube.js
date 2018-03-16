@@ -364,14 +364,17 @@ class DynamicCube extends Cube{
             ...rollupCoordinatesData
         };
 
-        const childDimensionList = this.schema.getChildDimensionList(dimension);
+        const childDimensionList = this.schema.getPostOrderChildDimensionList(dimension);
+
         if (childDimensionList.length){
-            const find = childDimensionList.find( childDimension => {
-                return addSpaceOptions[childDimension] ? false : childDimension;
-            });
-            if (find){
-                throw new NotCompletelySpaceException(find)
-            }
+        	const first = childDimensionList[0];
+
+        	// first parent define one member
+        	if (addSpaceOptions[first]){
+        		return;
+	        } else {
+		        throw new NotCompletelySpaceException(first)
+        	}
         }
     }
     /**
@@ -459,9 +462,10 @@ class DynamicCube extends Cube{
                 })
             }
         });
-        if (report.length){
-            console.log('битые ссылки:', report)
-        }
+        // "development"
+        // if (report.length){
+        //     console.log('broken links:', report)
+        // }
     }
     /**
      *

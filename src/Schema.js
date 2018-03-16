@@ -158,7 +158,7 @@ export class Schema extends Tree{
 
     }
 
-    getChildDimensionList(dimension){
+    getPostOrderChildDimensionList(dimension){
         let parentNode;
         let order = [];
         this.postOrder( ({dimension: currentDimension}, node) => {
