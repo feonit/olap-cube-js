@@ -27,10 +27,10 @@ describe('[ Cube ][ fill ]', function(){
 
     it('should normalize count of measure for non-normalized data', () => {
         let cube = new Cube(factTable, schema);
-        expect(cube.countOfCardinality()).toBe(8);
+        expect(cube.cartesian().length).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(5);
         cube.fill({ is: false });
-        expect(cube.countOfCardinality()).toBe(8);
+        expect(cube.cartesian().length).toBe(8);
         expect(cube.space.getMemberList('is').length).toBe(8);
     });
 
@@ -48,7 +48,7 @@ describe('[ Cube ][ fill ]', function(){
             { x: 1, y: 1, z: 0,is: false },
             { x: 1, y: 1, z: 1,is: false }
         ]);
-        expect(isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true);
+        expect(isEqual(jsonParseStringify(cube.denormalize()), factTableExpectedAfter )).toBe(true);
     });
 
     describe('[should normalize for hierarchy of dimensions]', ()=>{
@@ -90,11 +90,11 @@ describe('[ Cube ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(debug=cube.countOfCardinality()).toBe(4);
-            expect(debug=cube.countOfEmpty()).toBe(2);
+            expect(debug=cube.cartesian().length).toBe(4);
+            expect(debug=cube.cartesian().length - cube.query().length).toBe(2);
             cube.fill();
-            expect(debug=cube.countOfCardinality()).toBe(4);
-            expect(debug=cube.countOfEmpty()).toBe(0);
+            expect(debug=cube.cartesian().length).toBe(4);
+            expect(debug=cube.cartesian().length - cube.query().length).toBe(0);
         });
 
         it('should work level 3', ()=>{
@@ -105,11 +105,11 @@ describe('[ Cube ][ fill ]', function(){
             ];
 
             const cube = new Cube(factTable, schema);
-            expect(debug=cube.countOfCardinality()).toBe(6);
-            expect(debug=cube.countOfEmpty()).toBe(3);
+            expect(debug=cube.cartesian().length).toBe(6);
+            expect(debug=cube.cartesian().length - cube.query().length).toBe(3);
             cube.fill();
-            expect(debug=cube.countOfCardinality()).toBe(6);
-            expect(debug=cube.countOfEmpty()).toBe(0);
+            expect(debug=cube.cartesian().length).toBe(6);
+            expect(debug=cube.cartesian().length - cube.query().length).toBe(0);
         })
 
         it('should work for cells in hierarchy', ()=>{
@@ -128,7 +128,7 @@ describe('[ Cube ][ fill ]', function(){
                 {planet: "Mars", country: "France", city: "Paris", nationality: "Russian", humans: null}
             ]);
 
-            expect(isEqual(jsonParseStringify(cube.getDataArray()), factTableExpectedAfter )).toBe(true)
+            expect(isEqual(jsonParseStringify(cube.denormalize()), factTableExpectedAfter )).toBe(true)
         })
 
     });
@@ -154,7 +154,7 @@ describe('[ Cube ][ fill ]', function(){
         const cube = new Cube(factTable, schema)
         cube.fill({ xy: false });
 
-        expect(isEqual(jsonParseStringify(cube.getDataArray()), [
+        expect(isEqual(jsonParseStringify(cube.denormalize()), [
             { id: 1, x: 0, y: 1, xy: true },
             { id: 2, x: 1, y: 0, xy: true },
             { x: 0, y: 0, xy: false },

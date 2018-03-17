@@ -16,16 +16,16 @@ describe('[ Cube Static ]', function(){
             expect(Cube.prototype.query).toBeDefined();
         });
 
-        it('should define countOfCardinality', ()=> {
-            expect(Cube.prototype.countOfCardinality).toBeDefined();
+        it('should define cartesian', ()=> {
+            expect(Cube.prototype.cartesian).toBeDefined();
         });
 
-        it('should define countOfEmpty', ()=> {
-            expect(Cube.prototype.countOfEmpty).toBeDefined();
-        });
+	    it('should define residuals', ()=> {
+		    expect(Cube.prototype.residuals).toBeDefined();
+	    });
 
-        it('should define getDataArray', ()=> {
-            expect(Cube.prototype.getDataArray).toBeDefined();
+        it('should define denormalize', ()=> {
+            expect(Cube.prototype.denormalize).toBeDefined();
         });
 
         it('should define addMember', ()=> {
@@ -40,12 +40,8 @@ describe('[ Cube Static ]', function(){
             expect(Cube.prototype.fill).toBeDefined();
         });
 
-        it('should define countOfResiduals', ()=> {
-            expect(Cube.prototype.countOfResiduals).toBeDefined();
-        });
-
-        it('should define countOfUnfilled', ()=> {
-            expect(Cube.prototype.countOfUnfilled).toBeDefined();
+        it('should define unfilled', ()=> {
+            expect(Cube.prototype.unfilled).toBeDefined();
         });
     });
 
@@ -85,13 +81,13 @@ describe('[ Cube Static ]', function(){
             cube = new Cube(factTable, schema);
         });
 
-        it('should return cardinality count', ()=>{
-            const result = cube.countOfCardinality();
+        it('should return cartesian count', ()=>{
+            const result = cube.cartesian().length;
             expect(result).toBe(8)
         });
 
         it('should return empty count', ()=>{
-            const result = cube.countOfEmpty();
+            const result = cube.cartesian().length - cube.query().length;
             expect(result).toBe(3)
         });
 
@@ -122,7 +118,7 @@ describe('[ Cube Static ]', function(){
             };
 
             const cube = new Cube(factTable, schema);
-            const result = cube.countOfResiduals();
+            const result = cube.residuals().length;
             expect(result === 1).toBe(true);
         })
 

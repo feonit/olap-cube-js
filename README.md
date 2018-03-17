@@ -39,7 +39,7 @@ How Cube is work?
 ```javascript
 
 // This is an array of data from server
-let dataArray = [
+let facts = [
     { id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
     { id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
     { id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
@@ -74,7 +74,7 @@ let schema = {
 }
 
 // We send it all to the constructor
-let cube = new Cube(dataArray, schema);
+let cube = new Cube(facts, schema);
 
 ```
 Now cube will be:
@@ -118,10 +118,10 @@ Now cube will be:
     ]
 }
 ```
-How get list back:
+How get facts back:
 
 ```javascript
-cube.getDataArray()
+cube.denormalize()
 
 ```
 ```js
@@ -183,7 +183,7 @@ const dataArray = [
 ]
 const cube = new Cube(dataArray, schema)
 cube.fill({ xy: false })
-const newDataArray = cube.getDataArray()
+const newDataArray = cube.denormalize()
 
 ```
 

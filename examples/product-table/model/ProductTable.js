@@ -15,7 +15,7 @@ export default class ProductTable extends Cube{
 	getFactTableOutput(){
 		return new Composite({
 			headerName: "Fact Table",
-			rows: super.getDataArray().map( member =>{
+			rows: super.denormalize().map( member =>{
 				return new Composite({ member: member })
 			})
 		})
