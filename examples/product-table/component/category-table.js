@@ -44,8 +44,8 @@ export default {
 
 		onAdd(composite, item){
 			composite.add(item, this.selectedData);
-            this.valuesToAdd = {};
-            if (this.onChange){
+			this.valuesToAdd = {};
+			if (this.onChange){
 				this.onChange();
 			}
 		}

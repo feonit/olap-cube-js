@@ -5,14 +5,14 @@ import Member from './Member.js';
  * that is, they are not the result of calculating data
  * */
 export default class InputMember extends Member{
-    constructor(id, props, data){
-        const defaultValue = null;
-        const defaultData = {};
+	constructor(id, props, data){
+		const defaultValue = null;
+		const defaultData = {};
 
-        props.forEach( propName => {
-            defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue
-        });
+		props.forEach( propName => {
+			defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue
+		});
 
-        super(id, props, defaultData)
-    }
+		super(id, props, defaultData)
+	}
 }

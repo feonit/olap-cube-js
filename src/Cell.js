@@ -7,11 +7,11 @@ import Fact from './Fact.js';
  * The cells of the hypercube can be empty or full.
  * */
 export default class Cell extends Fact{
-    deleteProps(props){
-        props.forEach( prop => {
-            if ( prop !== ENTITY_ID ){
-                delete this[prop];
-            }
-        });
-    }
+	deleteProps(props){
+		props.forEach( prop => {
+			if ( prop !== ENTITY_ID ){
+				delete this[prop];
+			}
+		});
+	}
 }
