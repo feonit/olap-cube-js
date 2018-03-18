@@ -1,7 +1,7 @@
 .idea
 node_modules
 coverage/
-dist/
+test/
 secure/
 .nyc_output/
 package-lock.json

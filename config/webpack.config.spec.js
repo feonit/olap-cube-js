@@ -5,7 +5,7 @@ module.exports = {
 		spec: path.resolve(__dirname, '../spec/spec.js'),
 	},
 	output: {
-		path: path.resolve(__dirname, '../dist'),
+		path: path.resolve(__dirname, '../test'),
 		filename: '[name].js',
 		library: "Spec",
 		libraryTarget: "var"
