@@ -80,17 +80,50 @@ describe('readme', ()=>{
 		let data = jsonParseStringify(cube);
 		expect(isEqual(expected, data)).toBe(true)
 
-		// let member = { category: 'Category 1' }
-		let member = { id: 1 }
-		let filter = { categories: member }
-		let res = cube.query('products', filter )
 
-		expected = [
-			{ id: 1, product: 'Product 1' },
-			{ id: 2, product: 'Product 2' },
-		]
+		expect(isEqual(
+			[
+				{ id: 1, product: 'Product 1' },
+				{ id: 2, product: 'Product 2' },
+			],
+			jsonParseStringify(
+				cube.query('products', { 'categories': { id: 1 } })
+			)
+		)).toBe(true)
 
-		let isit = isEqual(expected, jsonParseStringify(res));
-		expect(isit).toBe(true)
+
+		expect(isEqual(
+			[
+				{ id: 2, product: 'Product 2' },
+				{ id: 3, product: 'Product 3' },
+				{ id: 4, product: 'Product 1' },
+			],
+			jsonParseStringify(
+				cube.query('products', { 'regions': [{ id: 2 }, { id: 3 }] } )
+			)
+		)).toBe(true)
+
+
+		expect(isEqual(
+			[
+				{ id: 1, region: 'North' },
+				{ id: 2, region: 'South' },
+			],
+			jsonParseStringify(
+				cube.query('regions', { 'categories': { id: 1 } })
+			)
+		)).toBe(true)
+
+
+		expect(isEqual(
+			[
+				{ id: 1, value: 737 },
+			],
+			jsonParseStringify(
+				cube.query('value', { 'date': { id: 1 } } )
+			)
+		)).toBe(true)
+
+
 	})
 });

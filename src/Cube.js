@@ -103,7 +103,7 @@ class Cube{
 
 	/**
 	 * Get facts from cube
-	 * @public
+	 * @private
 	 * */
 	denormalize(cells = this.cellTable){
 		return this.star.denormalize(cells)
@@ -371,6 +371,7 @@ class DynamicCube extends Cube{
 	}
 	/**
 	 * Get data without random identifiers
+	 * @private
 	 * */
 	denormalize(cells = this.cellTable, forSave = true){
 		const data = super.denormalize(cells);
