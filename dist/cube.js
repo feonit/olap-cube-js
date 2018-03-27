@@ -221,7 +221,11 @@ var Space = function () {
 	_createClass(Space, [{
 		key: "getMemberList",
 		value: function getMemberList(dimension) {
-			return this[dimension];
+			var memberList = this[dimension];
+			if (!memberList) {
+				throw Error("dimension \"" + dimension + "\" not found");
+			}
+			return memberList;
 		}
 		/**
    * @param {string} dimension
@@ -849,7 +853,7 @@ var Cube = function () {
 
 		/**
    * Get facts from cube
-   * @public
+   * @private
    * */
 
 	}, {
@@ -1182,6 +1186,7 @@ var DynamicCube = function (_Cube) {
 		}
 		/**
    * Get data without random identifiers
+   * @private
    * */
 
 	}, {
@@ -2188,6 +2193,8 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _const = __webpack_require__(0);
@@ -2249,13 +2256,25 @@ var MemberList = function (_extendableBuiltin2) {
    * */
 
 	}, {
-		key: "search",
-		value: function search(value) {
+		key: "searchValue",
+		value: function searchValue(value) {
 			return this.filter(function (member) {
 				return Object.keys(member).find(function (key) {
 					return key !== _const.ENTITY_ID && member[key] === value;
 				});
 			});
+		}
+	}, {
+		key: "searchData",
+		value: function searchData(data) {
+			if (data && (typeof data === "undefined" ? "undefined" : _typeof(data)) === "object") {
+				var keys = Object.keys(data);
+				return this.filter(function (member) {
+					return keys.some(function (key) {
+						return member.hasOwnProperty(key) && member[key] !== data[key];
+					});
+				});
+			}
 		}
 	}, {
 		key: "add",
@@ -2437,24 +2456,47 @@ var QueryAdapter = function () {
 			Object.keys(fixSpaceOptions).forEach(function (dimension) {
 				var value = fixSpaceOptions[dimension];
 
-				var find = function find(dimension, value) {
+				var filterValue = function filterValue(dimension, value) {
 					var memberList = space.getMemberList(dimension);
-					return memberList ? memberList.search(value) : void 0;
+					return memberList ? memberList.searchValue(value) : void 0;
+				};
+
+				var filterData = function filterData(dimension, data) {
+					var memberList = space.getMemberList(dimension);
+					return memberList ? memberList.searchData(data) : void 0;
 				};
 
 				if (typeof value === "string") {
-					fixSpaceOptions[dimension] = find(dimension, value) || [];
-				} else {
-					if (Array.isArray(value) && value.length && typeof value[0] === "string") {
+					fixSpaceOptions[dimension] = filterValue(dimension, value) || [];
+				}
+
+				// if ( typeof value === "object") {
+				// 	fixSpaceOptions[dimension] = filterData(dimension, value) || [];
+				// }
+
+				if (Array.isArray(value) && value.length) {
+
+					if (typeof value[0] === "string") {
 						fixSpaceOptions[dimension] = [];
 						value.reduce(function (accumulated, value) {
-							var found = find(dimension, value);
+							var found = filterValue(dimension, value);
 							if (found) {
 								[].splice.apply(accumulated, [accumulated.length, 0].concat(found));
 							}
 							return accumulated;
 						}, fixSpaceOptions[dimension]);
 					}
+
+					// if (typeof value[0] === "object"){
+					// 	fixSpaceOptions[dimension] = [];
+					// 	value.reduce( (accumulated, value) => {
+					// 		const found = filterData(dimension, value);
+					// 		if (found){
+					// 			[].splice.apply(accumulated, [accumulated.length, 0].concat(found))
+					// 		}
+					// 		return accumulated;
+					// 	}, fixSpaceOptions[dimension])
+					// }
 				}
 			});
 			return fixSpaceOptions;
