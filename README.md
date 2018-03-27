@@ -124,9 +124,9 @@ Now the cube will represent the structure below:
     },
     cellTable: [
         { id: 1, regions_id: 1, date_id: 1, products_id: 1, categories_id: 1, value_id: 1 },
-        { id: 2, regions_id: 2, date_id: 2, products_id: 2, categories_id: 1, value_id: 3 },
-        { id: 3, regions_id: 3, date_id: 3, products_id: 3, categories_id: 2, value_id: 2 },
-        { id: 4, regions_id: 3, date_id: 4, products_id: 4, categories_id: 2, value_id: 4 },
+        { id: 2, regions_id: 2, date_id: 2, products_id: 2, categories_id: 1, value_id: 2 },
+        { id: 3, regions_id: 3, date_id: 3, products_id: 3, categories_id: 2, value_id: 3 },
+        { id: 4, regions_id: 3, date_id: 3, products_id: 4, categories_id: 2, value_id: 4 },
     ]
 }
 ```
