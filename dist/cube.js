@@ -794,6 +794,7 @@ var Cube = function () {
   * @param {(object|null)?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
   * @param {boolean?} raw - return cell of fact data
   * @return {Member[]|FactTable|CellTable} returns members
+  * @deprecated
   * */
 
 
@@ -810,6 +811,61 @@ var Cube = function () {
 				}
 			}
 
+			var cells = this.filterCells(fixSpaceOptions);
+
+			if (!dimension) {
+				return raw ? cells : this.denormalize(cells);
+			} else {
+				return this.getDimensionMembersFromCells(dimension, cells);
+			}
+		}
+		/**
+   * @public
+   * */
+
+	}, {
+		key: 'getFacts',
+		value: function getFacts() {
+			return this.facts;
+		}
+		/**
+   * @public
+   * */
+
+	}, {
+		key: 'getDimensionMembers',
+		value: function getDimensionMembers(dimension) {
+			this.space.getMemberList(dimension);
+		}
+		/**
+   * @public
+   * */
+
+	}, {
+		key: 'getFactsBySet',
+		value: function getFactsBySet(fixSpaceOptions) {
+			var raw = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+			var cells = this.filterCells(fixSpaceOptions);
+			return raw ? cells : this.denormalize(cells);
+		}
+		/**
+   * @public
+   * */
+
+	}, {
+		key: 'getDimensionMembersBySet',
+		value: function getDimensionMembersBySet(dimension, fixSpaceOptions) {
+			var cells = this.filterCells(fixSpaceOptions);
+			return this.getDimensionMembersFromCells(dimension, cells);
+		}
+		/**
+   * @private
+   * */
+
+	}, {
+		key: 'filterCells',
+		value: function filterCells(fixSpaceOptions) {
 			var cells = this.cellTable;
 
 			if (fixSpaceOptions) {
@@ -819,36 +875,41 @@ var Cube = function () {
 				cells = fixSpace.match(cells);
 			}
 
-			if (!dimension) {
-				return raw ? cells : this.denormalize(cells);
-			} else {
-				var idAttribute = _Star2.default.genericId(dimension);
-				var ids = cells.map(function (cell) {
-					return cell[idAttribute];
+			return cells;
+		}
+		/**
+   * @private
+   * */
+
+	}, {
+		key: 'getDimensionMembersFromCells',
+		value: function getDimensionMembersFromCells(dimension, cells) {
+			var idAttribute = _Star2.default.genericId(dimension);
+			var ids = cells.map(function (cell) {
+				return cell[idAttribute];
+			});
+
+			var uniq = function uniq(items) {
+				var hash = {};
+				items.forEach(function (item) {
+					hash[item] = item;
 				});
-
-				var uniq = function uniq(items) {
-					var hash = {};
-					items.forEach(function (item) {
-						hash[item] = item;
-					});
-					return Object.keys(hash).map(function (key) {
-						return hash[key];
-					});
-				};
-
-				var uniqueIds = uniq(ids);
-				var result = [];
-				var members = this.space.getMemberList(dimension);
-
-				// filtering without loss of order in the array
-				members.forEach(function (member) {
-					if (uniqueIds.indexOf(member[_const.ENTITY_ID]) !== -1) {
-						result.push(member);
-					}
+				return Object.keys(hash).map(function (key) {
+					return hash[key];
 				});
-				return result;
-			}
+			};
+
+			var uniqueIds = uniq(ids);
+			var result = [];
+			var members = this.space.getMemberList(dimension);
+
+			// filtering without loss of order in the array
+			members.forEach(function (member) {
+				if (uniqueIds.indexOf(member[_const.ENTITY_ID]) !== -1) {
+					result.push(member);
+				}
+			});
+			return result;
 		}
 
 		/**
@@ -1018,8 +1079,8 @@ var DynamicCube = function (_Cube) {
 
 
 	_createClass(DynamicCube, [{
-		key: 'addMember',
-		value: function addMember(dimension) {
+		key: 'addDimensionMember',
+		value: function addDimensionMember(dimension) {
 			var _this5 = this;
 
 			var memberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -1159,8 +1220,8 @@ var DynamicCube = function (_Cube) {
    * */
 
 	}, {
-		key: 'removeMember',
-		value: function removeMember(dimension, member) {
+		key: 'removeDimensionMember',
+		value: function removeDimensionMember(dimension, member) {
 			var _this6 = this;
 
 			var dependenciesDimensionNames = this.schema.getDependenciesNames(dimension);
