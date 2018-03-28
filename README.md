@@ -346,6 +346,9 @@ let member = { id: 2 }
 cube.removeMember('products', member)
 ```
 
+## Versioning
+We use <a href="https://semver.org/">SemVer</a> for versioning.
+
 ## Todo
 - Update readme file
 - Method delete empty cells
