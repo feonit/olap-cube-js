@@ -28,12 +28,12 @@ describe('[ Cube Static ]', function(){
 			expect(Cube.prototype.denormalize).toBeDefined();
 		});
 
-		it('should define addMember', ()=> {
-			expect(Cube.prototype.addMember).toBeDefined();
+		it('should define addDimensionMember', ()=> {
+			expect(Cube.prototype.addDimensionMember).toBeDefined();
 		});
 
-		it('should define removeMember', ()=> {
-			expect(Cube.prototype.removeMember).toBeDefined();
+		it('should define removeDimensionMember', ()=> {
+			expect(Cube.prototype.removeDimensionMember).toBeDefined();
 		});
 
 		it('should define fill', ()=> {

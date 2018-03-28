@@ -27,7 +27,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - Tree structure for representing hierarchical data
 - [Balanced][4] hierarchies
 - Multi-level hierarchies
-- One hierarchy for one [dimension][3]
+- Each cube [dimension][3] contains one hierarchies
 - One [fact table][2]
 - OLAP data is typically stored in a [star schema][1]
 - Analysis of only the key attributes of the members of the dimensions
@@ -140,7 +140,7 @@ Now the cube will represent the structure below:
 ### Sets
 
 A set is a collection of distinct objects.
-Set provides a specialized syntax for querying and manipulating the multidimensional data stored in OLAP cubes.
+Set provides a specialized syntax for getting and manipulating the multidimensional data stored in OLAP cubes.
 Access to the elements of the OLAP-cube can be carried out several types of sets
 
 ##### Types of sets: [Set][8], [Subset][9], [EmptySet][10], [Multiset][11]
@@ -164,11 +164,11 @@ Now using different types of sets, you can access the elements of the cube
 
 #### Access to facts of the fact table
 
-##### Querying via Set <br/>
+##### Set <br/>
 Define the set with maximum cardinality. For this fixate all dimensions of the first level:
 ```js
 let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } }
-cube.query(set)
+cube.getFactsBySet(set)
 ```
 return:
 ```js
@@ -177,11 +177,11 @@ return:
 ]
 ```
 
-##### Querying via Subset <br/>
+##### Subset <br/>
 Fixate some of the dimensions:
 ```js
 let subset = { regions: { id: 3 } }
-cube.query(subset)
+cube.getFactsBySet(subset)
 ```
 return:
 ```js
@@ -190,11 +190,13 @@ return:
     { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
-##### Querying via EmptySet <br/>
+##### EmptySet <br/>
 This way you can take all the facts from the cube back:
 ```js
 let emptyset = {}
-cube.query(emptyset)
+cube.getFactsBySet(emptyset)
+// or little shorter
+cube.getFacts()
 ```
 return:
 ```js
@@ -205,11 +207,11 @@ return:
     { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
-##### Querying via Multiset <br/> 
+##### Multiset <br/>
 Fixate a plurality of dimension values:
 ```js
 let multiset = { date: [ { id: 1 }, { id: 2 } ] }
-cube.query(multiset)
+cube.getFactsBySet(multiset)
 ```
 return:
 ```js
@@ -219,10 +221,12 @@ return:
 ]
 ```
 #### Access to members of the dimensions tables
-##### Querying via EmptySet <br/>
-Simple queries return all members of the dimension:
+##### EmptySet <br/>
+Simple call return all members of the dimension:
 ```js
-cube.query('products')
+cube.getDimensionMembersBySet('products', {})
+// or little shorter
+cube.getDimensionMembers('products')
 ```
 return:
 ```js
@@ -233,11 +237,11 @@ return:
     { id: 4, product: 'Product 1' },
 ]
 ```
-##### Querying via SubSet <br/>
+##### SubSet <br/>
 Queries with the second argument return some members of the dimension in accordance with the passed set
 
 ```js
-cube.query('products', { categories: { id: 1 } })
+cube.getDimensionMembersBySet('products', { categories: { id: 1 } })
 ```
 return:
 ```js
@@ -248,7 +252,7 @@ return:
 ```
 Other example:
 ```js
-cube.query('regions', { categories: { id: 1 } })
+cube.getDimensionMembersBySet('regions', { categories: { id: 1 } })
 ```
 return:
 ```js
@@ -259,7 +263,7 @@ return:
 ```
 Other example:
 ```js
-cube.query('value', { date: { id: 1 } } )
+cube.getDimensionMembersBySet('value', { date: { id: 1 } } )
 ```
 ```js
 [
@@ -267,9 +271,9 @@ cube.query('value', { date: { id: 1 } } )
 ]
 ```
 
-##### Querying via Multiset <br/>
+##### Multiset <br/>
 ```js
-cube.query('products', { regions: [{ id: 2 }, { id: 3 }] } )
+cube.getDimensionMembersBySet('products', { regions: [{ id: 2 }, { id: 3 }] } )
 ```
 return:
 ```js
@@ -313,7 +317,7 @@ cube.fill(props);
 
 Now get the facts back:
 ```js
-let factsFilled = cube.query()
+let factsFilled = cube.getFacts()
 ```
 
 factsFilled will be:
@@ -324,12 +328,11 @@ factsFilled will be:
     { region: 'North', product: 'Product 2', value: 0 },
     { region: 'South', product: 'Product 1', value: 0 }
 ]
-
 ```
 
 ### Editing data in a cube
 ```js
-let regions = cube.query('regions')
+let regions = cube.getDimensionMembers('regions')
 let member = regions[0]
 member['region'] = 'East'; 
 ```
@@ -337,13 +340,13 @@ member['region'] = 'East';
 ### Adding data to the cube
 ```js
 let member = { product: 'Product 3' }
-cube.addMember('products', member)
+cube.addDimensionMember('products', member)
 ```
 
 ### Deleting data from a cube
 ```js
 let member = { id: 2 }
-cube.removeMember('products', member)
+cube.removeDimensionMember('products', member)
 ```
 
 ## Versioning
@@ -354,12 +357,15 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 - Method delete empty cells
 - Method delete empty cells to example
 - ES5/ES6 umd
-- Exclude query param
-- Multiple, unbalanced, ragged hierarchies
+- Exclude set param
+- Unbalanced, ragged hierarchies
+- Each cube dimension can contains more then one hierarchies (Multiple hierarchies)
 - Use additional attributes of the members
 - Remove responsibility for "id" prop at facts
 - Add support for snowflake schema
 - Add validation for tree
 - Single keyProp
 - AddMember without rollup options (then more than one member will be added)
+- Calculated members
+- MDX query language
 

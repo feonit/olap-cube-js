@@ -87,7 +87,7 @@ describe('readme', ()=>{
 				{ id: 2, product: 'Product 2' },
 			],
 			jsonParseStringify(
-				cube.query('products', { 'categories': { id: 1 } })
+				cube.getDimensionMembersBySet('products', { 'categories': { id: 1 } })
 			)
 		)).toBe(true);
 
@@ -99,7 +99,7 @@ describe('readme', ()=>{
 				{ id: 4, product: 'Product 1' },
 			],
 			jsonParseStringify(
-				cube.query('products', { 'regions': [{ id: 2 }, { id: 3 }] } )
+				cube.getDimensionMembersBySet('products', { 'regions': [{ id: 2 }, { id: 3 }] } )
 			)
 		)).toBe(true);
 
@@ -110,7 +110,7 @@ describe('readme', ()=>{
 				{ id: 2, region: 'South' },
 			],
 			jsonParseStringify(
-				cube.query('regions', { 'categories': { id: 1 } })
+				cube.getDimensionMembersBySet('regions', { 'categories': { id: 1 } })
 			)
 		)).toBe(true);
 
@@ -120,7 +120,7 @@ describe('readme', ()=>{
 				{ id: 1, value: 737 },
 			],
 			jsonParseStringify(
-				cube.query('value', { 'date': { id: 1 } } )
+				cube.getDimensionMembersBySet('value', { 'date': { id: 1 } } )
 			)
 		)).toBe(true);
 
@@ -129,7 +129,7 @@ describe('readme', ()=>{
 				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
 			],
 			jsonParseStringify(
-				cube.query({ regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } })
+				cube.getFactsBySet({ regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } })
 			)
 		)).toBe(true);
 
@@ -139,14 +139,14 @@ describe('readme', ()=>{
 				{ id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
 			],
 			jsonParseStringify(
-				cube.query({ regions: { id: 3 } })
+				cube.getFactsBySet({ regions: { id: 3 } })
 			)
 		)).toBe(true);
 
 		expect(isEqual(
 			facts,
 			jsonParseStringify(
-				cube.query({})
+				cube.getFactsBySet({})
 			)
 		)).toBe(true);
 
@@ -156,7 +156,7 @@ describe('readme', ()=>{
 				{ id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
 			],
 			jsonParseStringify(
-				cube.query({ date: [ { id: 1 }, { id: 2 } ] })
+				cube.getFactsBySet({ date: [ { id: 1 }, { id: 2 } ] })
 			)
 		)).toBe(true)
 	})

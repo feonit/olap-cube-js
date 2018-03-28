@@ -54,6 +54,7 @@ class Cube{
 	 * @param {(object|null)?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @param {boolean?} raw - return cell of fact data
 	 * @return {Member[]|FactTable|CellTable} returns members
+	 * @deprecated
 	 * */
 	query(dimension, fixSpaceOptions, raw = false){
 		const args = [].slice.call(arguments);
@@ -64,6 +65,44 @@ class Cube{
 			}
 		}
 
+		let cells = this.filterCells(fixSpaceOptions);
+
+		if (!dimension){
+			return raw ? cells : this.denormalize(cells);
+		} else {
+			return this.getDimensionMembersFromCells(dimension, cells);
+		}
+	}
+	/**
+	 * @public
+	 * */
+	getFacts(){
+		return this.facts;
+	}
+	/**
+	 * @public
+	 * */
+	getDimensionMembers(dimension){
+		this.space.getMemberList(dimension)
+	}
+	/**
+	 * @public
+	 * */
+	getFactsBySet(fixSpaceOptions, raw = false){
+		let cells = this.filterCells(fixSpaceOptions);
+		return raw ? cells : this.denormalize(cells);
+	}
+	/**
+	 * @public
+	 * */
+	getDimensionMembersBySet(dimension, fixSpaceOptions){
+		let cells = this.filterCells(fixSpaceOptions);
+		return this.getDimensionMembersFromCells(dimension, cells);
+	}
+	/**
+	 * @private
+	 * */
+	filterCells(fixSpaceOptions){
 		let cells = this.cellTable;
 
 		if (fixSpaceOptions){
@@ -73,32 +112,34 @@ class Cube{
 			cells = fixSpace.match(cells)
 		}
 
-		if (!dimension){
-			return raw ? cells : this.denormalize(cells);
-		} else {
-			const idAttribute = Star.genericId(dimension);
-			const ids = cells.map( cell => cell[idAttribute]);
+		return cells;
+	}
+	/**
+	 * @private
+	 * */
+	getDimensionMembersFromCells(dimension, cells){
+		const idAttribute = Star.genericId(dimension);
+		const ids = cells.map( cell => cell[idAttribute]);
 
-			const uniq = (items) => {
-				const hash = {};
-				items.forEach((item) => {
-					hash[item] = item
-				});
-				return Object.keys(hash).map(key => hash[key]);
-			};
-
-			const uniqueIds = uniq(ids);
-			const result = [];
-			const members = this.space.getMemberList(dimension);
-
-			// filtering without loss of order in the array
-			members.forEach( member => {
-				if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
-					result.push(member)
-				}
+		const uniq = (items) => {
+			const hash = {};
+			items.forEach((item) => {
+				hash[item] = item
 			});
-			return result;
-		}
+			return Object.keys(hash).map(key => hash[key]);
+		};
+
+		const uniqueIds = uniq(ids);
+		const result = [];
+		const members = this.space.getMemberList(dimension);
+
+		// filtering without loss of order in the array
+		members.forEach( member => {
+			if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
+				result.push(member)
+			}
+		});
+		return result;
 	}
 
 	/**
@@ -221,7 +262,7 @@ class DynamicCube extends Cube{
 	 * @param {object?} rollupCoordinatesData
 	 * @public
 	 * */
-	addMember(dimension, memberOptions = {}, rollupCoordinatesData = {}){
+	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}){
 		if (typeof dimension !== "string"){
 			throw Error(`parameter dimension expects as string: ${dimension}`)
 		}
@@ -347,7 +388,7 @@ class DynamicCube extends Cube{
 	 * @param {Member} member - the member will be removed
 	 * @public
 	 * */
-	removeMember(dimension, member){
+	removeDimensionMember(dimension, member){
 		const dependenciesDimensionNames = this.schema.getDependenciesNames(dimension);
 		const index = this.space.getMemberList(dimension).indexOf(member);
 		if (index === -1){

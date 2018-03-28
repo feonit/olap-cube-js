@@ -41,7 +41,7 @@ describe('[ Cube ][ remove ]', () => {
 
 		const memberForDelete = cube.query('z')[0];
 		expect(isEqual(jsonParseStringify(memberForDelete), {id: 1, z: 0} ));
-		cube.removeMember('z', memberForDelete);
+		cube.removeDimensionMember('z', memberForDelete);
 		expect((debug=cube.query('z')).length).toBe(1);
 		expect((debug=cube.query('is')).length).toBe(1);
 	});
@@ -54,7 +54,7 @@ describe('[ Cube ][ remove ]', () => {
 		const memberForDelete = cube.query('x')[1];
 		expect(isEqual(jsonParseStringify(memberForDelete), {id: 1, x: 1} ));
 		expect(memberForDelete).toBeDefined();
-		cube.removeMember('x', memberForDelete);
+		cube.removeDimensionMember('x', memberForDelete);
 		expect((debug=cube.query('is')).length).toBe(1);
 		expect((debug=cube.query('x')).length).toBe(1);
 		expect((debug=cube.query('xx')).length).toBe(1);

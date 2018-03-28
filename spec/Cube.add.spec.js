@@ -46,20 +46,20 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('should throw when defined not completely space for added member level 1', ()=>{
 			expect(() => {
-				cube.addMember('xxx', { xxx: 1 } )
+				cube.addDimensionMember('xxx', { xxx: 1 } )
 			}).toThrow();
 		});
 
 		it('should throw when defined not completely space for added member level 2', ()=>{
 			expect(() => {
-				cube.addMember('xx', { xx: 1 } )
+				cube.addDimensionMember('xx', { xx: 1 } )
 			}).toThrow();
 		});
 
 		it('should throw specified error when defined not completely space for added member', ()=>{
 			let err;
 			try {
-				cube.addMember('xxx', { xxx: 1 } )
+				cube.addDimensionMember('xxx', { xxx: 1 } )
 			} catch (error) {
 				err = error;
 			}
@@ -68,14 +68,14 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('should throw when was try to add a second member to the dimension for the cell ', ()=>{
 			expect(() => {
-				cube.addMember('xxxx', { xxxx: 1 } )
+				cube.addDimensionMember('xxxx', { xxxx: 1 } )
 			}).toThrow();
 		});
 
 		it('should throw specified error when was try to add a second member to the dimension for the cell ', ()=>{
 			let err;
 			try {
-				cube.addMember('xxxx', { xxxx: 1 } )
+				cube.addDimensionMember('xxxx', { xxxx: 1 } )
 			} catch (error) {
 				err = error;
 			}
@@ -84,14 +84,14 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('should throw when was try add member with not existed rollup member', ()=>{
 			expect(() => {
-				cube.addMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } } )
 			}).toThrow();
 		});
 
 		it('should throw specified error when was try add member with not existed rollup member', ()=>{
 			let err;
 			try {
-				cube.addMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } } )
 			} catch (error) {
 				err = error;
 			}
@@ -137,7 +137,7 @@ describe('[ Cube Edit ][ add ]', () => {
 				])
 			).toBe(true);
 
-			cube.addMember('coordinateX', { x: 2 });
+			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
 				isEqual( jsonParseStringify(cube.query('coordinateX')), [
@@ -156,7 +156,7 @@ describe('[ Cube Edit ][ add ]', () => {
 				])
 			).toBe(true);
 
-			cube.addMember('coordinateX', { x: 2 });
+			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
 				isEqual( jsonParseStringify(cube.query('coordinateY')), [
@@ -176,7 +176,7 @@ describe('[ Cube Edit ][ add ]', () => {
 				])
 			).toBe(true);
 
-			cube.addMember('coordinateX', { x: 2 });
+			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
 				isEqual( jsonParseStringify(cube.query()), [
@@ -200,7 +200,7 @@ describe('[ Cube Edit ][ add ]', () => {
 				])
 			).toBe(true);
 
-			cube.addMember('coordinateX', { x: 2 });
+			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
 				isEqual( jsonParseStringify(cube.query('valueOfXY')), [
@@ -297,7 +297,7 @@ describe('[ Cube Edit ][ add ]', () => {
 		];
 
 		it ('level 1, where node has not hierarchy', () => {
-			cube.addMember('product', { product: 'clock' } );
+			cube.addDimensionMember('product', { product: 'clock' } );
 
 			// product
 			expect(debug=isEqual( jsonParseStringify(cube.query('product')), product.concat([
@@ -338,7 +338,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it ('level 1', ()=>{
 
-			cube.addMember('day', { day : 4 }, { month: { id: 1 }, year: { id: 1 } } );
+			cube.addDimensionMember('day', { day : 4 }, { month: { id: 1 }, year: { id: 1 } } );
 
 			// day
 			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
@@ -369,7 +369,7 @@ describe('[ Cube Edit ][ add ]', () => {
 		});
 
 		it ('level 2', ()=>{
-			cube.addMember('month', { month : 'april' }, { year: { id: 1 } } );
+			cube.addDimensionMember('month', { month : 'april' }, { year: { id: 1 } } );
 
 			// day
 			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
@@ -401,7 +401,7 @@ describe('[ Cube Edit ][ add ]', () => {
 		});
 
 		it ('level 3', ()=>{
-			cube.addMember('year', { year : '2019' } );
+			cube.addDimensionMember('year', { year : '2019' } );
 
 			// day
 			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
