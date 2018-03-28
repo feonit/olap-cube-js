@@ -131,32 +131,43 @@ Now the cube will represent the structure below:
 }
 ```
 
-### Set
-A set is a collection of distinct objects.
-Set provides a specialized syntax for querying and manipulating the multidimensional data stored in OLAP cubes
+[8]: https://en.wikipedia.org/wiki/Set_(mathematics)
+[9]: https://en.wikipedia.org/wiki/Subset
+[10]: https://en.wikipedia.org/wiki/Empty_set
+[11]: https://en.wikipedia.org/wiki/Multiset
+[12]: https://en.wikipedia.org/wiki/Set_(mathematics)#Unions
 
-### Cube queries
-Access to the elements of the OLAP-cube can be carried out both for a
-complete set of dimension indices:
+### Sets
+
+A set is a collection of distinct objects.
+Set provides a specialized syntax for querying and manipulating the multidimensional data stored in OLAP cubes.
+Access to the elements of the OLAP-cube can be carried out several types of sets
+
+##### Types of sets: [Set][8], [Subset][9], [EmptySet][10], [Multiset][11]
+***Set***, that type determines one element:
 <br/>
 ***w : ( x , y , z ) → w<sub>xyz</sub>*** ,
 
-and for their subset:
+***Subset***, that type determines several elements:
 <br/>
-***W : ( x , y ) → W = { w<sub>z1</sub> , w<sub>z2</sub> , … , w<sub>zn</sub> }***
+***W : ( x , y ) → W = { w<sub>z1</sub> , w<sub>z2</sub> , … , w<sub>zn</sub> }*** ,
 
-in particular, with empty set, this way return all elements:
+***EmptySet***, that type determines all elements:
 <br/>
-***W : () → W = { w<sub>x1 y1 z1</sub> , w<sub>x1 y1 z2</sub> , … , w<sub>xn yn zn</sub> }***
+***W : () → W = { w<sub>x1 y1 z1</sub> , w<sub>x1 y1 z2</sub> , … , w<sub>xn yn zn</sub> }*** ,
 
-as a bonus, multiset, it is when an object from a set can be a set of values:
+***EmptySet***, that type determines union of elements:
 <br/>
-***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>x1 y1</sub> , W<sub>xn yn</sub> } = { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z2</sub>***
+***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>x1 y1</sub> , W<sub>xn yn</sub> } = { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z2</sub>*** .
+<br/>
+Now using different types of sets, you can access the elements of the cube
+
 #### Access to facts of the fact table
 
-Fixate all specializing dimensions
+##### Querying via Set <br/>
+Define the set with maximum cardinality. For this fixate all dimensions of the first level:
 ```js
-let set = { regions: { id: 1 }, data: { id: 1 }, products: { id: 1 } }
+let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } }
 cube.query(set)
 ```
 return:
@@ -165,22 +176,50 @@ return:
     { category: "Category 1", id: 1, month: "January", product: "Product 1", region: "North", value: 737, year: 2017 }
 ]
 ```
-Fixate some of the dimensions
+
+##### Querying via Subset <br/>
+Fixate some of the dimensions:
 ```js
-let subset = { regions: { id: 1 } }
+let subset = { regions: { id: 3 } }
 cube.query(subset)
-
-// this way you can take all the facts from the cube back
-cube.query()
-
-// or even fix a plurality of dimension values
+```
+return:
+```js
+[
+    { id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
+    { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+]
+```
+##### Querying via EmptySet <br/>
+This way you can take all the facts from the cube back:
+```js
+let emptyset = {}
+cube.query(emptyset)
+```
+return:
+```js
+[
+    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+    { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
+    { id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
+    { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+]
+```
+##### Querying via Multiset <br/> 
+Fixate a plurality of dimension values:
+```js
 let multiset = { date: [ { id: 1 }, { id: 2 } ] }
 cube.query(multiset)
-
 ```
-
+return:
+```js
+[
+    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+    { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
+]
+```
 #### Access to members of the dimensions tables
-
+##### Querying via EmptySet <br/>
 Simple queries return all members of the dimension:
 ```js
 cube.query('products')
@@ -194,8 +233,8 @@ return:
     { id: 4, product: 'Product 1' },
 ]
 ```
-
-Queries with the second argument return all members of the dimension in accordance with the passed filter data
+##### Querying via SubSet <br/>
+Queries with the second argument return some members of the dimension in accordance with the passed set
 
 ```js
 cube.query('products', { categories: { id: 1 } })
@@ -205,18 +244,6 @@ return:
 [
     { id: 1, product: 'Product 1' },
     { id: 2, product: 'Product 2' },
-]
-```
-Multiset example:
-```js
-cube.query('products', { regions: [{ id: 2 }, { id: 3 }] } )
-```
-return:
-```js
-[
-    { id: 2, product: 'Product 2' },
-    { id: 3, product: 'Product 3' },
-    { id: 4, product: 'Product 1' },
 ]
 ```
 Other example:
@@ -237,6 +264,19 @@ cube.query('value', { date: { id: 1 } } )
 ```js
 [
     { id: 1, value: 737 },
+]
+```
+
+##### Querying via Multiset <br/>
+```js
+cube.query('products', { regions: [{ id: 2 }, { id: 3 }] } )
+```
+return:
+```js
+[
+    { id: 2, product: 'Product 2' },
+    { id: 3, product: 'Product 3' },
+    { id: 4, product: 'Product 1' },
 ]
 ```
 

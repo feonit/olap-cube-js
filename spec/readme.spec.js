@@ -8,7 +8,7 @@ describe('readme', ()=>{
 		{ id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
 		{ id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
 		{ id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
-	]
+	];
 
 	// This is the data schema we need to obtain
 	let schema = {
@@ -34,7 +34,7 @@ describe('readme', ()=>{
 				]
 			}
 		]
-	}
+	};
 
 	// We send it all to the constructor
 	let cube = new Cube(facts, schema);
@@ -74,11 +74,11 @@ describe('readme', ()=>{
 			{ id: 3, regions_id: 3, date_id: 3, products_id: 3, categories_id: 2, value_id: 3 },
 			{ id: 4, regions_id: 3, date_id: 3, products_id: 4, categories_id: 2, value_id: 4 },
 		]
-	}
+	};
 
 	it('should pass readme example', ()=>{
 		let data = jsonParseStringify(cube);
-		expect(isEqual(expected, data)).toBe(true)
+		expect(isEqual(expected, data)).toBe(true);
 
 
 		expect(isEqual(
@@ -89,7 +89,7 @@ describe('readme', ()=>{
 			jsonParseStringify(
 				cube.query('products', { 'categories': { id: 1 } })
 			)
-		)).toBe(true)
+		)).toBe(true);
 
 
 		expect(isEqual(
@@ -101,7 +101,7 @@ describe('readme', ()=>{
 			jsonParseStringify(
 				cube.query('products', { 'regions': [{ id: 2 }, { id: 3 }] } )
 			)
-		)).toBe(true)
+		)).toBe(true);
 
 
 		expect(isEqual(
@@ -112,7 +112,7 @@ describe('readme', ()=>{
 			jsonParseStringify(
 				cube.query('regions', { 'categories': { id: 1 } })
 			)
-		)).toBe(true)
+		)).toBe(true);
 
 
 		expect(isEqual(
@@ -122,8 +122,42 @@ describe('readme', ()=>{
 			jsonParseStringify(
 				cube.query('value', { 'date': { id: 1 } } )
 			)
+		)).toBe(true);
+
+		expect(isEqual(
+			[
+				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
+			],
+			jsonParseStringify(
+				cube.query({ regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } })
+			)
+		)).toBe(true);
+
+		expect(isEqual(
+			[
+				{ id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
+				{ id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+			],
+			jsonParseStringify(
+				cube.query({ regions: { id: 3 } })
+			)
+		)).toBe(true);
+
+		expect(isEqual(
+			facts,
+			jsonParseStringify(
+				cube.query({})
+			)
+		)).toBe(true);
+
+		expect(isEqual(
+			[
+				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+				{ id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
+			],
+			jsonParseStringify(
+				cube.query({ date: [ { id: 1 }, { id: 2 } ] })
+			)
 		)).toBe(true)
-
-
 	})
 });
