@@ -26,7 +26,7 @@ class Cube {
 		Object.defineProperty(this, 'facts', { value: facts });
 
 		const dimensionTables = schema.getDimensionsResolutionOrder();
-		const star = new Star(facts, dimensionTables);
+		const star = Star.create(facts, dimensionTables);
 
 		const {space, cellTable} = star;
 		Object.defineProperty(this, 'star', { value: star });

@@ -41,7 +41,7 @@ describe('[ Star ]', () => {
 				}
 			];
 
-			star = new Star(factTable, dimensionTableList);
+			star = Star.create(factTable, dimensionTableList);
 		});
 
 		it('must be equal etalon and expected cube data', () => {
