@@ -12,8 +12,20 @@ describe('[ Cube Static ]', function(){
 
 	describe('[ API ]',()=>{
 
-		it('should define query', ()=> {
-			expect(Cube.prototype.query).toBeDefined();
+		it('should define getDimensionMembers', ()=> {
+			expect(Cube.prototype.getDimensionMembers).toBeDefined();
+		});
+
+		it('should define getDimensionMembersBySet', ()=> {
+			expect(Cube.prototype.getDimensionMembersBySet).toBeDefined();
+		});
+
+		it('should define getFacts', ()=> {
+			expect(Cube.prototype.getFacts).toBeDefined();
+		});
+
+		it('should define getFactsBySet', ()=> {
+			expect(Cube.prototype.getFactsBySet).toBeDefined();
 		});
 
 		it('should define cartesian', ()=> {
@@ -87,7 +99,7 @@ describe('[ Cube Static ]', function(){
 		});
 
 		it('should return empty count', ()=>{
-			const result = cube.cartesian().length - cube.query().length;
+			const result = cube.cartesian().length - cube.getFacts().length;
 			expect(result).toBe(3)
 		});
 

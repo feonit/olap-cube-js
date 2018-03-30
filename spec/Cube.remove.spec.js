@@ -36,28 +36,28 @@ describe('[ Cube ][ remove ]', () => {
 	let debug;
 	it('it should remove member and change measure length', () => {
 		let cube = new Cube(factTable, schema);
-		expect((debug=cube.query('is')).length).toBe(3);
-		expect((debug=cube.query('z')).length).toBe(2);
+		expect((debug=cube.getDimensionMembers('is')).length).toBe(3);
+		expect((debug=cube.getDimensionMembers('z')).length).toBe(2);
 
-		const memberForDelete = cube.query('z')[0];
+		const memberForDelete = cube.getDimensionMembers('z')[0];
 		expect(isEqual(jsonParseStringify(memberForDelete), {id: 1, z: 0} ));
 		cube.removeDimensionMember('z', memberForDelete);
-		expect((debug=cube.query('z')).length).toBe(1);
-		expect((debug=cube.query('is')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('z')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('is')).length).toBe(1);
 	});
 	it('it should remove target member and his own dependencies', () => {
 		let cube = new Cube(factTable, schema);
-		expect((debug=cube.query('is')).length).toBe(3);
-		expect((debug=cube.query('x')).length).toBe(2);
-		expect((debug=cube.query('xx')).length).toBe(3);
-		expect((debug=cube.query('xxx')).length).toBe(3);
-		const memberForDelete = cube.query('x')[1];
+		expect((debug=cube.getDimensionMembers('is')).length).toBe(3);
+		expect((debug=cube.getDimensionMembers('x')).length).toBe(2);
+		expect((debug=cube.getDimensionMembers('xx')).length).toBe(3);
+		expect((debug=cube.getDimensionMembers('xxx')).length).toBe(3);
+		const memberForDelete = cube.getDimensionMembers('x')[1];
 		expect(isEqual(jsonParseStringify(memberForDelete), {id: 1, x: 1} ));
 		expect(memberForDelete).toBeDefined();
 		cube.removeDimensionMember('x', memberForDelete);
-		expect((debug=cube.query('is')).length).toBe(1);
-		expect((debug=cube.query('x')).length).toBe(1);
-		expect((debug=cube.query('xx')).length).toBe(1);
-		expect((debug=cube.query('xxx')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('is')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('x')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('xx')).length).toBe(1);
+		expect((debug=cube.getDimensionMembers('xxx')).length).toBe(1);
 	})
 })

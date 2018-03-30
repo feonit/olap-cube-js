@@ -92,7 +92,7 @@
 				<section>
 					<h2>Output data</h2>
 					<button ng-click="cube.fill()">Normalize data</button>
-					<p>Current size: {{ cube.query().length }}</p>
+					<p>Current size: {{ cube.getFacts().length }}</p>
 					<p>Size of table after filling: {{ cube.cartesian().length - cube.unfilled().length }}</p>
 					<p>Count of unfilling cells: {{ cube.unfilled().length }}</p>
 					<br/>

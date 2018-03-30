@@ -131,7 +131,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('target dimension must be changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.query('coordinateX')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
 					{ id: 1, x: 0 },
 					{ id: 2, x: 1 }
 				])
@@ -140,7 +140,7 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.query('coordinateX')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
 					{ id: 1, x: 0 },
 					{ id: 2, x: 1 },
 					{ id: 3, x: 2 }
@@ -150,7 +150,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('other dimensions must be not changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.query('coordinateY')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
 					{ id: 1, y: 0 },
 					{ id: 2, y: 1 }
 				])
@@ -159,7 +159,7 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.query('coordinateY')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
 					{ id: 1, y: 0 },
 					{ id: 2, y: 1 }
 				])
@@ -168,7 +168,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('fact table must be changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.query()), [
+				isEqual( jsonParseStringify(cube.getFacts()), [
 					{ id: 1, x: 0, y: 0, value: 10 },
 					{ id: 2, x: 0, y: 1, value: 100 },
 					{ id: 3, x: 1, y: 0, value: 1000 },
@@ -179,7 +179,7 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.query()), [
+				isEqual( jsonParseStringify(cube.getFacts()), [
 					{ id: 1, x: 0, y: 0, value: 10 },
 					{ id: 2, x: 0, y: 1, value: 100 },
 					{ id: 3, x: 1, y: 0, value: 1000 },
@@ -192,7 +192,7 @@ describe('[ Cube Edit ][ add ]', () => {
 
 		it('measure data must be changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.query('valueOfXY')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('valueOfXY')), [
 					{ id: 1, value: 10 },
 					{ id: 2, value: 100 },
 					{ id: 3, value: 1000 },
@@ -203,7 +203,7 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.query('valueOfXY')), [
+				isEqual( jsonParseStringify(cube.getDimensionMembers('valueOfXY')), [
 					{ id: 1, value: 10 },
 					{ id: 2, value: 100 },
 					{ id: 3, value: 1000 },
@@ -300,27 +300,27 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('product', { product: 'clock' } );
 
 			// product
-			expect(debug=isEqual( jsonParseStringify(cube.query('product')), product.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('product')), product.concat([
 				{ id: 3, product: 'clock' }
 			]))).toBe(true);
 
 			// day
-			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('day')), day.concat([
 
 			]))).toBe(true);
 
 			// month
-			expect(debug=isEqual( jsonParseStringify(cube.query('month')), month.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('month')), month.concat([
 
 			]))).toBe(true);
 
 			// year
-			expect(debug=isEqual( jsonParseStringify(cube.query('year')), year.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('year')), year.concat([
 
 			]))).toBe(true);
 
 			// money
-			expect(debug=isEqual( jsonParseStringify(cube.query('money')), money.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('money')), money.concat([
 				{ id: 5, money: null },
 				{ id: 6, money: null },
 				{ id: 7, money: null },
@@ -328,7 +328,7 @@ describe('[ Cube Edit ][ add ]', () => {
 			]))).toBe(true);
 
 			// fact table
-			expect(debug=isEqual( jsonParseStringify(cube.query()), factTable.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getFacts()), factTable.concat([
 				{ product: 'clock', money: null, year: '2017', month: 'january', day: 1 },
 				{ product: 'clock', money: null, year: '2017', month: 'january', day: 2 },
 				{ product: 'clock', money: null, year: '2018', month: 'january', day: 2 },
@@ -341,28 +341,28 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('day', { day : 4 }, { month: { id: 1 }, year: { id: 1 } } );
 
 			// day
-			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('day')), day.concat([
 				{ id: 5, day: 4 }
 			]))).toBe(true);
 
 			// month
-			expect(debug=isEqual( jsonParseStringify(cube.query('month')), month.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('month')), month.concat([
 
 			]))).toBe(true);
 
 			// year
-			expect(debug=isEqual( jsonParseStringify(cube.query('year')), year.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('year')), year.concat([
 
 			]))).toBe(true);
 
 			// money
-			expect(debug=isEqual( jsonParseStringify(cube.query('money')), money.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('money')), money.concat([
 				{ id: 5, money: null },
 				{ id: 6, money: null }
 			]))).toBe(true);
 
 			// fact table
-			expect(debug=isEqual( jsonParseStringify(cube.query()), factTable.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getFacts()), factTable.concat([
 				{ product: 'telephone', money: null, year: '2017', month: 'january', day: 4 },
 				{ product: 'tv', money: null, year: '2017', month: 'january', day: 4 }
 			]))).toBe(true);
@@ -372,28 +372,28 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('month', { month : 'april' }, { year: { id: 1 } } );
 
 			// day
-			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('day')), day.concat([
 				{ id: 5, day: null }
 			]))).toBe(true);
 
 			// month
-			expect( isEqual( jsonParseStringify(cube.query('month')), month.concat([
+			expect( isEqual( jsonParseStringify(cube.getDimensionMembers('month')), month.concat([
 				{ id: 3, month: 'april' }
 			]))).toBe(true);
 
 			// year
-			expect( isEqual( jsonParseStringify(cube.query('year')), year.concat([
+			expect( isEqual( jsonParseStringify(cube.getDimensionMembers('year')), year.concat([
 
 			]))).toBe(true);
 
 			// money
-			expect(debug=isEqual( jsonParseStringify(cube.query('money')), money.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('money')), money.concat([
 				{ id: 5, money: null },
 				{ id: 6, money: null }
 			]))).toBe(true);
 
 			// fact table
-			expect(isEqual( jsonParseStringify(cube.query()), factTable.concat([
+			expect(isEqual( jsonParseStringify(cube.getFacts()), factTable.concat([
 				{ product: 'telephone', money: null, year: '2017', month: 'april', day: null },
 				{ product: 'tv', money: null, year: '2017', month: 'april', day: null }
 			]))).toBe(true);
@@ -404,28 +404,28 @@ describe('[ Cube Edit ][ add ]', () => {
 			cube.addDimensionMember('year', { year : '2019' } );
 
 			// day
-			expect(debug=isEqual( jsonParseStringify(cube.query('day')), day.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('day')), day.concat([
 				{ id: 5, day: null }
 			]))).toBe(true);
 
 			// month
-			expect(debug=isEqual( jsonParseStringify(cube.query('month')), month.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('month')), month.concat([
 				{ id: 3, month: null }
 			]))).toBe(true);
 
 			// year
-			expect(debug=isEqual( jsonParseStringify(cube.query('year')), year.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('year')), year.concat([
 				{ id: 3, year: '2019' }
 			]))).toBe(true);
 
 			// money
-			expect(debug=isEqual( jsonParseStringify(cube.query('money')), money.concat([
+			expect(debug=isEqual( jsonParseStringify(cube.getDimensionMembers('money')), money.concat([
 				{ id: 5, money: null },
 				{ id: 6, money: null }
 			]))).toBe(true);
 
 			// fact table
-			expect(isEqual( jsonParseStringify(cube.query()), factTable.concat([
+			expect(isEqual( jsonParseStringify(cube.getFacts()), factTable.concat([
 				{ product: 'telephone', money: null, year: '2019', month: null, day: null },
 				{ product: 'tv', money: null, year: '2019', month: null, day: null }
 			]))).toBe(true);

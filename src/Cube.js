@@ -19,7 +19,7 @@ import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMember
  *
  * @param {object[]} factTable - facts which will be subject to analysis
  * */
-class Cube{
+class Cube {
 	constructor(facts, dimensionsSchema){
 		const schema = new Schema(dimensionsSchema);
 		Object.defineProperty(this, 'schema', { value: schema });
@@ -44,75 +44,69 @@ class Cube{
 			console.warn('Fact table not has final dimension')
 		}
 	}
-
-	/**
-	 * A method that allows you to find all members of a specified dimension
-	 * or part of the members using a filter if they are in a hierarchy
-	 *
-	 * @public
-	 * @param {(string|null|object)?} dimension - dimension from which the member will be found
-	 * @param {(object|null)?} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-	 * @param {boolean?} raw - return cell of fact data
-	 * @return {Member[]|FactTable|CellTable} returns members
-	 * @deprecated
-	 * */
-	query(dimension, fixSpaceOptions, raw = false){
-		const args = [].slice.call(arguments);
-		if (args.length > 0 && args[0]){
-			if (typeof args[0] === "object"){
-				fixSpaceOptions = args[0];
-				dimension = null;
-			}
-		}
-
-		let cells = this.filterCells(fixSpaceOptions);
-
-		if (!dimension){
-			return raw ? cells : this.denormalize(cells);
-		} else {
-			return this.getDimensionMembersFromCells(dimension, cells);
-		}
-	}
 	/**
 	 * @public
+	 * @return {FactTable} returns members
 	 * */
 	getFacts(){
-		return this.facts;
+		return this.denormalize(this.cellTable);
 	}
 	/**
+	 * @param {string} dimension - dimension from which the member will be found
 	 * @public
+	 * @return {Member[]} returns members
 	 * */
 	getDimensionMembers(dimension){
-		this.space.getMemberList(dimension)
+		return this.space.getMemberList(dimension)
 	}
 	/**
+	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @public
+	 * @return {FactTable} returns members
 	 * */
-	getFactsBySet(fixSpaceOptions, raw = false){
-		let cells = this.filterCells(fixSpaceOptions);
-		return raw ? cells : this.denormalize(cells);
+	getFactsBySet(fixSpaceOptions){
+		let { cellTable } = this.projection(fixSpaceOptions);
+		return this.denormalize(cellTable);
 	}
 	/**
+	 * @param {string} dimension - dimension from which the member will be found
+	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @public
+	 * @return {Member[]} returns members
 	 * */
 	getDimensionMembersBySet(dimension, fixSpaceOptions){
-		let cells = this.filterCells(fixSpaceOptions);
-		return this.getDimensionMembersFromCells(dimension, cells);
+		let { cellTable } = this.projection(fixSpaceOptions);
+		return this.getDimensionMembersFromCells(dimension, cellTable);
+	}
+	/**
+	 * @private
+	 * @return {CellTable} returns members
+	 * */
+	getCells(){
+		return this.cellTable;
+	}
+	/**
+	 * @private
+	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
+	 * @return {CellTable} returns members
+	 * */
+	getCellsBySet(fixSpaceOptions){
+		return this.projection(fixSpaceOptions);
 	}
 	/**
 	 * @private
 	 * */
-	filterCells(fixSpaceOptions){
-		let cells = this.cellTable;
+	projection(fixSpaceOptions){
+		let cellTable = this.cellTable;
 
 		if (fixSpaceOptions){
 			const queryAdapter = new QueryAdapter();
 			queryAdapter.applyAdapter(fixSpaceOptions, this.space);
 			const fixSpace = new FixSpace(fixSpaceOptions);
-			cells = fixSpace.match(cells)
+			cellTable = fixSpace.match(cellTable)
 		}
 
-		return cells;
+		return { cellTable };
 	}
 	/**
 	 * @private
@@ -176,7 +170,7 @@ class Cube{
 				const reqursive = (dimensions, index, space = {}) => {
 					const dimension = dimensions[index];
 					index = index + 1;
-					this.query(dimension, space).map((item) => {
+					this.getDimensionMembersBySet(dimension, space).map((item) => {
 						const newSpace = Object.assign({}, space);
 						newSpace[dimension] = item;
 						if (index === dimensions.length) {
@@ -191,7 +185,7 @@ class Cube{
 
 				return acc;
 			} else {
-				return [].concat(this.query( dimensions[0] )).map( member => {
+				return [].concat(this.getDimensionMembers( dimensions[0] )).map( member => {
 					return { [dimensions[0]]: member }
 				})
 			}
@@ -220,7 +214,7 @@ class Cube{
 		const tuples = this.cartesian();
 		const residuals = [];
 		tuples.forEach( (tuple) => {
-			const members = this.query(tuple);
+			const members = this.getFactsBySet(tuple);
 			if (members.length > 1){
 				residuals.push(tuple)
 			}
@@ -237,7 +231,7 @@ class Cube{
 		const unfilled = [];
 
 		tuples.forEach( (tuple) => {
-			const members = this.query(tuple);
+			const members = this.getFactsBySet(tuple);
 			if (members.length === 0 ){
 				unfilled.push(tuple)
 			}
@@ -276,7 +270,7 @@ class DynamicCube extends Cube{
 		const rollupCoordinates = {};
 		Object.keys(rollupCoordinatesData).forEach( dimension => {
 			const memberData = rollupCoordinatesData[dimension];
-			const memberList = this.query(dimension);
+			const memberList = this.getDimensionMembers(dimension);
 			const id = memberData[ENTITY_ID];
 			const find = memberList.find( member => {
 				return id === member[ENTITY_ID]
@@ -334,7 +328,7 @@ class DynamicCube extends Cube{
 
 				if (parentDimensionTable){
 					// debugger;
-					const members = this.query(parentDimensionTable.dimension, { [currentDimension]: member });
+					const members = this.getDimensionMembersBySet(parentDimensionTable.dimension, { [currentDimension]: member });
 
 					recursivelyForEach([parentDimensionTable.dimension], [members], 0, coordinatesCopy);
 				}
@@ -484,18 +478,18 @@ class DynamicCube extends Cube{
 	 * */
 	fill(props){
 		if (!this.residuals().length){
-			const measureName = this.schema.getMeasure().dimension;
+			const dimension = this.schema.getMeasure().dimension;
 			const tuples = this.cartesian();
 			const emptyMemberOptions = [];
 			tuples.forEach( combination => {
-				const unique = this.query(measureName, combination );
+				const unique = this.getDimensionMembersBySet(dimension, combination );
 				if ( !unique.length ){
 					emptyMemberOptions.push( combination );
 				}
 			});
 
 			emptyMemberOptions.forEach( cellOptions => {
-				const member = this._createMemberDependency( measureName, props );
+				const member = this._createMemberDependency( dimension, props );
 				const options = Object.assign({}, cellOptions, member );
 				this._createNormalizeData(options);
 			});

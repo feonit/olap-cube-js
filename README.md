@@ -368,4 +368,5 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 - AddMember without rollup options (then more than one member will be added)
 - Calculated members
 - MDX query language
+- Several fact tables
 

@@ -91,10 +91,10 @@ describe('[ Cube ][ fill ]', function(){
 
 			const cube = new Cube(factTable, schema);
 			expect(debug=cube.cartesian().length).toBe(4);
-			expect(debug=cube.cartesian().length - cube.query().length).toBe(2);
+			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(2);
 			cube.fill();
 			expect(debug=cube.cartesian().length).toBe(4);
-			expect(debug=cube.cartesian().length - cube.query().length).toBe(0);
+			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
 		});
 
 		it('should work level 3', ()=>{
@@ -106,10 +106,10 @@ describe('[ Cube ][ fill ]', function(){
 
 			const cube = new Cube(factTable, schema);
 			expect(debug=cube.cartesian().length).toBe(6);
-			expect(debug=cube.cartesian().length - cube.query().length).toBe(3);
+			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(3);
 			cube.fill();
 			expect(debug=cube.cartesian().length).toBe(6);
-			expect(debug=cube.cartesian().length - cube.query().length).toBe(0);
+			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
 		})
 
 		it('should work for cells in hierarchy', ()=>{
