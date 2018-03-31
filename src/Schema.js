@@ -25,36 +25,32 @@ const adapter = schema => {
  * @throws {DimensionException}
  * */
 export class Schema extends Tree {
-	constructor({schema}){
-		const isCreateMode = !schema;
+	constructor(options){
+		let schema = options.schema? options.schema : options;
 
-		if (isCreateMode){
-			return Schema.create.apply(null, arguments)
-		} else {
-			const tree = adapter(schema);
+		const tree = adapter(schema);
 
-			super(tree);
+		super(tree);
 
-			this.schema = new SchemaDimension(schema);
+		this.schema = new SchemaDimension(schema);
 
-			this._dimensionsResolutionOrder = [];
-			this._dimensionTable = {};
+		this._dimensionsResolutionOrder = [];
+		this._dimensionTable = {};
 
-			this.postOrder( (dimensionTable) => {
+		this.postOrder( (dimensionTable) => {
+			const {dimension} = dimensionTable;
+			if ( !this._dimensionTable[dimension] ){
 				const {dimension} = dimensionTable;
-				if ( !this._dimensionTable[dimension] ){
-					const {dimension} = dimensionTable;
-					this._dimensionTable[dimension] = dimensionTable;
-					this._dimensionsResolutionOrder.push(this._dimensionTable[dimension])
-				} else {
-					throw new DimensionException(dimension)
-				}
-			});
-
-			const final = this.getFinal();
-			if (final.length === 0){
-				console.warn('Fact table not has final dimension')
+				this._dimensionTable[dimension] = dimensionTable;
+				this._dimensionsResolutionOrder.push(this._dimensionTable[dimension])
+			} else {
+				throw new DimensionException(dimension)
 			}
+		});
+
+		const final = this.getFinal();
+		if (final.length === 0){
+			console.warn('Fact table not has final dimension')
 		}
 	}
 
