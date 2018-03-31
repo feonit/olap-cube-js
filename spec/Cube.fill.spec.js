@@ -48,7 +48,8 @@ describe('[ Cube ][ fill ]', function(){
 			{ x: 1, y: 1, z: 0,is: false },
 			{ x: 1, y: 1, z: 1,is: false }
 		]);
-		expect(isEqual(jsonParseStringify(cube.denormalize()), factTableExpectedAfter )).toBe(true);
+		const localFacts = cube.getFacts();
+		expect(isEqual(jsonParseStringify(localFacts), factTableExpectedAfter )).toBe(true);
 	});
 
 	describe('[should normalize for hierarchy of dimensions]', ()=>{

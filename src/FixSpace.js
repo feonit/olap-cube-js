@@ -1,7 +1,7 @@
 import Space from './Space.js'
 import {ENTITY_ID} from "./const.js";
 import Cell from "./Cell.js";
-import Star from "./Star.js";
+import Cube from "./Cube.js";
 
 class DimensionDataException extends Error {
 	constructor(data){
@@ -37,7 +37,7 @@ export default class FixSpace extends Space {
 	match(cells){
 		let filtered = [].concat(cells);
 		this.getDimensionList().forEach( dimension => {
-			const idAttribute = Star.genericId(dimension);
+			const idAttribute = Cube.genericId(dimension);
 			const members = this.getMemberList(dimension);
 			const totalPart = [];
 			members.forEach( member => {

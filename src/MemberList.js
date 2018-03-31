@@ -1,4 +1,5 @@
 import {ENTITY_ID} from "./const.js";
+import Member from "./Member.js";
 
 /**
  * */
@@ -6,6 +7,7 @@ export default class MemberList extends Array {
 	constructor(array){
 		super();
 		if (Array.isArray(array)){
+			array = array.map( member => new Member(member) )
 			Object.assign(this, array)
 		}
 	}

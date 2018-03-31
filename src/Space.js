@@ -1,4 +1,4 @@
-
+import MemberList from './MemberList.js'
 /**
  * The composed aggregate object, members grouped by dimension names
  * */
@@ -6,7 +6,8 @@ export default class Space{
 	constructor(options){
 		if (options){
 			this.getDimensionList.call(options).forEach( dimension => {
-				this.setMemberList(dimension, options[dimension])
+				const memberList = options[dimension]
+				this.setMemberList(dimension, memberList)
 			})
 		}
 	}
@@ -25,7 +26,7 @@ export default class Space{
 	 * @param {MemberList|object[]} memberList
 	 * */
 	setMemberList(dimension, memberList){
-		this[dimension] = memberList;
+		this[dimension] = new MemberList(memberList);
 	}
 	/**
 	 * @return {string[]}

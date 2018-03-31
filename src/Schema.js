@@ -24,26 +24,42 @@ const adapter = schema => {
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
  * @throws {DimensionException}
  * */
-export class Schema extends Tree{
-	constructor(schema){
+export class Schema extends Tree {
+	constructor({schema}){
+		const isCreateMode = !schema;
 
-		super(adapter(schema));
+		if (isCreateMode){
+			return Schema.create.apply(null, arguments)
+		} else {
+			const tree = adapter(schema);
 
-		this.schema = new SchemaDimension(schema);
+			super(tree);
 
-		this._dimensionsResolutionOrder = [];
-		this._dimensionTable = {};
+			this.schema = new SchemaDimension(schema);
 
-		this.postOrder( (dimensionTable) => {
-			const {dimension} = dimensionTable;
-			if ( !this._dimensionTable[dimension] ){
+			this._dimensionsResolutionOrder = [];
+			this._dimensionTable = {};
+
+			this.postOrder( (dimensionTable) => {
 				const {dimension} = dimensionTable;
-				this._dimensionTable[dimension] = dimensionTable;
-				this._dimensionsResolutionOrder.push(this._dimensionTable[dimension])
-			} else {
-				throw new DimensionException(dimension)
+				if ( !this._dimensionTable[dimension] ){
+					const {dimension} = dimensionTable;
+					this._dimensionTable[dimension] = dimensionTable;
+					this._dimensionsResolutionOrder.push(this._dimensionTable[dimension])
+				} else {
+					throw new DimensionException(dimension)
+				}
+			});
+
+			const final = this.getFinal();
+			if (final.length === 0){
+				console.warn('Fact table not has final dimension')
 			}
-		});
+		}
+	}
+
+	static create(schema){
+		return new Schema({schema})
 	}
 
 	/**

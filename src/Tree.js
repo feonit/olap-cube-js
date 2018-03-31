@@ -9,8 +9,8 @@ class Node {
  *
  * */
 export default class Tree {
-	constructor(options){
-		this._root = new Node(options)
+	constructor(tree){
+		this._root = new Node(tree)
 	}
 	getRoot(){
 		return this._root;

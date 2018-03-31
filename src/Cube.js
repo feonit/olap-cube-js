@@ -8,8 +8,9 @@ import FactTable from './FactTable.js';
 import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
-import Star from "./Star.js";
+import CellTable from "./CellTable.js";
 import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMemberRollupException } from './errors.js';
+import StarBuilder from "./StarBuilder.js";
 
 /**
  * It a means to retrieve data
@@ -17,32 +18,43 @@ import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMember
  * Base class for normalizing a denormalized data array
  * and analyzing query according to a given scheme
  *
- * @param {object[]} factTable - facts which will be subject to analysis
+ * @param {{star, schema}|Cube} factTable - facts which will be subject to analysis
  * */
 class Cube {
-	constructor(facts, dimensionsSchema){
+	constructor(options){
+		const isCreateMode = arguments.length === 2;
+
+		if (isCreateMode){
+			return this.create.apply(this, arguments)
+		} else {
+			const {space, cellTable, schema} = options;
+
+			this.space = new Space(space);
+			this.cellTable = new CellTable(cellTable);
+
+			Object.defineProperty(this, 'schema', { value: new Schema(schema) });
+
+			const count = this.residuals().length;
+			if (count > 0){
+				console.warn('Fact table has residuals')
+			}
+		}
+	}
+	/**
+	 * @public
+	 * */
+	create(facts, dimensionsSchema){
+		if ( !Cube.isPrototypeOf(this.constructor) ){
+			throw Error('this.constructor must be prototype of Cube')
+		}
+		const CubeConstructor = this.constructor;
 		const schema = new Schema(dimensionsSchema);
-		Object.defineProperty(this, 'schema', { value: schema });
-		Object.defineProperty(this, 'facts', { value: facts });
+		const factTable = new FactTable(facts);
+		let dimensionTables = schema.getDimensionsResolutionOrder();
 
-		const dimensionTables = schema.getDimensionsResolutionOrder();
-		const star = Star.create(facts, dimensionTables);
+		const {space, cellTable} = StarBuilder.build(factTable, dimensionTables);
 
-		const {space, cellTable} = star;
-		Object.defineProperty(this, 'star', { value: star });
-
-		this.space = space;
-		this.cellTable = cellTable;
-
-		const count = this.residuals().length;
-		if (count > 0){
-			console.warn('Fact table has residuals')
-		}
-
-		const final = this.schema.getFinal();
-		if (final.length == 0){
-			console.warn('Fact table not has final dimension')
-		}
+		return new CubeConstructor({space, cellTable, schema});
 	}
 	/**
 	 * @public
@@ -112,7 +124,7 @@ class Cube {
 	 * @private
 	 * */
 	getDimensionMembersFromCells(dimension, cells){
-		const idAttribute = Star.genericId(dimension);
+		const idAttribute = Cube.genericId(dimension);
 		const ids = cells.map( cell => cell[idAttribute]);
 
 		const uniq = (items) => {
@@ -135,13 +147,20 @@ class Cube {
 		});
 		return result;
 	}
-
 	/**
 	 * Get facts from cube
 	 * @private
 	 * */
 	denormalize(cells = this.cellTable){
-		return this.star.denormalize(cells)
+		let dimensionTables = this.schema.getDimensionsResolutionOrder();
+		return StarBuilder.destroy(cells, this.space, dimensionTables)
+	}
+
+	/**
+	 * A way to create a name for a property in which a unique identifier will be stored
+	 * */
+	static genericId(entityName) {
+		return entityName + '_' + ENTITY_ID;
 	}
 
 	/**
@@ -208,18 +227,18 @@ class Cube {
 
 	/**
 	 * Residuals - list of tuples, according to which there is more than one member
-	 * @public
+	 * @public {FactTable}
 	 * */
 	residuals(){
 		const tuples = this.cartesian();
-		const residuals = [];
+		const totalFacts = [];
 		tuples.forEach( (tuple) => {
-			const members = this.getFactsBySet(tuple);
-			if (members.length > 1){
-				residuals.push(tuple)
+			const partFacts = this.getFactsBySet(tuple);
+			if (partFacts.length > 1){
+				totalFacts.push(tuple)
 			}
 		});
-		return residuals;
+		return totalFacts;
 	}
 
 	/**
@@ -247,9 +266,7 @@ class Cube {
  * as well as generating missing values for possible display of data
  * */
 class DynamicCube extends Cube{
-	constructor(factTable, dimensionsSchema){
-		super(factTable, dimensionsSchema)
-	}
+
 	/**
 	 * @param {string} dimension - dimension in which the member is created
 	 * @param {object?} memberOptions - properties for the created member
@@ -391,7 +408,7 @@ class DynamicCube extends Cube{
 		this.space.getMemberList(dimension).splice(index, 1);
 
 		const filterData = this.cellTable.filter(data => {
-			return data[Star.genericId(dimension)] == member[ENTITY_ID];
+			return data[Cube.genericId(dimension)] == member[ENTITY_ID];
 		});
 
 		filterData.forEach( data => {
@@ -430,7 +447,7 @@ class DynamicCube extends Cube{
 	_removeSubModel(normalizeData, dimension){
 		// подчистить суб-модельку
 		const filtered = this.space.getMemberList(dimension).filter(record => {
-			return record[ENTITY_ID] == normalizeData[Star.genericId(dimension)]
+			return record[ENTITY_ID] == normalizeData[Cube.genericId(dimension)]
 		});
 
 		// и подчистить суб-модельку
@@ -451,7 +468,7 @@ class DynamicCube extends Cube{
 				const copy = [].concat(this.space.getMemberList(dimension));
 				// чтобы splice корректно отработал
 				copy.forEach( (member, index) => {
-					const idAttribute = Star.genericId(dimension);
+					const idAttribute = Cube.genericId(dimension);
 					const findLink = this.cellTable.find( data => {
 						return data[idAttribute] == member[ENTITY_ID]
 					});
@@ -502,7 +519,7 @@ class DynamicCube extends Cube{
 	_createNormalizeData(obj){
 		const options = {};
 		Object.keys(obj).forEach( key => {
-			options[Star.genericId(key)] = obj[key][ENTITY_ID]
+			options[Cube.genericId(key)] = obj[key][ENTITY_ID]
 		});
 		const newNormaliseData = new InputCell(options);
 		this.cellTable.push(newNormaliseData);
@@ -515,7 +532,7 @@ class DynamicCube extends Cube{
 	_createMember(dimension, props = {}){
 		const {keyProps} = this.schema.getDimensionTable(dimension);
 		const id = DynamicCube.reduceId(this.space.getMemberList(dimension));
-		const member = new InputMember(id, keyProps, props);
+		const member = InputMember.create(id, keyProps, props);
 		this.space.getMemberList(dimension).add(member);
 		return member;
 	}

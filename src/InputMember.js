@@ -5,7 +5,7 @@ import Member from './Member.js';
  * that is, they are not the result of calculating data
  * */
 export default class InputMember extends Member{
-	constructor(id, props, data){
+	static create(id, props, data){
 		const defaultValue = null;
 		const defaultData = {};
 
@@ -13,6 +13,6 @@ export default class InputMember extends Member{
 			defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue
 		});
 
-		super(id, props, defaultData)
+		return super.create(id, props, defaultData)
 	}
 }

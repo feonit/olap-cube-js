@@ -1,7 +1,7 @@
-import Star from "../src/Star.js";
+import StarBuilder from "../src/StarBuilder.js";
 import {isEqual, jsonParseStringify} from './helpers/helpers.js'
 
-describe('[ Star ]', () => {
+describe('[ StarBuilder ]', () => {
 
 	describe('common', ()=>{
 		let star;
@@ -41,7 +41,7 @@ describe('[ Star ]', () => {
 				}
 			];
 
-			star = Star.create(factTable, dimensionTableList);
+			star = StarBuilder.build(factTable, dimensionTableList);
 		});
 
 		it('must be equal etalon and expected cube data', () => {
@@ -86,22 +86,5 @@ describe('[ Star ]', () => {
 			star = jsonParseStringify(star);
 			expect(isEqual(star, etalon)).toBe(true)
 		});
-
-		it('should return same array of data', () => {
-			let factTable = [
-				{ id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-				{ id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-				{ id: 3, city: 'Paris', company: 'AirLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
-				{ id: 4, city: 'Moscow', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
-				{ id: 5, city: 'Moscow', company: 'SkyLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 2, price: '25$'},
-			];
-
-			let data = jsonParseStringify(star.denormalize());
-			expect(isEqual(factTable, data)).toBe(true)
-		});
-	});
-
-	it('generation unique entity ID name', () => {
-		expect(Star.genericId('entity')).toBe('entity_id')
 	});
 });
