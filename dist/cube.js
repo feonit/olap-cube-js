@@ -1,4 +1,5 @@
 /*!
+ * Version: "0.3.1"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
