@@ -51,7 +51,7 @@
 
 			<td ng-repeat="key in $ctrl.keys track by $index">
 				<div ng-if="$index === 0">
-					<button ng-if="$ctrl.removeEnabled" ng-click="$ctrl.onRemove($ctrl.tableData, row.member)">remove</button>
+					<button ng-if="$ctrl.removeEnabled" ng-click="$ctrl.handleRemove($ctrl.tableData, row.member)">remove</button>
 					<span ng-if="!$ctrl.editEnabled">{{ row.member[key] }}</span>
 				</div>
 				<div ng-if="$index !== 0">
@@ -61,21 +61,21 @@
 			</td>
 
 			<td>
-				<category-table
+				<tree-table
 					table-data="row"
 					added="$ctrl.added"
 					editable="$ctrl.editable"
 					removable="$ctrl.removable"
 					on-change="$ctrl.onChange()"
 				>
-				</category-table>
+				</tree-table>
 			</td>
 		</tr>
 
 		<tr ng-if="!$ctrl.isCompositen" ng-repeat="row in $ctrl.tableData.rows track by $index">
 			<td ng-repeat="key in $ctrl.keys track by $index">
 				<div ng-if="$index === 0">
-					<button ng-if="$ctrl.removeEnabled" ng-click="$ctrl.onRemove($ctrl.tableData, row.member)" >Remove</button>
+					<button ng-if="$ctrl.removeEnabled" ng-click="$ctrl.handleRemove($ctrl.tableData, row.member)" >Remove</button>
 					<span ng-if="!$ctrl.editEnabled">{{row.member[key]}}</span>
 				</div>
 				<div ng-if="$index !== 0">
@@ -90,7 +90,7 @@
 	<tfoot>
 		<tr ng-if="$ctrl.added && $ctrl.addEnabled">
 			<td ng-repeat="key in $ctrl.keys track by $index">
-				<button  ng-if="$index === 0"  ng-click="$ctrl.onAdd($ctrl.tableData, $ctrl.valuesToAdd)" >Add</button>
+				<button  ng-if="$index === 0"  ng-click="$ctrl.handleAdd($ctrl.tableData, $ctrl.valuesToAdd)" >Add</button>
 				<input ng-if="$index !== 0"  ng-model="$ctrl.valuesToAdd[key]" placeholder="Enter {{key}}" />
 			</td>
 		</tr>

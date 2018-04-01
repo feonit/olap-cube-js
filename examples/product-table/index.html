@@ -4,24 +4,29 @@
 	<meta charset="UTF-8">
 	<title>Title</title>
 	<script src="https://code.angularjs.org/1.6.9/angular.min.js"></script>
-	<script type="module" src="../../src/Cube.js"></script>
 	<link rel="stylesheet" href="./style.css">
+
+	<!-- try build -->
+	<script type="module" src="../../dist/Cube.js"></script>
 </head>
 <body>
 
 	<script type="module">
-		import CategoryTable from './component/category-table.js'
+		import TreeTable from './component/Tree-table.js'
 		import ProductTable from './model/ProductTable.js'
 		import factTable from './data/factTable.js'
 		import schema from './data/schema.js'
+		import Cube from '../../src/Cube.js'
+
+		const ProductTableCube = ProductTable(window.Cube ? window.Cube.default : Cube);
 
 		window.angular.module('demo', [])
-			.component('categoryTable', CategoryTable)
+			.component('treeTable', TreeTable)
 			.controller('AppController', ['$scope', class DimensionTableController{
 				constructor($scope){
 					$scope.schema = schema;
-					$scope.cube = new ProductTable(factTable, schema);
-					$scope.factTable = $scope.cube.getFactTable();
+					$scope.cube = new ProductTableCube(factTable, schema);
+					$scope.factTable = $scope.cube.getFactTable(factTable);
 
 					$scope.qr_selectedYear = "";
 					$scope.$watch('qr_selectedYear', (year)=>{
@@ -84,10 +89,10 @@
 			<div>
 				<section>
 					<h2>Input data</h2>
-					<category-table
+					<tree-table
 						editable="false"
 						table-data="factTable"
-					></category-table>
+					></tree-table>
 				</section>
 				<section>
 					<h2>Output data</h2>
@@ -96,11 +101,11 @@
 					<p>Size of table after filling: {{ cube.cartesian().length - cube.unfilled().length }}</p>
 					<p>Count of unfilling cells: {{ cube.unfilled().length }}</p>
 					<br/>
-					<category-table
+					<tree-table
 						editable="false"
 						ng-if="outputData"
 						table-data="outputData"
-					></category-table>
+					></tree-table>
 				</section>
 			</div>
 
@@ -111,33 +116,33 @@
 					</summary>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="yearQrMonthTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="yearQrTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="qrMonthTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 				</details>
@@ -149,43 +154,43 @@
 						Dimension Tables <sup>(output data)</sup>
 					</summary>
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="productTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="marketTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="markTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="yearTable"
 							on-change="reset()"
-						></category-table>
+						></tree-table>
 					</section>
 				</details>
 			</div>
@@ -197,14 +202,14 @@
 					</summary>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="qrTable"
 							on-change="reset()"
 							selected-data="fotQrTable"
-						></category-table>
+						></tree-table>
 						<label>
 							<strong>year</strong>
 							<select ng-model="qr_selectedYear">
@@ -215,14 +220,14 @@
 					</section>
 
 					<section>
-						<category-table
+						<tree-table
 							added="true"
 							editable="true"
 							removable="true"
 							table-data="monthTable"
 							on-change="reset()"
 							selected-data="forMonthTable"
-						></category-table>
+						></tree-table>
 						<label>
 							<strong>qr</strong>
 							<select ng-model="month_selectedQr">

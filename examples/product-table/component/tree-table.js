@@ -1,5 +1,3 @@
-import TableController from "./TableController.js";
-
 export default {
 	bindings: {
 		"tableData": "<",
@@ -10,9 +8,8 @@ export default {
 		"selectedData": "<"
 	},
 	controllerAs: '$ctrl',
-	controller: class CategoryTableController extends TableController{
+	controller: class TreeTableController {
 		constructor(){
-			super();
 			this.editEnabled = false;
 			this.addEnabled = false;
 			this.removeEnabled = false;
@@ -34,21 +31,34 @@ export default {
 				}
 			}
 		}
-
-		onRemove(composite, item){
+		/**
+		 * remove member handler
+		 * */
+		handleRemove(composite, item){
 			composite.remove(item);
 			if (this.onChange){
 				this.onChange();
 			}
 		}
-
-		onAdd(composite, item){
+		/**
+		 * add member handler
+		 * */
+		handleAdd(composite, item){
 			composite.add(item, this.selectedData);
 			this.valuesToAdd = {};
 			if (this.onChange){
 				this.onChange();
 			}
 		}
+		/**
+		 * Sort where param id placed in first column
+		 * */
+		getSortedObjectKeys (obj) {
+			const keys = Object.keys(obj).sort((key1, key2)=>{
+				return key1 === 'id' ? false : key1 > key2;
+			});
+			return keys;
+		}
 	},
-	templateUrl: './component/category-table.html',
+	templateUrl: './component/tree-table.html',
 }
