@@ -1,3 +1,4 @@
+import './Fact.spec.js'
 import './Schema.spec.js'
 import './StarBuilder.spec.js'
 import './Cube.spec.js'

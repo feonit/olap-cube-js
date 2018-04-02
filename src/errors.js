@@ -18,3 +18,17 @@ export class CantAddMemberRollupException extends Error {
 		this.message = `Can't add member, rollup dimension: ${dimension} with id: ${id} not found`;
 	}
 }
+
+export class NotFoundFactId extends Error {
+	constructor(){
+		super();
+		this.message = `Not found fact id`
+	}
+}
+
+export const handleError = (error)=>{
+	if (error instanceof Error){
+		error.message = `[Cube] ${error.message}`
+	}
+	throw error;
+};
