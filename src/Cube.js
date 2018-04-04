@@ -566,5 +566,6 @@ class DynamicCube extends Cube{
 
 
 }
-
+//for backward compatibility, will be removed in next realize
+DynamicCube.default = DynamicCube;
 export default DynamicCube;
