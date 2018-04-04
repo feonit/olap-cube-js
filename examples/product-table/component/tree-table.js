@@ -1,4 +1,4 @@
-export default {
+angular.module('demo').component('treeTable', {
 	bindings: {
 		"tableData": "<",
 		"editable": "<",
@@ -61,4 +61,4 @@ export default {
 		}
 	},
 	templateUrl: './component/tree-table.html',
-}
+})

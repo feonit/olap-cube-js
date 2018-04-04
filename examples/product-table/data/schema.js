@@ -1,4 +1,4 @@
-export default {
+angular.module('demo').constant('schema', {
 	dimension: 'money',
 	keyProps: ['money', 'cents'],
 	dependency: [
@@ -31,4 +31,4 @@ export default {
 			]
 		},
 	]
-};
+});

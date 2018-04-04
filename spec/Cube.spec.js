@@ -189,6 +189,70 @@ describe('[ Cube Static ]', function(){
 		})
 	});
 
+	const factTable = [
+		{ id: 1, x: 0, y: 0, xy: null },
+	];
+
+	const schema = {
+		dimension: 'xy',
+		keyProps: ['xy'],
+		dependency: [
+			{
+				dimension: 'x',
+				keyProps: ['x']
+			},
+			{
+				dimension: 'y',
+				keyProps: ['y']
+			}
+		]
+	};
+
+	it('inheritance of cube must work', ()=>{
+		class CustomCube extends Cube {}
+		const cube = new CustomCube(factTable, schema);
+		expect(cube instanceof CustomCube).toBe(true)
+		expect(cube instanceof Cube).toBe(true)
+	});
+
+	it('fabric method create of cube must work', ()=>{
+		let cube;
+		class CustomCube extends Cube{}
+		//1
+		cube = new Cube(factTable, schema)
+		cube = new CustomCube(factTable, schema)
+
+		//Class constructor DynamicCube cannot be invoked without 'new'
+		//todo try in build mode
+		try {
+			function CustomCube2(){
+				Cube.apply(this, arguments)
+			}
+			CustomCube2.prototype = Object.create(Cube.prototype);// without constructor link
+			cube = new CustomCube2();
+
+			function CustomCube3(){
+				Cube.apply(this, arguments)
+			}
+			CustomCube3.prototype = Object.create(Cube.prototype);
+			CustomCube3.prototype.constructor = Array; // with incorrect reference
+			cube = new CustomCube3();
+		} catch (error){
+			error
+		}
+
+		//2
+		let createCube;
+		createCube = Cube.prototype.create;
+		cube = createCube(factTable, schema);
+		createCube = CustomCube.prototype.create;
+		cube = createCube(factTable, schema);
+		//3
+		cube = Cube.create(factTable, schema)
+		//4
+		cube = CustomCube.create(factTable, schema)
+	});
+
 	it('generation unique entity ID name', () => {
 		expect(Cube.genericId('entity')).toBe('entity_id')
 	});

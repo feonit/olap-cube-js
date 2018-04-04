@@ -1,10 +1,15 @@
-import TreeTableData from './TreeTableData.js'
+angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTableData){
 
-// todo: add some functional in Cube
+	function ProductCube(){
+		window.Cube.default.apply(this, arguments)
+	}
 
-export default (Cube) => {
-	return class ProductTableCube extends Cube {
-		getFactTable(factTable){
+	ProductCube.prototype = Object.create(window.Cube.default.prototype);
+
+	// ProductCube.prototype.constructor = ProductCube;
+
+	Object.assign(ProductCube.prototype, {
+		getFactTable: function(factTable){
 			return new TreeTableData({
 				headerName: "Fact Table",
 				rows: factTable.map( member =>{
@@ -12,16 +17,16 @@ export default (Cube) => {
 				}),
 				//todo methods for add/remove rows of fact table
 			})
-		}
-		getFactTableOutput(){
+		},
+		getFactTableOutput: function(){
 			return new TreeTableData({
 				headerName: "Fact Table",
-				rows: super.getFacts().map( member =>{
+				rows: this.getFacts().map( member =>{
 					return new TreeTableData({ member: member })
 				})
 			})
-		}
-		getProduct(){
+		},
+		getProduct: function(){
 			return new TreeTableData({
 				headerName: "Product",
 				rows: this.getDimensionMembers('product').map( member => {
@@ -30,8 +35,8 @@ export default (Cube) => {
 				add: (member)=>{ this.addDimensionMember('product', member ) },
 				remove: (member)=>{ this.removeDimensionMember('product', member ) }
 			})
-		}
-		getMarket(){
+		},
+		getMarket: function(){
 			return new TreeTableData({
 				headerName: "Market",
 				rows: this.getDimensionMembers('market').map( member => {
@@ -40,8 +45,8 @@ export default (Cube) => {
 				add: (member)=>{ this.addDimensionMember('market', member ) },
 				remove: (member)=>{ this.removeDimensionMember('market', member ) }
 			})
-		}
-		getMark(){
+		},
+		getMark: function(){
 			return new TreeTableData({
 				headerName: "Mark",
 				rows: this.getDimensionMembers('mark').map( member => {
@@ -50,8 +55,8 @@ export default (Cube) => {
 				remove: (member)=>{ this.removeDimensionMember('mark', member ) },
 				add: (member)=>{ this.addDimensionMember('mark', member ) }
 			})
-		}
-		getMonth(qr, year){
+		},
+		getMonth: function(qr, year){
 			return new TreeTableData({
 				headerName: "Month",
 				rows: this.getDimensionMembersBySet('month', { qr, year }).map( member => {
@@ -60,8 +65,8 @@ export default (Cube) => {
 				remove: (member)=>{ this.removeDimensionMember('month', member ) },
 				add: (member, space)=>{ this.addDimensionMember('month', member, space ) }
 			})
-		}
-		getQr(year){
+		},
+		getQr: function(year){
 			return new TreeTableData({
 				headerName: "Qr",
 				rows: this.getDimensionMembersBySet('qr', { year }).map( member => {
@@ -70,8 +75,8 @@ export default (Cube) => {
 				remove: (member)=>{ this.removeDimensionMember('qr', member ) },
 				add: (member, space)=>{ this.addDimensionMember('qr', member, space ) }
 			})
-		}
-		getYear(qr){
+		},
+		getYear: function(qr){
 			return new TreeTableData({
 				headerName: "Year",
 				rows: this.getDimensionMembersBySet('year', {qr}).map( member => {
@@ -80,8 +85,8 @@ export default (Cube) => {
 				remove: (member)=>{ this.removeDimensionMember('year', member ) },
 				add: (member)=>{ this.addDimensionMember('year', member ) }
 			})
-		}
-		getQrMonth(){
+		},
+		getQrMonth: function(){
 			return new TreeTableData({
 				headerName: "Qr",
 				categoryName: "Qr category",
@@ -101,8 +106,8 @@ export default (Cube) => {
 					})
 				})
 			})
-		}
-		getYearQr(){
+		},
+		getYearQr: function(){
 			return new TreeTableData({
 				headerName: "Year",
 				categoryName: "Year category",
@@ -122,8 +127,8 @@ export default (Cube) => {
 					});
 				})
 			})
-		}
-		getYearQrMonth(){
+		},
+		getYearQrMonth: function(){
 			return new TreeTableData({
 				headerName: "Year",
 				categoryName: "Year category",
@@ -157,5 +162,8 @@ export default (Cube) => {
 				})
 			})
 		}
-	}
-}
+	});
+
+	return ProductCube
+}]);
+

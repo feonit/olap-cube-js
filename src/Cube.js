@@ -22,10 +22,11 @@ import StarBuilder from "./StarBuilder.js";
  * */
 class Cube {
 	constructor(options){
+		//todo if no arguments exception
 		const isCreateMode = arguments.length === 2;
 
 		if (isCreateMode){
-			return this.create.apply(this, arguments)
+			return Cube.create.apply(this, arguments)
 		} else {
 			const {space, cellTable, schema} = options;
 
@@ -43,18 +44,43 @@ class Cube {
 	/**
 	 * @public
 	 * */
-	create(facts, dimensionsSchema){
-		if ( !Cube.isPrototypeOf(this.constructor) ){
-			throw Error('this.constructor must be prototype of Cube')
+	static create(facts, dimensionsSchema){
+		// 1 this === Cube
+		// 2 this === any else or undefined
+		// 3 this instanceof Cube or Cube.prototype.isPrototypeOf(this)
+		// 4 this === CustomCube
+		let CubeConstructor;
+
+		if (typeof this === "object") {
+			if (this instanceof DynamicCube){
+				//1
+				CubeConstructor = this.constructor;
+			} else {
+				//2
+				CubeConstructor = DynamicCube;
+			}
+		} else if (typeof this === "function"){
+			if ( this === Cube ){
+				//3
+				CubeConstructor = DynamicCube;
+			} else if ( Cube.prototype.isPrototypeOf(this) ){
+				//4
+				CubeConstructor = this;
+			}
+		} else {
+			CubeConstructor = DynamicCube;
 		}
-		const CubeConstructor = this.constructor;
-		const schema = new Schema(dimensionsSchema);
-		const factTable = new FactTable(facts);
-		let dimensionTables = schema.getDimensionsResolutionOrder();
 
-		const {space, cellTable} = StarBuilder.build(factTable, dimensionTables);
+		if (CubeConstructor){
+			const schema = new Schema(dimensionsSchema);
+			const factTable = new FactTable(facts);
+			let dimensionTables = schema.getDimensionsResolutionOrder();
 
-		return new CubeConstructor({space, cellTable, schema});
+			const {space, cellTable} = StarBuilder.build(factTable, dimensionTables);
+
+			return new CubeConstructor({space, cellTable, schema});
+		}
+
 	}
 	/**
 	 * @public

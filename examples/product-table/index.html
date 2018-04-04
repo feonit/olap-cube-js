@@ -7,8 +7,13 @@
 	<link rel="stylesheet" href="./style.css">
 
 	<!-- try build -->
-	<script type="module" src="../../dist/cube.js"></script>
-	<script type="module" src="./product-table.js"></script>
+	<script src="../../dist/cube.js"></script>
+	<script src="./app.js"></script>
+	<script src="./component/tree-table.js"></script>
+	<script src="./component/TreeTableData.js"></script>
+	<script src="./model/ProductCube.js"></script>
+	<script src="./data/factTable.js"></script>
+	<script src="./data/schema.js"></script>
 </head>
 <body>
 	<div ng-controller="AppController">
@@ -193,5 +198,9 @@
 
 		</details>
 	</div>
+
+	<script>
+		angular.bootstrap(document, ['demo']);
+	</script>
 </body>
 </html>
