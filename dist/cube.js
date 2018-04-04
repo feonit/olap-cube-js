@@ -1,5 +1,5 @@
 /*!
- * Version: "0.3.1"
+ * Version: "0.4.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -158,7 +158,7 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _InputCell = __webpack_require__(10);
+var _InputCell = __webpack_require__(11);
 
 var _InputCell2 = _interopRequireDefault(_InputCell);
 
@@ -168,39 +168,39 @@ var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
-var _InputMember = __webpack_require__(11);
+var _InputMember = __webpack_require__(13);
 
 var _InputMember2 = _interopRequireDefault(_InputMember);
 
-var _Schema = __webpack_require__(12);
+var _Schema = __webpack_require__(14);
 
 var _Space = __webpack_require__(4);
 
 var _Space2 = _interopRequireDefault(_Space);
 
-var _FactTable = __webpack_require__(8);
+var _FactTable = __webpack_require__(9);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
-var _FixSpace = __webpack_require__(15);
+var _FixSpace = __webpack_require__(17);
 
 var _FixSpace2 = _interopRequireDefault(_FixSpace);
 
-var _QueryAdapter = __webpack_require__(16);
+var _QueryAdapter = __webpack_require__(18);
 
 var _QueryAdapter2 = _interopRequireDefault(_QueryAdapter);
 
-var _TupleTable = __webpack_require__(17);
+var _TupleTable = __webpack_require__(19);
 
 var _TupleTable2 = _interopRequireDefault(_TupleTable);
 
-var _CellTable = __webpack_require__(9);
+var _CellTable = __webpack_require__(10);
 
 var _CellTable2 = _interopRequireDefault(_CellTable);
 
-var _errors = __webpack_require__(19);
+var _errors = __webpack_require__(6);
 
-var _StarBuilder = __webpack_require__(20);
+var _StarBuilder = __webpack_require__(21);
 
 var _StarBuilder2 = _interopRequireDefault(_StarBuilder);
 
@@ -928,7 +928,10 @@ var DynamicCube = function (_Cube) {
 
 	return DynamicCube;
 }(Cube);
+//for backward compatibility, will be removed in next realize
 
+
+DynamicCube.default = DynamicCube;
 exports.default = DynamicCube;
 
 /***/ }),
@@ -1003,7 +1006,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(7);
+var _MemberList = __webpack_require__(8);
 
 var _MemberList2 = _interopRequireDefault(_MemberList);
 
@@ -1078,16 +1081,49 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _const = __webpack_require__(0);
+
+var _errors = __webpack_require__(6);
+
+var _console = __webpack_require__(12);
+
+var _console2 = _interopRequireDefault(_console);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Fact = function Fact(data) {
+var isSimple = function isSimple(value) {
+	var type = typeof value === "undefined" ? "undefined" : _typeof(value);
+	return type !== "object" && type !== "function" && type !== "undefined" || value === null;
+};
+
+var Fact =
+/**
+ * @throw {NotFoundFactId}
+ * */
+function Fact(data) {
 	_classCallCheck(this, Fact);
 
-	Object.assign(this, data);
-	if (!this[_const.ENTITY_ID]) {
-		throw "data must have id parameter";
+	try {
+		for (var key in data) {
+			if (!data.hasOwnProperty(key)) {
+				return;
+			}
+
+			if (isSimple(data[key])) {
+				this[key] = data[key];
+			} else {
+				_console2.default.warn("[Fact] value of prop \"" + key + "\" has an unspecified value: " + data[key]);
+			}
+		}
+		if (!(_const.ENTITY_ID in this)) {
+			throw new _errors.NotFoundFactId();
+		}
+	} catch (error) {
+		(0, _errors.handleError)(error);
 	}
 };
 
@@ -1095,6 +1131,190 @@ exports.default = Fact;
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+function _extendableBuiltin7(cls) {
+	function ExtendableBuiltin() {
+		var instance = Reflect.construct(cls, Array.from(arguments));
+		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+		return instance;
+	}
+
+	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
+		constructor: {
+			value: cls,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (Object.setPrototypeOf) {
+		Object.setPrototypeOf(ExtendableBuiltin, cls);
+	} else {
+		ExtendableBuiltin.__proto__ = cls;
+	}
+
+	return ExtendableBuiltin;
+}
+
+function _extendableBuiltin5(cls) {
+	function ExtendableBuiltin() {
+		var instance = Reflect.construct(cls, Array.from(arguments));
+		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+		return instance;
+	}
+
+	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
+		constructor: {
+			value: cls,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (Object.setPrototypeOf) {
+		Object.setPrototypeOf(ExtendableBuiltin, cls);
+	} else {
+		ExtendableBuiltin.__proto__ = cls;
+	}
+
+	return ExtendableBuiltin;
+}
+
+function _extendableBuiltin3(cls) {
+	function ExtendableBuiltin() {
+		var instance = Reflect.construct(cls, Array.from(arguments));
+		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+		return instance;
+	}
+
+	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
+		constructor: {
+			value: cls,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (Object.setPrototypeOf) {
+		Object.setPrototypeOf(ExtendableBuiltin, cls);
+	} else {
+		ExtendableBuiltin.__proto__ = cls;
+	}
+
+	return ExtendableBuiltin;
+}
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _extendableBuiltin(cls) {
+	function ExtendableBuiltin() {
+		var instance = Reflect.construct(cls, Array.from(arguments));
+		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+		return instance;
+	}
+
+	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
+		constructor: {
+			value: cls,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (Object.setPrototypeOf) {
+		Object.setPrototypeOf(ExtendableBuiltin, cls);
+	} else {
+		ExtendableBuiltin.__proto__ = cls;
+	}
+
+	return ExtendableBuiltin;
+}
+
+var NotCompletelySpaceException = exports.NotCompletelySpaceException = function (_extendableBuiltin2) {
+	_inherits(NotCompletelySpaceException, _extendableBuiltin2);
+
+	function NotCompletelySpaceException(dimension) {
+		_classCallCheck(this, NotCompletelySpaceException);
+
+		var _this = _possibleConstructorReturn(this, (NotCompletelySpaceException.__proto__ || Object.getPrototypeOf(NotCompletelySpaceException)).call(this));
+
+		_this.message = "Not completely defined space for added member, not found member for dimension: \"" + dimension + "\"";
+		return _this;
+	}
+
+	return NotCompletelySpaceException;
+}(_extendableBuiltin(Error));
+
+var AddDimensionOfCellException = exports.AddDimensionOfCellException = function (_extendableBuiltin4) {
+	_inherits(AddDimensionOfCellException, _extendableBuiltin4);
+
+	function AddDimensionOfCellException(dimension) {
+		_classCallCheck(this, AddDimensionOfCellException);
+
+		var _this2 = _possibleConstructorReturn(this, (AddDimensionOfCellException.__proto__ || Object.getPrototypeOf(AddDimensionOfCellException)).call(this));
+
+		_this2.message = "You can not add a second member to the dimension for the cell: \"" + dimension + "\"";
+		return _this2;
+	}
+
+	return AddDimensionOfCellException;
+}(_extendableBuiltin3(Error));
+
+var CantAddMemberRollupException = exports.CantAddMemberRollupException = function (_extendableBuiltin6) {
+	_inherits(CantAddMemberRollupException, _extendableBuiltin6);
+
+	function CantAddMemberRollupException(dimension, id) {
+		_classCallCheck(this, CantAddMemberRollupException);
+
+		var _this3 = _possibleConstructorReturn(this, (CantAddMemberRollupException.__proto__ || Object.getPrototypeOf(CantAddMemberRollupException)).call(this));
+
+		_this3.message = "Can't add member, rollup dimension: " + dimension + " with id: " + id + " not found";
+		return _this3;
+	}
+
+	return CantAddMemberRollupException;
+}(_extendableBuiltin5(Error));
+
+var NotFoundFactId = exports.NotFoundFactId = function (_extendableBuiltin8) {
+	_inherits(NotFoundFactId, _extendableBuiltin8);
+
+	function NotFoundFactId() {
+		_classCallCheck(this, NotFoundFactId);
+
+		var _this4 = _possibleConstructorReturn(this, (NotFoundFactId.__proto__ || Object.getPrototypeOf(NotFoundFactId)).call(this));
+
+		_this4.message = "Not found fact id";
+		return _this4;
+	}
+
+	return NotFoundFactId;
+}(_extendableBuiltin7(Error));
+
+var handleError = exports.handleError = function handleError(error) {
+	if (error instanceof Error) {
+		error.message = "[Cube] " + error.message;
+	}
+	throw error;
+};
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1134,7 +1354,7 @@ var Dimension = function Dimension(_ref) {
 exports.default = Dimension;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1253,7 +1473,7 @@ var MemberList = function (_extendableBuiltin2) {
 exports.default = MemberList;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1322,7 +1542,7 @@ var FactTable = function (_extendableBuiltin2) {
 exports.default = FactTable;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1404,7 +1624,7 @@ var CellTable = function (_extendableBuiltin2) {
 exports.default = CellTable;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1452,7 +1672,26 @@ var InputCell = function (_Cell) {
 exports.default = InputCell;
 
 /***/ }),
-/* 11 */
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = {
+	log: function log(string) {
+		console.log("[Cube] " + string);
+	},
+	warn: function warn(string) {
+		console.warn("[Cube] " + string);
+	}
+};
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1511,7 +1750,7 @@ var InputMember = function (_Member) {
 exports.default = InputMember;
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1526,11 +1765,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _SchemaDimension = __webpack_require__(13);
+var _SchemaDimension = __webpack_require__(15);
 
 var _SchemaDimension2 = _interopRequireDefault(_SchemaDimension);
 
-var _Tree2 = __webpack_require__(14);
+var _Tree2 = __webpack_require__(16);
 
 var _Tree3 = _interopRequireDefault(_Tree2);
 
@@ -1846,7 +2085,7 @@ var Schema = exports.Schema = function (_Tree) {
 }(_Tree3.default);
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1856,7 +2095,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _Dimension2 = __webpack_require__(6);
+var _Dimension2 = __webpack_require__(7);
 
 var _Dimension3 = _interopRequireDefault(_Dimension2);
 
@@ -1895,7 +2134,7 @@ var SchemaDimension = function (_Dimension) {
 exports.default = SchemaDimension;
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2094,7 +2333,7 @@ var Tree = function () {
 exports.default = Tree;
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2235,7 +2474,7 @@ var FixSpace = function (_Space) {
 exports.default = FixSpace;
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2337,7 +2576,7 @@ var QueryAdapter = function () {
 exports.default = QueryAdapter;
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2351,7 +2590,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _Tuple = __webpack_require__(18);
+var _Tuple = __webpack_require__(20);
 
 var _Tuple2 = _interopRequireDefault(_Tuple);
 
@@ -2422,7 +2661,7 @@ var TupleTable = function (_extendableBuiltin2) {
 exports.default = TupleTable;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2443,144 +2682,7 @@ var Tuple = function Tuple(options) {
 exports.default = Tuple;
 
 /***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-function _extendableBuiltin5(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-function _extendableBuiltin3(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _extendableBuiltin(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-var NotCompletelySpaceException = exports.NotCompletelySpaceException = function (_extendableBuiltin2) {
-	_inherits(NotCompletelySpaceException, _extendableBuiltin2);
-
-	function NotCompletelySpaceException(dimension) {
-		_classCallCheck(this, NotCompletelySpaceException);
-
-		var _this = _possibleConstructorReturn(this, (NotCompletelySpaceException.__proto__ || Object.getPrototypeOf(NotCompletelySpaceException)).call(this));
-
-		_this.message = "Not completely defined space for added member, not found member for dimension: \"" + dimension + "\"";
-		return _this;
-	}
-
-	return NotCompletelySpaceException;
-}(_extendableBuiltin(Error));
-
-var AddDimensionOfCellException = exports.AddDimensionOfCellException = function (_extendableBuiltin4) {
-	_inherits(AddDimensionOfCellException, _extendableBuiltin4);
-
-	function AddDimensionOfCellException(dimension) {
-		_classCallCheck(this, AddDimensionOfCellException);
-
-		var _this2 = _possibleConstructorReturn(this, (AddDimensionOfCellException.__proto__ || Object.getPrototypeOf(AddDimensionOfCellException)).call(this));
-
-		_this2.message = "You can not add a second member to the dimension for the cell: \"" + dimension + "\"";
-		return _this2;
-	}
-
-	return AddDimensionOfCellException;
-}(_extendableBuiltin3(Error));
-
-var CantAddMemberRollupException = exports.CantAddMemberRollupException = function (_extendableBuiltin6) {
-	_inherits(CantAddMemberRollupException, _extendableBuiltin6);
-
-	function CantAddMemberRollupException(dimension, id) {
-		_classCallCheck(this, CantAddMemberRollupException);
-
-		var _this3 = _possibleConstructorReturn(this, (CantAddMemberRollupException.__proto__ || Object.getPrototypeOf(CantAddMemberRollupException)).call(this));
-
-		_this3.message = "Can't add member, rollup dimension: " + dimension + " with id: " + id + " not found";
-		return _this3;
-	}
-
-	return CantAddMemberRollupException;
-}(_extendableBuiltin5(Error));
-
-/***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2596,11 +2698,11 @@ var _Space = __webpack_require__(4);
 
 var _Space2 = _interopRequireDefault(_Space);
 
-var _CellTable = __webpack_require__(9);
+var _CellTable = __webpack_require__(10);
 
 var _CellTable2 = _interopRequireDefault(_CellTable);
 
-var _MemberList = __webpack_require__(7);
+var _MemberList = __webpack_require__(8);
 
 var _MemberList2 = _interopRequireDefault(_MemberList);
 
@@ -2610,7 +2712,7 @@ var _Member2 = _interopRequireDefault(_Member);
 
 var _const = __webpack_require__(0);
 
-var _DimensionTable = __webpack_require__(21);
+var _DimensionTable = __webpack_require__(22);
 
 var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
 
@@ -2618,7 +2720,7 @@ var _Cube = __webpack_require__(2);
 
 var _Cube2 = _interopRequireDefault(_Cube);
 
-var _FactTable = __webpack_require__(8);
+var _FactTable = __webpack_require__(9);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -2844,7 +2946,7 @@ var StarBuilder = function () {
 exports.default = StarBuilder;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2854,7 +2956,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _Dimension2 = __webpack_require__(6);
+var _Dimension2 = __webpack_require__(7);
 
 var _Dimension3 = _interopRequireDefault(_Dimension2);
 
@@ -2891,5 +2993,5 @@ var DimensionTable = function (_Dimension) {
 exports.default = DimensionTable;
 
 /***/ })
-/******/ ]);
+/******/ ])["default"];
 });
