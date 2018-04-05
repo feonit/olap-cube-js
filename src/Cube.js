@@ -68,7 +68,7 @@ class Cube {
 				CubeConstructor = this;
 			}
 		} else {
-			CubeConstructor = DynamicCube;
+			throw Error('this must have prototype of Cube.prototype')
 		}
 
 		if (CubeConstructor){
@@ -286,10 +286,7 @@ class Cube {
 }
 
 /**
- * Is a means of replenishing data
- *
- * A helper class that provides methods for adding and removing values,
- * as well as generating missing values for possible display of data
+ * Interface providing special methods for the possibility of changing the data in Cube
  * */
 class DynamicCube extends Cube{
 
