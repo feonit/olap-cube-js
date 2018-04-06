@@ -1,5 +1,5 @@
 /*!
- * Version: "0.3.1"
+ * Version: "0.4.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -929,7 +929,10 @@ var DynamicCube = function (_Cube) {
 
 	return DynamicCube;
 }(Cube);
+//for backward compatibility, will be removed in next realize
 
+
+DynamicCube.default = DynamicCube;
 exports.default = DynamicCube;
 
 /***/ }),
@@ -2991,5 +2994,5 @@ var DimensionTable = function (_Dimension) {
 exports.default = DimensionTable;
 
 /***/ })
-/******/ ]);
+/******/ ])["default"];
 });
