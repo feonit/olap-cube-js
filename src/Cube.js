@@ -9,8 +9,14 @@ import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
 import TupleTable from "./TupleTable.js";
 import CellTable from "./CellTable.js";
-import { NotCompletelySpaceException, AddDimensionOfCellException, CantAddMemberRollupException } from './errors.js';
+import {
+	NotCompletelySpaceException,
+	AddDimensionOfCellException,
+	CantAddMemberRollupException,
+	CreateInstanceException
+} from './errors.js';
 import StarBuilder from "./StarBuilder.js";
+import console from './console.js'
 
 /**
  * It a means to retrieve data
@@ -26,7 +32,8 @@ class Cube {
 		const isCreateMode = arguments.length === 2;
 
 		if (isCreateMode){
-			return Cube.create.apply(this, arguments)
+			console.warnOnce('deprecated: new Cube(facts, schema), use Cube.create(facts, schema) instead');
+			return this.constructor.create.apply(this.constructor, arguments)
 		} else {
 			const {space, cellTable, schema} = options;
 
@@ -35,9 +42,10 @@ class Cube {
 
 			Object.defineProperty(this, 'schema', { value: new Schema(schema) });
 
-			const count = this.residuals().length;
+			const residuals = this.residuals();
+			const count = residuals.length;
 			if (count > 0){
-				console.warn('Fact table has residuals')
+				console.warn('Fact table has residuals', residuals)
 			}
 		}
 	}
@@ -45,42 +53,20 @@ class Cube {
 	 * @public
 	 * */
 	static create(facts, dimensionsSchema){
-		// 1 this === Cube
-		// 2 this === any else or undefined
-		// 3 this instanceof Cube or Cube.prototype.isPrototypeOf(this)
-		// 4 this === CustomCube
-		let CubeConstructor;
-
-		if (typeof this === "object") {
-			if (this instanceof DynamicCube){
-				//1
-				CubeConstructor = this.constructor;
-			} else {
-				//2
-				CubeConstructor = DynamicCube;
-			}
-		} else if (typeof this === "function"){
-			if ( this === Cube ){
-				//3
-				CubeConstructor = DynamicCube;
-			} else if ( Cube.prototype.isPrototypeOf(this) ){
-				//4
-				CubeConstructor = this;
-			}
-		} else {
-			throw Error('this must have prototype of Cube.prototype')
+		if ( !(DynamicCube.isPrototypeOf(this) || DynamicCube === this)){
+			throw new CreateInstanceException()
 		}
 
-		if (CubeConstructor){
-			const schema = new Schema(dimensionsSchema);
-			const factTable = new FactTable(facts);
-			let dimensionTables = schema.getDimensionsResolutionOrder();
+		const schema = new Schema(dimensionsSchema);
+		const factTable = new FactTable(facts);
+		let dimensionTables = schema.getDimensionsResolutionOrder();
 
-			const {space, cellTable} = StarBuilder.build(factTable, dimensionTables);
+		const {
+			space,
+			cellTable
+		} = StarBuilder.build(factTable, dimensionTables);
 
-			return new CubeConstructor({space, cellTable, schema});
-		}
-
+		return new this({space, cellTable, schema});
 	}
 	/**
 	 * @public

@@ -26,6 +26,13 @@ export class NotFoundFactId extends Error {
 	}
 }
 
+export class CreateInstanceException extends Error {
+	constructor(){
+		super();
+		this.message = 'this must have prototype of Cube'
+	}
+}
+
 export const handleError = (error)=>{
 	if (error instanceof Error){
 		error.message = `[Cube] ${error.message}`

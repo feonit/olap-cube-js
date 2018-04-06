@@ -1,4 +1,5 @@
 import Cube from '../src/Cube.js';
+import {CreateInstanceException} from '../src/errors.js'
 
 describe('[ Cube Static ]', function(){
 
@@ -11,7 +12,7 @@ describe('[ Cube Static ]', function(){
 	});
 
 	const checkPrototypeApi = (Cube)=>{
-		describe(`[ API ${Cube.name}]`,()=>{
+		describe(`[ API prototype ${Cube.name}]`,()=>{
 
 			it('should define getDimensionMembers', ()=> {
 				expect(Cube.prototype.getDimensionMembers).toBeDefined();
@@ -55,6 +56,13 @@ describe('[ Cube Static ]', function(){
 
 			it('should define unfilled', ()=> {
 				expect(Cube.prototype.unfilled).toBeDefined();
+			});
+		});
+
+		describe(`[ API static ${Cube.name}]`,()=>{
+
+			it('should define create', ()=> {
+				expect(Cube.create).toBeDefined();
 			});
 		});
 	};
@@ -164,7 +172,7 @@ describe('[ Cube Static ]', function(){
 			};
 			cube = new Cube(factTable, schema);
 			window.cube = cube;
-			// cubeCopy = cloneDeep(cube); new Cube(cube);
+			cubeCopy = new Cube(cube);
 		});
 
 		it('the ability to create a copy cube must work', () => {
@@ -224,48 +232,30 @@ describe('[ Cube Static ]', function(){
 	it('fabric method create of cube must work', ()=>{
 		let cube;
 		class CustomCube extends Cube{}
-		//1
 		cube = new Cube(factTable, schema)
 		cube = new CustomCube(factTable, schema)
-
-		//Class constructor DynamicCube cannot be invoked without 'new'
-		//todo try in build mode
-		try {
-			function CustomCube2(){
-				Cube.apply(this, arguments)
-			}
-			CustomCube2.prototype = Object.create(Cube.prototype);// without constructor link
-			cube = new CustomCube2();
-
-			function CustomCube3(){
-				Cube.apply(this, arguments)
-			}
-			CustomCube3.prototype = Object.create(Cube.prototype);
-			CustomCube3.prototype.constructor = Array; // with incorrect reference
-			cube = new CustomCube3();
-		} catch (error){
-			error
-		}
-
-		//2
-		let createCube;
-		createCube = Cube.create;
-		cube = createCube(factTable, schema);
-		expect(cube instanceof Cube).toBe(true)
-
-		createCube = CustomCube.create;
-		cube = createCube(factTable, schema);
-		expect(cube instanceof Cube).toBe(true)
-		expect(cube instanceof CustomCube).toBe(true)
-
-		//3
 		cube = Cube.create(factTable, schema)
 		expect(cube instanceof Cube).toBe(true)
+	});
 
-		//4
-		cube = CustomCube.create(factTable, schema)
-		expect(cube instanceof Cube).toBe(true)
-		expect(cube instanceof CustomCube).toBe(true)
+	it('should throw when execute create static method without context of Cube constructor of its interface', ()=>{
+		class CustomCube extends Cube{}
+		const createCube = CustomCube.create;
+		expect(()=>{
+			createCube(factTable, schema)
+		}).toThrow()
+	});
+
+	it('should specific throw when execute create static method without context of Cube constructor of its interface', ()=>{
+		class CustomCube extends Cube{}
+		const createCube = CustomCube.create;
+		let error;
+		try{
+			const cube = createCube(factTable, schema);
+		} catch (e){
+			error = e;
+		}
+		expect(error instanceof CreateInstanceException).toBe(true)
 	});
 
 	it('generation unique entity ID name', () => {
