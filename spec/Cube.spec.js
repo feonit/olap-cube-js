@@ -171,7 +171,6 @@ describe('[ Cube Static ]', function(){
 				]
 			};
 			cube = new Cube(factTable, schema);
-			window.cube = cube;
 			cubeCopy = new Cube(cube);
 		});
 
