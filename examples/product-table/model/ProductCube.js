@@ -137,7 +137,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 								insideSpace[key] = parentSpace[key]
 							}
 							for (key in space){
-								insideSpace[key] = parentSpace[key]
+								insideSpace[key] = space[key]
 							}
 							self.addDimensionMember('month', member, insideSpace )
 						},
