@@ -33,7 +33,8 @@ class Cube {
 
 		if (isCreateMode){
 			console.warnOnce('deprecated: new Cube(facts, schema), use Cube.create(facts, schema) instead');
-			return this.constructor.create.apply(this.constructor, arguments)
+			const cube = this.constructor.create.apply(this.constructor, arguments);
+			return cube;
 		} else {
 			const {space, cellTable, schema} = options;
 
@@ -50,7 +51,11 @@ class Cube {
 		}
 	}
 	/**
+	 * Fabric method for creating cube from facts and schema data
 	 * @public
+	 * @param {object} dimensionsSchema
+	 * @param {object[]} facts
+	 * @return {Cube}
 	 * */
 	static create(facts, dimensionsSchema){
 		if ( !(DynamicCube.isPrototypeOf(this) || DynamicCube === this)){
@@ -66,7 +71,8 @@ class Cube {
 			cellTable
 		} = StarBuilder.build(factTable, dimensionTables);
 
-		return new this({space, cellTable, schema});
+		const cube = new this({space, cellTable, schema});
+		return cube;
 	}
 	/**
 	 * @public
@@ -202,7 +208,7 @@ class Cube {
 					const dimension = dimensions[index];
 					index = index + 1;
 					this.getDimensionMembersBySet(dimension, space).map((item) => {
-						const newSpace = Object.assign({}, space);
+						const newSpace = {...space};
 						newSpace[dimension] = item;
 						if (index === dimensions.length) {
 							acc.push(newSpace);
@@ -315,7 +321,7 @@ class DynamicCube extends Cube{
 			drillDownCoordinates[currentDimension] = this._createMember(currentDimension);
 		});
 
-		const coordinates = Object.assign({}, addedCoordinates, rollupCoordinates, drillDownCoordinates);
+		const coordinates = {...addedCoordinates, ...rollupCoordinates, ...drillDownCoordinates};
 
 		// leafs
 		const externals = this.schema.getExternals();
@@ -336,7 +342,7 @@ class DynamicCube extends Cube{
 			const dimension = this.schema.getMeasure().dimension;
 			const member = this._createMember(dimension);
 			const value = { [ dimension ]: member };
-			const cellData = Object.assign( {}, coordinates, value );
+			const cellData = {...coordinates, ...value};
 			this._createNormalizeData(cellData);
 		};
 
@@ -349,7 +355,7 @@ class DynamicCube extends Cube{
 			const parentDimensionTable = this.schema.getByDependency(currentDimension);
 
 			membersList[index].forEach( member => {
-				const coordinatesCopy = Object.assign({}, coordinates);
+				const coordinatesCopy = {...coordinates};
 				coordinatesCopy[currentDimension] = member;
 
 				if (parentDimensionTable){
@@ -516,7 +522,7 @@ class DynamicCube extends Cube{
 
 			emptyMemberOptions.forEach( cellOptions => {
 				const member = this._createMemberDependency( dimension, props );
-				const options = Object.assign({}, cellOptions, member );
+				const options = {...cellOptions, ...member};
 				this._createNormalizeData(options);
 			});
 		}

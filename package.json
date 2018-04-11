@@ -1,6 +1,6 @@
 {
   "name": "olap-cube-js",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A package olap-cube-js for client OLAP cube",
   "main": "index.js",
   "devDependencies": {
@@ -8,7 +8,9 @@
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-builtin-extend": "^1.1.2",
+    "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "codecov": "^3.0.0",
     "http-server": "^0.10.0",

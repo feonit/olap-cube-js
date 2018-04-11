@@ -5,7 +5,7 @@ angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube',
 	$scope.factTable = $scope.cube.getFactTable(factTable);
 
 	$scope.qr_selectedYear = "";
-	$scope.$watch('qr_selectedYear', (year)=>{
+	$scope.$watch('qr_selectedYear', function(year){
 		year = angular.copy(year);
 		$scope.qrTable = $scope.cube.getQr(year);
 		$scope.fotQrTable = { year: year };
@@ -13,7 +13,7 @@ angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube',
 
 	$scope.month_selectedQr = "";
 	$scope.monthYearTableRows = $scope.cube.getYear().rows;
-	$scope.$watch('month_selectedQr', (month_selectedQr)=>{
+	$scope.$watch('month_selectedQr', function(month_selectedQr){
 		month_selectedQr = angular.copy(month_selectedQr);
 		if (month_selectedQr){
 			$scope.monthYearTableRows = $scope.cube.getYear(month_selectedQr).rows;
@@ -27,7 +27,7 @@ angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube',
 
 	$scope.month_selectedYear = "";
 	$scope.monthQrTableRows = $scope.cube.getQr().rows;
-	$scope.$watch('month_selectedYear', (month_selectedYear)=>{
+	$scope.$watch('month_selectedYear', function(month_selectedYear){
 		month_selectedYear = angular.copy(month_selectedYear)
 		if (month_selectedYear){
 			$scope.monthQrTableRows = $scope.cube.getQr(month_selectedYear).rows;
@@ -36,7 +36,7 @@ angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube',
 		$scope.forMonthTable = { qr: angular.copy($scope.month_selectedQr), year: month_selectedYear }
 	});
 
-	const reset = () => {
+	const reset = function() {
 		$scope.marketTable = $scope.cube.getMarket();
 		$scope.productTable = $scope.cube.getProduct();
 		$scope.markTable = $scope.cube.getMark();
@@ -51,7 +51,7 @@ angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube',
 	$scope.reset = reset;
 	reset();
 
-	$scope.$watch('cube', () => {
+	$scope.$watch('cube', function() {
 		$scope.outputData = $scope.cube.getFactTableOutput();
 	}, true);
 }]);

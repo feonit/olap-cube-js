@@ -31,13 +31,13 @@ section{
 }
 
 .parent {
-	display: flex;
+	display: table;
+	width: 100%;
 	align-items: center;
 }
 
 .parent > div {
-	flex: 1;
-	align-self: flex-start;
+	display: table-cell;
 	padding: 10px;
 }
 

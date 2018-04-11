@@ -221,7 +221,27 @@ describe('[ Cube Static ]', function(){
 		]
 	};
 
-	it('inheritance of cube must work', ()=>{
+	it('inheritance of cube must work ES5', ()=>{
+		function CustomCube(factTable, schema){
+			// if Cube.js not esm module
+			try {
+				Function.prototype.apply.apply(Cube, arguments)
+			} catch (error){
+				if (error instanceof TypeError){
+					const cube = new Cube(factTable, schema);
+					Object.assign(this, cube)
+				}
+			}
+		}
+		CustomCube.prototype = Object.create(Cube.prototype);
+		Object.setPrototypeOf(CustomCube, Cube);
+
+		const cube = new CustomCube(factTable, schema);
+		expect(cube instanceof CustomCube).toBe(true);
+		expect(cube instanceof Cube).toBe(true)
+	});
+
+	it('inheritance of cube must work ES6', ()=>{
 		class CustomCube extends Cube {}
 		const cube = new CustomCube(factTable, schema);
 		expect(cube instanceof CustomCube).toBe(true)

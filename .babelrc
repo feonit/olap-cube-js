@@ -4,6 +4,7 @@
     ["babel-plugin-transform-builtin-extend", {
       "globals": ["Error", "Array"]
     }],
-    "transform-object-rest-spread"
+    "transform-object-rest-spread",
+    "transform-object-assign"
   ]
 }

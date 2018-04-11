@@ -7,6 +7,14 @@
 	<link rel="stylesheet" href="./style.css">
 
 	<!-- try build -->
+	<script src="../../vendors/Array.from.js"></script>
+	<script src="../../vendors/Array.find.js"></script>
+	<script src="../../dist/Reflect.js"></script>
+	<script>
+		if (!window.Reflect){
+			window.Reflect = window.example.Reflect;
+		}
+	</script>
 	<script src="../../dist/cube.js"></script>
 	<script src="./app.js"></script>
 	<script src="./component/tree-table.js"></script>

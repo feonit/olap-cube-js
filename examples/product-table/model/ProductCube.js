@@ -1,106 +1,148 @@
 angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTableData){
+	
+	var Cube = window.Cube;
 
 	function ProductCube(){
-		window.Cube.default.apply(this, arguments)
+		const cube = Cube.apply(this, arguments)
+		return cube;
 	}
 
-	ProductCube.prototype = Object.create(window.Cube.default.prototype);
+	ProductCube.prototype = Object.create(Cube.prototype);
+	ProductCube.prototype.constructor = ProductCube;
+	Object.setPrototypeOf(ProductCube, Cube);
 
-	// ProductCube.prototype.constructor = ProductCube;
+	var productCubePrototype = {
+		constructor: ProductCube,
 
-	Object.assign(ProductCube.prototype, {
 		getFactTable: function(factTable){
 			return new TreeTableData({
 				headerName: "Fact Table",
-				rows: factTable.map( member =>{
+				rows: factTable.map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
 				//todo methods for add/remove rows of fact table
 			})
 		},
 		getFactTableOutput: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Fact Table",
-				rows: this.getFacts().map( member =>{
+				rows: self.getFacts().map( function(member) {
 					return new TreeTableData({ member: member })
 				})
 			})
 		},
 		getProduct: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Product",
-				rows: this.getDimensionMembers('product').map( member => {
+				rows: self.getDimensionMembers('product').map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				add: (member)=>{ this.addDimensionMember('product', member ) },
-				remove: (member)=>{ this.removeDimensionMember('product', member ) }
+				add: function(member){ self.addDimensionMember('product', member ) },
+				remove: function(member){ self.removeDimensionMember('product', member ) }
 			})
 		},
 		getMarket: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Market",
-				rows: this.getDimensionMembers('market').map( member => {
+				rows: self.getDimensionMembers('market').map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				add: (member)=>{ this.addDimensionMember('market', member ) },
-				remove: (member)=>{ this.removeDimensionMember('market', member ) }
+				add: function(member){ self.addDimensionMember('market', member ) },
+				remove: function(member){ self.removeDimensionMember('market', member ) }
 			})
 		},
 		getMark: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Mark",
-				rows: this.getDimensionMembers('mark').map( member => {
+				rows: self.getDimensionMembers('mark').map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				remove: (member)=>{ this.removeDimensionMember('mark', member ) },
-				add: (member)=>{ this.addDimensionMember('mark', member ) }
+				remove: function(member){ self.removeDimensionMember('mark', member ) },
+				add: function(member){ self.addDimensionMember('mark', member ) }
 			})
 		},
 		getMonth: function(qr, year){
+			var self = this;
+			var space = {};
+			if (qr){
+				space.qr = qr;
+			}
+			if (year){
+				space.year = year;
+			}
 			return new TreeTableData({
 				headerName: "Month",
-				rows: this.getDimensionMembersBySet('month', { qr, year }).map( member => {
+				rows: self.getDimensionMembersBySet('month', space).map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				remove: (member)=>{ this.removeDimensionMember('month', member ) },
-				add: (member, space)=>{ this.addDimensionMember('month', member, space ) }
+				remove: function(member){ self.removeDimensionMember('month', member ) },
+				add: function(member, space){ self.addDimensionMember('month', member, space ) }
 			})
 		},
 		getQr: function(year){
+			var self = this;
+			var space = {};
+			if (year){
+				space.year = year;
+			}
 			return new TreeTableData({
 				headerName: "Qr",
-				rows: this.getDimensionMembersBySet('qr', { year }).map( member => {
+				rows: self.getDimensionMembersBySet('qr', space).map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				remove: (member)=>{ this.removeDimensionMember('qr', member ) },
-				add: (member, space)=>{ this.addDimensionMember('qr', member, space ) }
+				remove: function(member){ self.removeDimensionMember('qr', member ) },
+				add: function(member, space){ self.addDimensionMember('qr', member, space ) }
 			})
 		},
 		getYear: function(qr){
+			var self = this;
+			var space = {};
+			if (qr){
+				space.qr = qr;
+			}
 			return new TreeTableData({
 				headerName: "Year",
-				rows: this.getDimensionMembersBySet('year', {qr}).map( member => {
+				rows: self.getDimensionMembersBySet('year', space).map( function(member) {
 					return new TreeTableData({ member: member })
 				}),
-				remove: (member)=>{ this.removeDimensionMember('year', member ) },
-				add: (member)=>{ this.addDimensionMember('year', member ) }
+				remove: function(member){ self.removeDimensionMember('year', member ) },
+				add: function(member){ self.addDimensionMember('year', member ) }
 			})
 		},
 		getQrMonth: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Qr",
 				categoryName: "Qr category",
-				add: (member)=>{ this.addDimensionMember('qr', member ) },
-				remove: (member)=>{ this.removeDimensionMember('qr', member ) },
-				rows: this.getDimensionMembers('qr').map( qr => {
-					const space = { qr };
+				add: function(member){ self.addDimensionMember('qr', member ) },
+				remove: function(member){ self.removeDimensionMember('qr', member ) },
+				rows: self.getDimensionMembers('qr').map( function(qr) {
+					var space = {};
+					if (qr){
+						space.qr = qr
+					}
 
 					return new TreeTableData({
 						headerName: "Month",
 						member: qr,
-						add: (member, parentSpace)=>{ this.addDimensionMember('month', member, Object.assign({}, parentSpace, space) ) },
-						remove: (member)=>{ this.removeDimensionMember('month', member ) },
-						rows: this.getDimensionMembersBySet('month', space).map( member => {
+						add: function(member, parentSpace){
+							//todo remove it may be
+							var insideSpace = {};
+							var key;
+							for (key in parentSpace){
+								insideSpace[key] = parentSpace[key]
+							}
+							for (key in space){
+								insideSpace[key] = parentSpace[key]
+							}
+							self.addDimensionMember('month', member, insideSpace )
+						},
+						remove: function(member){ self.removeDimensionMember('month', member ) },
+						rows: self.getDimensionMembersBySet('month', space).map( function(member) {
 							return new TreeTableData({ member: member })
 						})
 					})
@@ -108,20 +150,24 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 			})
 		},
 		getYearQr: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Year",
 				categoryName: "Year category",
-				add: (member)=>{ this.addDimensionMember('year', member ) },
-				remove: (member)=>{ this.removeDimensionMember('year', member ) },
-				rows: this.getDimensionMembers('year').map( year => {
-					const space = { year };
+				add: function(member){ self.addDimensionMember('year', member ) },
+				remove: function(member){ self.removeDimensionMember('year', member ) },
+				rows: self.getDimensionMembers('year').map( function(year) {
+					var space = {};
+					if (year){
+						space.year = year;
+					}
 
 					return new TreeTableData({
 						headerName: "Year Tables",
 						member: year,
-						add: (member)=>{ this.addDimensionMember('qr', member, space ) },
-						remove: (member)=>{ this.removeDimensionMember('qr', member ) },
-						rows: this.getDimensionMembersBySet('qr', space).map( member => {
+						add: function(member){ self.addDimensionMember('qr', member, space ) },
+						remove: function(member){ self.removeDimensionMember('qr', member ) },
+						rows: self.getDimensionMembersBySet('qr', space).map( function(member) {
 							return new TreeTableData({ member: member })
 						})
 					});
@@ -129,29 +175,39 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 			})
 		},
 		getYearQrMonth: function(){
+			var self = this;
 			return new TreeTableData({
 				headerName: "Year",
 				categoryName: "Year category",
-				add: (member)=>{ this.addDimensionMember('year', member ) },
-				remove: (member)=>{ this.removeDimensionMember('year', member ) },
-				rows: this.getDimensionMembers('year').map( year => {
-					const space = { year };
+				add: function(member){ self.addDimensionMember('year', member ) },
+				remove: function(member){ self.removeDimensionMember('year', member ) },
+				rows: self.getDimensionMembers('year').map( function(year) {
+					var space = {};
+					if (year){
+						space.year = year;
+					}
 
 					return new TreeTableData({
 						member: year,
 						headerName: "Qr",
 						categoryName: "Qr category",
-						remove: (member)=>{ this.removeDimensionMember('qr', member) },
-						add: (member)=>{ this.addDimensionMember('qr', member, space ) },
-						rows: this.getDimensionMembersBySet('qr', space).map( qr => {
-							const space = { qr, year };
+						remove: function(member){ self.removeDimensionMember('qr', member) },
+						add: function(member){ self.addDimensionMember('qr', member, space ) },
+						rows: self.getDimensionMembersBySet('qr', space).map( function(qr) {
+							var space = {};
+							if (qr){
+								space.qr = qr
+							}
+							if (year){
+								space.year = year;
+							}
 
 							return new TreeTableData({
 								member: qr,
 								headerName: "Month",
-								remove: (member)=>{ this.removeDimensionMember('month', member ) },
-								add: (member)=>{ this.addDimensionMember('month', member, space ) },
-								rows: this.getDimensionMembersBySet('month', space).map( month => {
+								remove: function(member){ self.removeDimensionMember('month', member ) },
+								add: function(member){ self.addDimensionMember('month', member, space ) },
+								rows: self.getDimensionMembersBySet('month', space).map(function(month) {
 									return new TreeTableData({
 										member: month
 									})
@@ -162,7 +218,13 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 				})
 			})
 		}
-	});
+	};
+
+	for (var key in productCubePrototype){
+		if (productCubePrototype.hasOwnProperty(key)){
+			ProductCube.prototype[key] = productCubePrototype[key]
+		}
+	}
 
 	return ProductCube
 }]);

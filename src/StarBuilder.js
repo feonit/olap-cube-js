@@ -56,7 +56,7 @@ export default class StarBuilder {
 
 		const factTable = new FactTable();
 		cellTable.forEach( cell => {
-			factTable.push(Object.assign({}, cell))
+			factTable.push({...cell})
 		});
 
 		factTable.forEach( fact => {
@@ -66,7 +66,7 @@ export default class StarBuilder {
 				const member = space.getMemberList(dimensionSchema.dimension).find( member => {
 					return member[ENTITY_ID] === idValue;
 				});
-				const memberCopy = Object.assign({}, member);
+				const memberCopy = {...member};
 				delete memberCopy[ENTITY_ID];
 				delete fact[idAttribute];
 				Object.assign(fact, memberCopy);

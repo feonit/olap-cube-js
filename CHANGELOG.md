@@ -1,5 +1,7 @@
 ## Change Log
 
+*0.4.1* Deprecated `new Cube(facts, schema)`, use `Cube.create(facts, schema)` instead. Updated example, now example support old browsers
+
 *0.4.0* Changed the way to import the module from Cube.default to Cube, deprecated Cube.default
 
 *0.3.1* Add version to banner
