@@ -353,17 +353,23 @@ cube.removeDimensionMember('products', member)
 We use <a href="https://semver.org/">SemVer</a> for versioning.
 
 ## Todo
+In future versions:
+
+- Refactor tree, add validation for schema tree, fix remove error
+- Change API: Cube.create(facts, schema) method
+- Use forgotten otherProps
+- Add eslint
 - Update readme file
-- Method delete empty cells
-- Method delete empty cells to example
-- ES5/ES6 umd
+- Method delete empty cells(+ to example)
+- ES5/ES6 builds
 - Exclude set param
 - Unbalanced, ragged hierarchies
 - Each cube dimension can contains more then one hierarchies (Multiple hierarchies)
 - Use additional attributes of the members
 - Remove responsibility for "id" prop at facts
+- Add protection for the "id" property in members
+- Add optional parameter name "id"
 - Add support for snowflake schema
-- Add validation for tree
 - Single keyProp
 - AddMember without rollup options (then more than one member will be added)
 - Calculated members

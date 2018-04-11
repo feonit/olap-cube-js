@@ -160,7 +160,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _InputCell = __webpack_require__(16);
+var _InputCell = __webpack_require__(12);
 
 var _InputCell2 = _interopRequireDefault(_InputCell);
 
@@ -170,11 +170,11 @@ var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
-var _InputMember = __webpack_require__(17);
+var _InputMember = __webpack_require__(13);
 
 var _InputMember2 = _interopRequireDefault(_InputMember);
 
-var _Schema = __webpack_require__(18);
+var _Schema = __webpack_require__(14);
 
 var _Space = __webpack_require__(4);
 
@@ -184,15 +184,15 @@ var _FactTable = __webpack_require__(10);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
-var _FixSpace = __webpack_require__(21);
+var _FixSpace = __webpack_require__(17);
 
 var _FixSpace2 = _interopRequireDefault(_FixSpace);
 
-var _QueryAdapter = __webpack_require__(22);
+var _QueryAdapter = __webpack_require__(18);
 
 var _QueryAdapter2 = _interopRequireDefault(_QueryAdapter);
 
-var _TupleTable = __webpack_require__(23);
+var _TupleTable = __webpack_require__(19);
 
 var _TupleTable2 = _interopRequireDefault(_TupleTable);
 
@@ -202,7 +202,7 @@ var _CellTable2 = _interopRequireDefault(_CellTable);
 
 var _errors = __webpack_require__(6);
 
-var _StarBuilder = __webpack_require__(25);
+var _StarBuilder = __webpack_require__(21);
 
 var _StarBuilder2 = _interopRequireDefault(_StarBuilder);
 
@@ -1712,11 +1712,7 @@ var CellTable = function (_extendableBuiltin2) {
 exports.default = CellTable;
 
 /***/ }),
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */,
-/* 16 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1764,7 +1760,7 @@ var InputCell = function (_Cell) {
 exports.default = InputCell;
 
 /***/ }),
-/* 17 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1823,7 +1819,7 @@ var InputMember = function (_Member) {
 exports.default = InputMember;
 
 /***/ }),
-/* 18 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1838,11 +1834,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _SchemaDimension = __webpack_require__(19);
+var _SchemaDimension = __webpack_require__(15);
 
 var _SchemaDimension2 = _interopRequireDefault(_SchemaDimension);
 
-var _Tree2 = __webpack_require__(20);
+var _Tree2 = __webpack_require__(16);
 
 var _Tree3 = _interopRequireDefault(_Tree2);
 
@@ -2158,7 +2154,7 @@ var Schema = exports.Schema = function (_Tree) {
 }(_Tree3.default);
 
 /***/ }),
-/* 19 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2207,7 +2203,7 @@ var SchemaDimension = function (_Dimension) {
 exports.default = SchemaDimension;
 
 /***/ }),
-/* 20 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2406,7 +2402,7 @@ var Tree = function () {
 exports.default = Tree;
 
 /***/ }),
-/* 21 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2547,7 +2543,7 @@ var FixSpace = function (_Space) {
 exports.default = FixSpace;
 
 /***/ }),
-/* 22 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2649,7 +2645,7 @@ var QueryAdapter = function () {
 exports.default = QueryAdapter;
 
 /***/ }),
-/* 23 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2665,7 +2661,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _Tuple = __webpack_require__(24);
+var _Tuple = __webpack_require__(20);
 
 var _Tuple2 = _interopRequireDefault(_Tuple);
 
@@ -2736,7 +2732,7 @@ var TupleTable = function (_extendableBuiltin2) {
 exports.default = TupleTable;
 
 /***/ }),
-/* 24 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2759,7 +2755,7 @@ var Tuple = function Tuple(options) {
 exports.default = Tuple;
 
 /***/ }),
-/* 25 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2791,7 +2787,7 @@ var _Member2 = _interopRequireDefault(_Member);
 
 var _const = __webpack_require__(0);
 
-var _DimensionTable = __webpack_require__(26);
+var _DimensionTable = __webpack_require__(22);
 
 var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
 
@@ -3025,7 +3021,7 @@ var StarBuilder = function () {
 exports.default = StarBuilder;
 
 /***/ }),
-/* 26 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
