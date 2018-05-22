@@ -2,21 +2,19 @@ import InputCell from './InputCell.js'
 import {ENTITY_ID} from './const.js';
 import Member from './Member.js';
 import InputMember from './InputMember.js';
-import {Schema} from './Schema.js';
-import Space from './Space.js';
+import DimensionTree from './DimensionTree.js';
 import FactTable from './FactTable.js';
-import FixSpace from "./FixSpace.js";
 import QueryAdapter from "./QueryAdapter.js";
-import TupleTable from "./TupleTable.js";
-import CellTable from "./CellTable.js";
 import {
 	NotCompletelySpaceException,
-	AddDimensionOfCellException,
 	CantAddMemberRollupException,
 	CreateInstanceException
 } from './errors.js';
-import StarBuilder from "./StarBuilder.js";
+import SnowflakeBuilder from "./SnowflakeBuilder.js";
 import console from './console.js'
+import CellTable from "./CellTable.js";
+import TupleTable from "./TupleTable.js";
+import Space from "./Space.js";
 
 /**
  * It a means to retrieve data
@@ -24,84 +22,98 @@ import console from './console.js'
  * Base class for normalizing a denormalized data array
  * and analyzing query according to a given scheme
  *
- * @param {{star, schema}|Cube} factTable - facts which will be subject to analysis
+ * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 class Cube {
 	constructor(options){
-		//todo if no arguments exception
-		const isCreateMode = arguments.length === 2;
+		const {dimensionHierarchies, cellTable} = options;
+		this.dimensionHierarchies = dimensionHierarchies.map(dimensionTree=>{
+			return DimensionTree.createDimensionTree(dimensionTree)
+		});
+		this.cellTable = new CellTable(cellTable);
 
-		if (isCreateMode){
-			console.warnOnce('deprecated: new Cube(facts, schema), use Cube.create(facts, schema) instead');
-			const cube = this.constructor.create.apply(this.constructor, arguments);
-			return cube;
-		} else {
-			const {space, cellTable, schema} = options;
-
-			this.space = new Space(space);
-			this.cellTable = new CellTable(cellTable);
-
-			Object.defineProperty(this, 'schema', { value: new Schema(schema) });
-
-			const residuals = this.residuals();
-			const count = residuals.length;
-			if (count > 0){
-				console.warn('Fact table has residuals', residuals)
-			}
-		}
+		// const residuals = this.residuals();
+		// const count = residuals.length;
+		// if (count > 0){
+		// 	console.warn('Fact table has residuals', residuals)
+		// }
 	}
 	/**
-	 * Fabric method for creating cube from facts and schema data
 	 * @public
-	 * @param {object} dimensionsSchema
+	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
+	 * @param {object} dimensionHierarchiesData
 	 * @param {object[]} facts
 	 * @return {Cube}
 	 * */
-	static create(facts, dimensionsSchema){
+	static create(facts, dimensionHierarchiesData){
 		if ( !(DynamicCube.isPrototypeOf(this) || DynamicCube === this)){
 			throw new CreateInstanceException()
 		}
 
-		const schema = new Schema(dimensionsSchema);
+		const dimensionHierarchies = dimensionHierarchiesData.map(dimensionTree=>{
+			return DimensionTree.createDimensionTree(dimensionTree)
+		});
 		const factTable = new FactTable(facts);
-		let dimensionTables = schema.getDimensionsResolutionOrder();
 
-		const {
-			space,
-			cellTable
-		} = StarBuilder.build(factTable, dimensionTables);
+		const cellTable = new CellTable(factTable);
 
-		const cube = new this({space, cellTable, schema});
+		SnowflakeBuilder.anotherBuild(factTable, cellTable, dimensionHierarchies)
+
+		const cube = new this({dimensionHierarchies, cellTable});
 		return cube;
+	}
+	/**
+	 * @public
+	 * */
+	addFacts(facts){
+		facts.forEach(this.addFact)
+	}
+	/**
+	 * @public
+	 * */
+	addFact(){
+
 	}
 	/**
 	 * @public
 	 * @return {FactTable} returns members
 	 * */
 	getFacts(){
-		return this.denormalize(this.cellTable);
+		return this.denormalize(this.getMeasure());
 	}
 	/**
-	 * @param {string} dimension - dimension from which the member will be found
 	 * @public
+	 * @param {string} dimension - dimension from which the member will be found
 	 * @return {Member[]} returns members
 	 * */
 	getDimensionMembers(dimension){
-		return this.space.getMemberList(dimension)
+		return this.getSpace()[dimension]
 	}
 	/**
-	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @public
+	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @return {FactTable} returns members
 	 * */
 	getFactsBySet(fixSpaceOptions){
-		let { cellTable } = this.projection(fixSpaceOptions);
-		return this.denormalize(cellTable);
+		return this.denormalize(this.getMeasureBySet(fixSpaceOptions));
 	}
 	/**
+	 * @public
+	 * */
+	getMeasure(){
+		return this.cellTable;
+	}
+	/**
+	 * @public
+	 * */
+	getMeasureBySet(fixSpaceOptions){
+		let { cellTable } = this.projection(fixSpaceOptions);
+		return cellTable;
+	}
+	/**
+	 * @public
 	 * @param {string} dimension - dimension from which the member will be found
 	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-	 * @public
 	 * @return {Member[]} returns members
 	 * */
 	getDimensionMembersBySet(dimension, fixSpaceOptions){
@@ -110,84 +122,195 @@ class Cube {
 	}
 	/**
 	 * @private
-	 * @return {CellTable} returns members
 	 * */
-	getCells(){
-		return this.cellTable;
-	}
-	/**
-	 * @private
-	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-	 * @return {CellTable} returns members
-	 * */
-	getCellsBySet(fixSpaceOptions){
-		return this.projection(fixSpaceOptions);
+	getSpace(){
+		const space = {};
+		this.dimensionHierarchies.forEach(dimensionHierarchy=>{
+			const dimensionSpace = dimensionHierarchy.getSpace();
+			Object.assign(space, dimensionSpace)
+		})
+		return space;
 	}
 	/**
 	 * @private
 	 * */
 	projection(fixSpaceOptions){
-		let cellTable = this.cellTable;
+		if (!fixSpaceOptions){
+			return;
+		}
+		let cellTable = this.getMeasure();
 
-		if (fixSpaceOptions){
-			const queryAdapter = new QueryAdapter();
-			queryAdapter.applyAdapter(fixSpaceOptions, this.space);
-			const fixSpace = new FixSpace(fixSpaceOptions);
-			cellTable = fixSpace.match(cellTable)
+		const queryAdapter = new QueryAdapter();
+		queryAdapter.applyAdapter(fixSpaceOptions, this.getSpace());
+
+		if (Object.keys(fixSpaceOptions).length === 0){
+			return {cellTable};
 		}
 
-		return { cellTable };
+		const fixSpace = {};
+		Object.keys(fixSpaceOptions).forEach(dimension=>{
+			fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension])
+				? fixSpaceOptions[dimension]
+				: [fixSpaceOptions[dimension]];
+		});
+
+		// для каждого измерения
+		const totalSpaces = Object.keys(fixSpace).map(dimension=>{
+
+			// ищется его расширенная версия для каждого члена
+			const spacesForCells = fixSpace[dimension].map(member => {
+
+				let searchedInTree = this.searchDimensionTreeByDimension(dimension);
+
+				const treeProjection = searchedInTree.recoveryTreeProjectionOfMember(dimension, member);
+				const {
+					dimension: dimensionProjection,
+					members: membersProjection
+				} = treeProjection.getRoot().getTreeValue();
+
+				return { [dimensionProjection]: membersProjection };
+			});
+
+			// после чего эти расширенные версии объекдиняются
+			const totalSpace = Space.union(...spacesForCells);
+
+			return totalSpace;
+		});
+
+		// фильтрация продолжается
+		let filteredCellTable = cellTable;
+
+		totalSpaces.forEach(space => {
+			// и ищутся те ячейки, которые принадлежат получившейся области
+			filteredCellTable = filteredCellTable.filter(cell=>{
+				return this.cellBelongsToSpace(cell, space)
+			});
+		});
+
+		return { cellTable: filteredCellTable };
+	}
+	/**
+	 * @private
+	 * */
+	cellBelongsToSpace(cell, space){
+		const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
+			const members = space[dimension];
+			const idAttribute = Cube.genericId(dimension);
+			const finded = members.find(member=>{
+				return member[ENTITY_ID] === cell[idAttribute]
+			});
+			return !finded;
+		});
+		return !somePropOfCellNotBelongToSpace;
+	}
+	/**
+	 * @private
+	 * Поиск по всем иерархиям
+	 * */
+	searchDimensionTreeByDimension(dimension){
+		let findDimensionTree;
+		this.dimensionHierarchies.forEach( dimensionTree =>{
+			const searchedDimensionTree = dimensionTree.searchValueDimension(dimension);
+			if (searchedDimensionTree){
+				findDimensionTree = dimensionTree.searchValueDimension(dimension);
+			}
+		});
+		return findDimensionTree;
 	}
 	/**
 	 * @private
 	 * */
 	getDimensionMembersFromCells(dimension, cells){
-		const idAttribute = Cube.genericId(dimension);
-		const ids = cells.map( cell => cell[idAttribute]);
 
-		const uniq = (items) => {
-			const hash = {};
-			items.forEach((item) => {
-				hash[item] = item
-			});
-			return Object.keys(hash).map(key => hash[key]);
-		};
+		const searchedDimensionTree = this.searchDimensionTreeByDimension(dimension);
 
-		const uniqueIds = uniq(ids);
-		const result = [];
-		const members = this.space.getMemberList(dimension);
+		let rootMembers;
+		let rootDimension;
 
-		// filtering without loss of order in the array
-		members.forEach( member => {
-			if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
-				result.push(member)
-			}
+		if (searchedDimensionTree.isRoot()){
+			rootMembers = searchedDimensionTree.getTreeValue().members;
+			rootDimension = searchedDimensionTree.getTreeValue().dimension;
+		} else {
+			rootMembers = searchedDimensionTree.getRoot().getTreeValue().members;
+			rootDimension = searchedDimensionTree.getRoot().getTreeValue().dimension;
+		}
+
+		const idAttrubute = Cube.genericId(rootDimension);
+
+		const members = [];
+		cells.forEach(cell => {
+			rootMembers.forEach(rootMember => {
+				if (cell[idAttrubute] === rootMember[ENTITY_ID]){
+					if (members.indexOf(rootMember) === -1){
+						members.push(rootMember)
+					}
+				}
+			})
 		});
-		return result;
-	}
-	/**
-	 * Get facts from cube
-	 * @private
-	 * */
-	denormalize(cells = this.cellTable){
-		let dimensionTables = this.schema.getDimensionsResolutionOrder();
-		return StarBuilder.destroy(cells, this.space, dimensionTables)
-	}
 
-	/**
-	 * A way to create a name for a property in which a unique identifier will be stored
-	 * */
-	static genericId(entityName) {
-		return entityName + '_' + ENTITY_ID;
-	}
+		if (searchedDimensionTree.isRoot()){
+			return members
+		} else {
+			let lastMembers = members;
+			let end = false;
+			let lastDimension = rootDimension;
+			searchedDimensionTree.getRoot().tracePreOrder((nodeValue, tree)=>{
+				if (tree.isRoot()){
+					return;
+				}
+				if (!end){
+					lastMembers = searchedDimensionTree.rollUpDimensionMembers(lastDimension, lastMembers)
+					lastDimension = nodeValue.dimension;
+				}
+				if (nodeValue.dimension === dimension){
+					end = true;
+				}
+			});
+			return lastMembers;
+		}
 
+		// const ids = cells.map( cell => {
+		// 	let result;
+		// 	//todo нужно заменить на рут(точнее на level 1 в текущей версии схемы)
+		// 	const searchedDimensionTree = this.searchDimensionTreeByDimension(dimension);
+		//
+		// 	searchedDimensionTree.traceUp(dimension, ({dimension})=>{
+		// 		const idAttribute = Cube.genericId(dimension);
+		// 		if ( cell.hasOwnProperty(idAttribute) ){
+		// 			result = cell[idAttribute]
+		// 		}
+		// 	});
+		// 	if (result === void 0){
+		// 		throw 'dimension not found'
+		// 	}
+		// 	return result;
+		// });
+		//
+		// const uniq = (items) => {
+		// 	const hash = {};
+		// 	items.forEach((item) => {
+		// 		hash[item] = item
+		// 	});
+		// 	return Object.keys(hash).map(key => hash[key]);
+		// };
+		//
+		// const uniqueIds = uniq(ids);
+		// const members = [];
+		// const allMembers = this.getSpace()[dimension];
+		//
+		// // filtering without loss of order in the array
+		// allMembers.forEach( member => {
+		// 	if (uniqueIds.indexOf(member[ENTITY_ID]) !== -1){
+		// 		members.push(member)
+		// 	}
+		// });
+		// return members;
+	}
 	/**
-	 * Cartesian product - list of all possible tuples
 	 * @public
+	 * Cartesian product - list of all possible tuples
 	 * */
 	cartesian(){
-		const branches = this.schema.getBranches();
-
 		const f = (a, b) => [].concat(...a.map(d => {
 			return b.map(e => {
 				return [].concat(d, e)
@@ -198,54 +321,40 @@ class Cube {
 			return b ? cartesian(f(a, b), ...c) : a
 		};
 
-		const sets = branches.map(branch => {
-			const dimensions = branch.map(({ dimension }) => dimension).reverse();
-			if (dimensions.length > 1) {
+		const dimensionsOrder = [];
 
-				const acc = [];
-
-				const reqursive = (dimensions, index, space = {}) => {
-					const dimension = dimensions[index];
-					index = index + 1;
-					this.getDimensionMembersBySet(dimension, space).map((item) => {
-						const newSpace = {...space};
-						newSpace[dimension] = item;
-						if (index === dimensions.length) {
-							acc.push(newSpace);
-						} else {
-							reqursive(dimensions, index, newSpace);
-						}
-					});
-				};
-
-				reqursive(dimensions, 0);
-
-				return acc;
-			} else {
-				return [].concat(this.getDimensionMembers( dimensions[0] )).map( member => {
-					return { [dimensions[0]]: member }
-				})
-			}
+		const sett = this.dimensionHierarchies.map( tree => tree.getTreeValue() ).map( dimensionTable => {
+			dimensionsOrder.push(dimensionTable.dimension);
+			return dimensionTable.members;
 		});
 
-		const res = cartesian.apply(null, sets);
-
-		const items = res.map(arr => arr.reduce( (acc, arr) => {
-			return Object.assign(acc, arr);
-		}, {}));
+		const res = cartesian.apply(null, sett);
 
 		const tupleTable = new TupleTable();
 
-		items.forEach( item => {
-			tupleTable.add(item)
+		res.forEach(arr => {
+			const item = {};
+			dimensionsOrder.forEach((dimension, index) => {
+				item[dimension] = arr[index]
+			});
+
+			tupleTable.addTuple(item);
+
+			return item;
 		});
 
 		return tupleTable;
 	}
-
 	/**
+	 * @private
+	 * Get facts from cube
+	 * */
+	denormalize(cells = this.getMeasure()){
+		return SnowflakeBuilder.destroy(cells, this.dimensionHierarchies)
+	}
+	/**
+	 * @public
 	 * Residuals - list of tuples, according to which there is more than one member
-	 * @public {FactTable}
 	 * */
 	residuals(){
 		const tuples = this.cartesian();
@@ -258,22 +367,12 @@ class Cube {
 		});
 		return totalFacts;
 	}
-
 	/**
-	 * Unfilled - list of tuples, in accordance with which there is not a single member
-	 * @public
+	 * @private
+	 * A way to create a name for a property in which a unique identifier will be stored
 	 * */
-	unfilled(){
-		const tuples = this.cartesian();
-		const unfilled = [];
-
-		tuples.forEach( (tuple) => {
-			const members = this.getFactsBySet(tuple);
-			if (members.length === 0 ){
-				unfilled.push(tuple)
-			}
-		});
-		return unfilled;
+	static genericId(entityName) {
+		return entityName + '_' + ENTITY_ID;
 	}
 }
 
@@ -281,23 +380,18 @@ class Cube {
  * Interface providing special methods for the possibility of changing the data in Cube
  * */
 class DynamicCube extends Cube{
-
 	/**
+	 * @public
 	 * @param {string} dimension - dimension in which the member is created
 	 * @param {object?} memberOptions - properties for the created member
 	 * @param {object?} rollupCoordinatesData
-	 * @public
+	 * @param {object?} drillDownCoordinatesOptions
+	 * @param {object?} measureData
 	 * */
-	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}){
+	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, measureData){
 		if (typeof dimension !== "string"){
-			throw Error(`parameter dimension expects as string: ${dimension}`)
+			throw TypeError(`parameter dimension expects as string: ${dimension}`)
 		}
-
-		this._validateDimension(dimension);
-
-		const addedCoordinates = {
-			[dimension]: this._createMember(dimension, memberOptions)
-		};
 
 		const rollupCoordinates = {};
 		Object.keys(rollupCoordinatesData).forEach( dimension => {
@@ -314,133 +408,92 @@ class DynamicCube extends Cube{
 			}
 		});
 
-		this._validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData);
+		// todo валидацию
+		// this._validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData);
 
-		const drillDownCoordinates = {};
-		this.schema.traceUp(dimension, ({dimension: currentDimension}) => {
-			drillDownCoordinates[currentDimension] = this._createMember(currentDimension);
-		});
+		const tree = this.searchDimensionTreeByDimension(dimension);
 
-		const coordinates = {...addedCoordinates, ...rollupCoordinates, ...drillDownCoordinates};
-
-		// leafs
-		const externals = this.schema.getExternals();
-
-		// filter for not defined tables
-		const missedDimensionTables = externals.filter(({dimension: externalDimension}) => {
-			return dimension !== externalDimension && !rollupCoordinates[externalDimension]
-		});
-
-		// место куда будут складываться
-		const space = new Space();
-
-		missedDimensionTables.forEach(({dimension})=>{
-			space.setMemberList(dimension, this.space.getMemberList(dimension))
-		});
-
-		const createCell = (coordinates) => {
-			const dimension = this.schema.getMeasure().dimension;
-			const member = this._createMember(dimension);
-			const value = { [ dimension ]: member };
-			const cellData = {...coordinates, ...value};
-			this._createNormalizeData(cellData);
-		};
-
-		const size = this.schema.getNames().length - 1;
-
-		const recursivelyForEach = (dimensions, membersList, index, coordinates) => {
-			const dimensionsLength = dimensions.length;
-			const currentDimension = dimensions[index];
-			const cells = [];
-			const parentDimensionTable = this.schema.getByDependency(currentDimension);
-
-			membersList[index].forEach( member => {
-				const coordinatesCopy = {...coordinates};
-				coordinatesCopy[currentDimension] = member;
-
-				if (parentDimensionTable){
-					// debugger;
-					const members = this.getDimensionMembersBySet(parentDimensionTable.dimension, { [currentDimension]: member });
-
-					recursivelyForEach([parentDimensionTable.dimension], [members], 0, coordinatesCopy);
-				}
-
-				if ( (index + 1) === dimensionsLength ){
-					if ( Object.keys(coordinatesCopy).length ===  size ){
-						cells.push(coordinatesCopy)
-					}
-				} else {
-					recursivelyForEach(dimensions, membersList, index + 1, coordinatesCopy);
-				}
-			});
-
-			cells.forEach((cellOptions)=>{
-				createCell(cellOptions)
-			})
-		};
-
-		const dimensions = space.getDimensionList();
-		const membersList = dimensions.map(dimension => space.getMemberList(dimension));
-		recursivelyForEach(dimensions, membersList, 0, coordinates);
-	}
-	_validateDimension(dimension){
-		const measureDimension = this.schema.getMeasure().dimension;
-		if (dimension === measureDimension){
-			throw new AddDimensionOfCellException(dimension)
-		}
-	}
-	_validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData){
-		const addSpaceOptions = {
-			[dimension]: memberOptions,
-			...rollupCoordinatesData
-		};
-
-		const childDimensionList = this.schema.getPostOrderChildDimensionList(dimension);
-
-		if (childDimensionList.length){
-			const first = childDimensionList[0];
-
-			// first parent define one member
-			if (addSpaceOptions[first]){
-				return;
+		const childs = tree.getChildTrees();
+		childs.forEach( tree => {
+			const { dimension } = tree.getTreeValue();
+			const member = rollupCoordinatesData[dimension];
+			if (!member){
+				throw new CantAddMemberRollupException(dimension)
 			} else {
-				throw new NotCompletelySpaceException(first)
+				memberOptions[Cube.genericId(dimension)] = member[ENTITY_ID];
 			}
-		}
+		});
+
+		let saveMember = this._createMember(tree, memberOptions);
+		let saveDimension = dimension;
+
+		tree.traceUpOrder((tracedTree)=>{
+			if (tree !== tracedTree){
+				const { dimension: parentDimension } = tracedTree.getTreeValue();
+				const drillDownCoordinatesData = { [Cube.genericId(saveDimension)]: saveMember[ENTITY_ID] };
+				Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
+				saveMember = this._createMember(tracedTree, drillDownCoordinatesData);
+				saveDimension = parentDimension;
+			}
+		});
+
+		this.fill(measureData);
 	}
 	/**
-	 *
+	 * @public
 	 * @param {string} dimension - dimension from which the member will be removed
 	 * @param {Member} member - the member will be removed
-	 * @public
 	 * */
 	removeDimensionMember(dimension, member){
-		const dependenciesDimensionNames = this.schema.getDependenciesNames(dimension);
-		const index = this.space.getMemberList(dimension).indexOf(member);
-		if (index === -1){
-			throw new Error('represented member was not found in the ' + dimension + ' dimension')
-		}
-		this.space.getMemberList(dimension).splice(index, 1);
+		const dimensionTree = this.searchDimensionTreeByDimension(dimension);
+		const endToBeRemoved = dimensionTree.removeDimensionMember(dimension, member);
 
-		const filterData = this.cellTable.filter(data => {
-			return data[Cube.genericId(dimension)] == member[ENTITY_ID];
-		});
-
-		filterData.forEach( data => {
-			const index = this.cellTable.indexOf(data);
-			this.cellTable.splice(index, 1);
-
-			dependenciesDimensionNames.forEach( dimension => {
-				this._removeSubModel(data, dimension);
+		const measures = this.getMeasure();
+		const getRemoveMeasures = (dimension, members)=>{
+			const removedMeasures = [];
+			const idAttribute = Cube.genericId(dimension);
+			measures.forEach(measure => {
+				members.forEach((member)=>{
+					if (measure[idAttribute] == member[ENTITY_ID]){
+						removedMeasures.push(measure)
+					}
+				})
 			});
-		});
-		this._normalize();
+			return removedMeasures;
+		}
+
+		Object.keys(endToBeRemoved).map( dimension =>{
+			const removedMeasures = getRemoveMeasures(dimension, endToBeRemoved[dimension]);
+
+			removedMeasures.forEach(measure=>{
+				measures.removeCell(measure);
+			})
+		})
 	}
 	/**
-	 * Get data without random identifiers
 	 * @private
 	 * */
-	denormalize(cells = this.cellTable, forSave = true){
+	_validateCompletenessRollupCoordinatesData(dimension, memberOptions, rollupCoordinatesData){
+		// const addSpaceOptions = {
+		// 	[dimension]: memberOptions,
+		// 	...rollupCoordinatesData
+		// };
+		//
+		// const dimensionHierarchy = this.schema.getDimensionHierarchy(dimension);
+		//
+		// if (dimensionHierarchy.length){
+		// 	dimensionHierarchy.forEach( dimension => {
+		// 		if ( !addSpaceOptions[dimension]){
+		// 			throw new NotCompletelySpaceException(dimension)
+		// 		}
+		// 	});
+		// }
+	}
+	/**
+	 * @private
+	 * Get data without random identifiers
+	 * */
+	denormalize(cells = this.getMeasure(), forSave = true){
 		const data = super.denormalize(cells);
 		if (forSave){
 			data.forEach( (data, index) => {
@@ -452,121 +505,69 @@ class DynamicCube extends Cube{
 		return data;
 	}
 	/**
-	 * Remove subentity, links to which none of the model does not remain
-	 * @private
-	 * */
-	/**
-	 *
-	 * @private
-	 * */
-	_removeSubModel(normalizeData, dimension){
-		// подчистить суб-модельку
-		const filtered = this.space.getMemberList(dimension).filter(record => {
-			return record[ENTITY_ID] == normalizeData[Cube.genericId(dimension)]
-		});
-
-		// и подчистить суб-модельку
-		filtered.forEach( data => {
-			const index = this.space.getMemberList(dimension).indexOf(data);
-			this.space.getMemberList(dimension).splice(index, 1);
-		})
-	}
-	/**
-	 *
-	 * @private
-	 * */
-	_normalize(){
-		const names = this.schema.getNames();
-		const report = [];
-		names.forEach( dimension => {
-			if (this.space.getMemberList(dimension).length){
-				const copy = [].concat(this.space.getMemberList(dimension));
-				// чтобы splice корректно отработал
-				copy.forEach( (member, index) => {
-					const idAttribute = Cube.genericId(dimension);
-					const findLink = this.cellTable.find( data => {
-						return data[idAttribute] == member[ENTITY_ID]
-					});
-					if (!findLink){
-						this.space.getMemberList(dimension).splice(index - (copy.length - this.space.getMemberList(dimension).length), 1);
-						report.push(member)
-					}
-				})
-			}
-		});
-		// "development"
-		// if (report.length){
-		//     console.log('broken links:', report)
-		// }
-	}
-	/**
-	 *
 	 * @public
-	 * */
-	/**
 	 * Filling method for full size of cube
 	 * @param {object?} props - properties for empty cells
-	 * @public
 	 * */
 	fill(props){
 		if (!this.residuals().length){
-			const dimension = this.schema.getMeasure().dimension;
 			const tuples = this.cartesian();
-			const emptyMemberOptions = [];
 			tuples.forEach( combination => {
-				const unique = this.getDimensionMembersBySet(dimension, combination );
+				const unique = this.getMeasureBySet(combination);
 				if ( !unique.length ){
-					emptyMemberOptions.push( combination );
+					this._createNormalizeData(combination, props);
 				}
-			});
-
-			emptyMemberOptions.forEach( cellOptions => {
-				const member = this._createMemberDependency( dimension, props );
-				const options = {...cellOptions, ...member};
-				this._createNormalizeData(options);
 			});
 		}
 	}
 	/**
-	 *
+	 * @public
+	 * Unfilled - list of tuples, in accordance with which there is not a single member
+	 * */
+	unfilled(){
+		const tuples = this.cartesian();
+		const unfilled = [];
+
+		tuples.forEach( (tuple) => {
+			const members = this.getFactsBySet(tuple);
+			if (members.length === 0 ){
+				unfilled.push(tuple)
+			}
+		});
+		return unfilled;
+	}
+	/**
 	 * @private
 	 * */
-	_createNormalizeData(obj){
-		const options = {};
+	_createNormalizeData(obj, props){
+		let options = {};
 		Object.keys(obj).forEach( key => {
 			options[Cube.genericId(key)] = obj[key][ENTITY_ID]
 		});
+		options = {...options, ...props};
 		const newNormaliseData = new InputCell(options);
-		this.cellTable.push(newNormaliseData);
+		this.getMeasure().addCell(newNormaliseData);
 	}
 	/**
-	 * @param {string} dimension
-	 * @param {object?} props
 	 * @private
+	 * @param {Tree} tree
+	 * @param {object?} props
 	 * */
-	_createMember(dimension, props = {}){
-		const {keyProps} = this.schema.getDimensionTable(dimension);
-		const id = DynamicCube.reduceId(this.space.getMemberList(dimension));
-		const member = InputMember.create(id, keyProps, props);
-		this.space.getMemberList(dimension).add(member);
+	_createMember(tree, props = {}){
+		const space = this.getSpace();
+		const {keyProps, dimension} = tree.getTreeValue();
+		const childDimensions = tree.getChildTrees().map( tree => tree.getTreeValue().dimension );
+		const linkProps = [];
+		childDimensions.forEach( dimension => {
+			linkProps.push(Cube.genericId(dimension))
+		});
+		const id = DynamicCube.reduceId(space[dimension]);
+		const member = InputMember.create(id, keyProps.concat(linkProps), props);
+		space[dimension].addMember(member);
 		return member;
 	}
 	/**
-	 * create space
 	 * @private
-	 * */
-	_createMemberDependency(dimension, memberOptions = {}){
-		const result = {};
-
-		result[dimension] = this._createMember(dimension, memberOptions);
-
-		this.schema.traceUp(dimension, ({dimension}) => {
-			result[dimension] = this._createMember(dimension);
-		});
-
-		return result;
-	}
-	/**
 	 * Method of generating a unique identifier within the selected space
 	 * */
 	static reduceId(array){
@@ -578,9 +579,6 @@ class DynamicCube extends Cube{
 			return 1;
 		}
 	}
-
-
 }
-//for backward compatibility, will be removed in next realize
-DynamicCube.default = DynamicCube;
+
 export default DynamicCube;

@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
-import {isEqual, jsonParseStringify} from './helpers/helpers.js'
+import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
 
-describe('[ Cube ][ fill ]', function(){
+describe('method Cube.prototype.fill', function(){
 	let debug;
 
 	const factTable = [
@@ -15,34 +15,30 @@ describe('[ Cube ][ fill ]', function(){
 		// { id: 8, x: 1, y: 1, z: 1, is: true },
 	];
 
-	const schema = {
-		dimension: 'is',
-		keyProps: ['is'],
-		dependency: [
-			{ dimension: 'x', keyProps: ['x']},
-			{ dimension: 'y', keyProps: ['y']},
-			{ dimension: 'z', keyProps: ['z']}
-		]
-	};
+	const dimensionHierarchies = [
+		{ dimensionTable: { dimension: 'x', keyProps: ['x'] }},
+		{ dimensionTable: { dimension: 'y', keyProps: ['y'] }},
+		{ dimensionTable: { dimension: 'z', keyProps: ['z'] }}
+	];
+
+	it('should define fill', ()=> {
+		expect(Cube.prototype.fill).toBeDefined();
+	});
 
 	it('should normalize count of measure for non-normalized data', () => {
-		let cube = new Cube(factTable, schema);
-		expect(cube.cartesian().length).toBe(8);
-		expect(cube.space.getMemberList('is').length).toBe(5);
+		let cube = Cube.create(factTable, dimensionHierarchies);
+		expect(debug=cube.cartesian().length).toBe(8);
+		expect(debug=cube.getFacts().length).toBe(5);
 		cube.fill({ is: false });
-		expect(cube.cartesian().length).toBe(8);
-		expect(cube.space.getMemberList('is').length).toBe(8);
+		expect(debug=cube.cartesian().length).toBe(8);
+		expect(debug=cube.getFacts().length).toBe(8);
 	});
 
 	it('should normalize count of measure for non-normalized data with default props', () => {
-		let cube = new Cube(factTable, schema);
-		expect(cube.space.getMemberList('is')[5]).not.toBeDefined();
-		expect(cube.space.getMemberList('is')[6]).not.toBeDefined();
-		expect(cube.space.getMemberList('is')[7]).not.toBeDefined();
+		let cube = Cube.create(factTable, dimensionHierarchies);
+
 		cube.fill({ is: false });
-		expect(cube.space.getMemberList('is')[5]).toBeDefined();
-		expect(cube.space.getMemberList('is')[6]).toBeDefined();
-		expect(cube.space.getMemberList('is')[7]).toBeDefined();
+
 		const factTableExpectedAfter = factTable.concat([
 			{ x: 1, y: 0, z: 1,is: false },
 			{ x: 1, y: 1, z: 0,is: false },
@@ -53,35 +49,39 @@ describe('[ Cube ][ fill ]', function(){
 	});
 
 	describe('[should normalize for hierarchy of dimensions]', ()=>{
-		let schema;
+		let dimensionHierarchies;
 
 		beforeEach(()=>{
-			schema = {
-				dimension: 'humans',
-				keyProps: ['humans'],
-				dependency: [
-					{
+			dimensionHierarchies = [
+				{
+					dimensionTable: {
 						dimension: 'city',
 						keyProps: ['city'],
-						dependency: [
-							{
+					},
+					dependency: [
+						{
+							dimensionTable: {
 								dimension: 'country',
 								keyProps: ['country'],
-								dependency: [
-									{
+							},
+							dependency: [
+								{
+									dimensionTable: {
 										dimension: 'planet',
 										keyProps: ['planet']
 									}
-								]
-							}
-						]
-					},
-					{
+								}
+							]
+						}
+					]
+				},
+				{
+					dimensionTable: {
 						dimension: 'nationality',
 						keyProps: ['nationality']
 					}
-				]
-			};
+				}
+			];
 		});
 
 		it('should work level 1', ()=>{
@@ -90,10 +90,10 @@ describe('[ Cube ][ fill ]', function(){
 				{id : 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
 			];
 
-			const cube = new Cube(factTable, schema);
+			const cube = Cube.create(factTable, dimensionHierarchies);
 			expect(debug=cube.cartesian().length).toBe(4);
 			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(2);
-			cube.fill();
+			cube.fill({ humans: 0 });
 			expect(debug=cube.cartesian().length).toBe(4);
 			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
 		});
@@ -105,54 +105,35 @@ describe('[ Cube ][ fill ]', function(){
 				{id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
 			];
 
-			const cube = new Cube(factTable, schema);
+			const cube = Cube.create(factTable, dimensionHierarchies);
 			expect(debug=cube.cartesian().length).toBe(6);
 			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(3);
-			cube.fill();
+			cube.fill({ humans: 0 });
 			expect(debug=cube.cartesian().length).toBe(6);
 			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
-		})
-
-		it('should work for cells in hierarchy', ()=>{
-			const factTable = [
-				{id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
-				{id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
-				{id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
-			];
-
-			const cube = new Cube(factTable, schema);
-			cube.fill();
-
-			let factTableExpectedAfter = [].concat(factTable).concat([
-				{planet: "Earth", country: "Russia", city: "Moscow", nationality: "French", humans: null},
-				{planet: "Earth", country: "France", city: "Paris", nationality: "Russian", humans: null},
-				{planet: "Mars", country: "France", city: "Paris", nationality: "Russian", humans: null}
-			]);
-
-			expect(isEqual(jsonParseStringify(cube.denormalize()), factTableExpectedAfter )).toBe(true)
 		})
 
 	});
 
 	it('should pass for example doc', () => {
-		const schema = {
-			dimension: 'xy',
-			keyProps: ['xy'],
-			dependency: [
-				{
+		const dimensionHierarchies = [
+			{
+				dimensionTable: {
 					dimension: 'x',
 					keyProps: ['x']
-				},{
+				}
+			},{
+				dimensionTable: {
 					dimension: 'y',
 					keyProps: ['y']
 				}
-			]
-		};
+			}
+		];
 		const factTable = [
 			{ id: 1, x: 0, y: 1, xy: true },
 			{ id: 2, x: 1, y: 0, xy: true }
 		];
-		const cube = new Cube(factTable, schema)
+		const cube = Cube.create(factTable, dimensionHierarchies)
 		cube.fill({ xy: false });
 
 		expect(isEqual(jsonParseStringify(cube.denormalize()), [

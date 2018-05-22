@@ -65,14 +65,11 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 				add: function(member){ self.addDimensionMember('mark', member ) }
 			})
 		},
-		getMonth: function(qr, year){
+		getMonth: function(qr){
 			var self = this;
 			var space = {};
 			if (qr){
 				space.qr = qr;
-			}
-			if (year){
-				space.year = year;
 			}
 			return new TreeTableData({
 				headerName: "Month",
@@ -197,9 +194,6 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 							var space = {};
 							if (qr){
 								space.qr = qr
-							}
-							if (year){
-								space.year = year;
 							}
 
 							return new TreeTableData({

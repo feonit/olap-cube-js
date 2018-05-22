@@ -34,11 +34,22 @@ export default class MemberList extends Array {
 			});
 		}
 	}
-	add(member){
+	addMember(member){
 		if (this.indexOf(member[ENTITY_ID] === -1)){
 			this.push(member)
 		} else {
 			debugger;
 		}
+	}
+	removeMember(member){
+		var index = this.indexOf(member);
+		if (index === -1) {
+			throw new Error('represented member was not found', member);
+		}
+		this.splice(index, 1);
+	}
+	setMembers(members){
+		this.splice(0, this.length)
+		Object.assign(this, members)
 	}
 }

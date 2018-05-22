@@ -14,7 +14,8 @@ TreeTableController.prototype = {
 
 	_reset: function (){
 		this.isCompositen = !!this.tableData.categoryName;
-		this.keys = this.getSortedObjectKeys(this.tableData.rows[0].member);
+		this.keys =  this.getSortedObjectKeys(this.tableData.rows[0].member);
+		// this.keys = this.tableData.rows.length ? this.getSortedObjectKeys(this.tableData.rows[0].member) : [];
 	},
 
 	$onChanges: function (changesObj){

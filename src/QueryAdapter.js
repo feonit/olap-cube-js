@@ -12,12 +12,12 @@ export default class QueryAdapter {
 			const value = fixSpaceOptions[dimension];
 
 			const filterValue = (dimension, value) => {
-				const memberList = space.getMemberList(dimension);
+				const memberList = space[dimension];
 				return memberList ? memberList.searchValue(value) : void 0;
 			};
 
 			const filterData = (dimension, data) => {
-				const memberList = space.getMemberList(dimension);
+				const memberList = space[dimension];
 				return memberList ? memberList.searchData(data) : void 0;
 			};
 

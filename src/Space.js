@@ -1,4 +1,5 @@
 import MemberList from './MemberList.js'
+import TupleTable from "./TupleTable.js";
 /**
  * The composed aggregate object, members grouped by dimension names
  * */
@@ -32,6 +33,24 @@ export default class Space{
 	 * @return {string[]}
 	 * */
 	getDimensionList(){
-		return Object.keys(this);
+		return Object.getOwnPropertyNames(this);
+	}
+
+	static union(){
+		const newSpace = {};
+		const arg = [...arguments];
+		arg.forEach(space => {
+			Space.add(newSpace, space);
+		});
+		return newSpace;
+	}
+
+	static add(targetSpace, otherSpace){
+		Object.keys(otherSpace).forEach(dimension => {
+			if (!targetSpace[dimension]){
+				targetSpace[dimension] = [];
+			}
+			Array.prototype.push.apply(targetSpace[dimension], otherSpace[dimension])
+		})
 	}
 }

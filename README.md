@@ -10,7 +10,7 @@
 
 
 
-[1]: https://en.wikipedia.org/wiki/Star_schema
+[1]: https://en.wikipedia.org/wiki/Snowflake_schema
 [2]: https://en.wikipedia.org/wiki/Fact_table
 [3]: https://en.wikipedia.org/wiki/Dimension_(data_warehouse)
 [4]: https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.abx.cub.doc/abx-c-cube-balancedandunbalancedhierarchies.html
@@ -29,7 +29,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - Multi-level hierarchies
 - Each cube [dimension][3] contains one hierarchies
 - One [fact table][2]
-- OLAP data is typically stored in a [star schema][1]
+- OLAP data is typically stored in a [snowflake schema][1]
 - Analysis of only the key attributes of the members of the dimensions
 - The ability to edit data
 - Composite dimension keys
@@ -61,74 +61,105 @@ let facts = [
 ]
 
 // This is the data schema we need to obtain
-let schema = {
-    dimension: 'value',
-    keyProps: ['value'],
-    dependency: [
-        {
+let dimensionHierarchies = [
+    {
+        dimensionTable: {
             dimension: 'regions',
             keyProps: ['region'],
-        },
-        {
+        }
+    },
+    {
+        dimensionTable: {
             dimension: 'date',
             keyProps: ['year', 'month']
-        },
-        {
+        }
+    },  
+    {
+        dimensionTable: {
             dimension: 'products',
             keyProps: ['product'],
-            dependency: [
-                {
+        },
+        dependency: [
+            {
+                dimensionTable: {
                     dimension: 'categories',
                     keyProps: ['category']
                 }
-            ]
-        }
-    ]
-}
+            }
+        ]
+    }
+];
 
 // We send it all to the constructor
-let cube = new Cube(facts, schema);
+let cube = Cube.create(facts, dimensionHierarchies);
 
 ```
 Now the cube will represent the structure below:
 
 ```js
-{
-    space: {
-        regions: [
-            { id: 1, region: 'North' },
-            { id: 2, region: 'South' },
-            { id: 3, region: 'West' }
-        ],
-        date: [
-            { id: 1, year: 2017, month: 'January' },
-            { id: 2, year: 2017, month: 'April' },
-            { id: 3, year: 2018, month: 'April' }
-        ],
-        products: [
-            { id: 1, product: 'Product 1' },
-            { id: 2, product: 'Product 2' },
-            { id: 3, product: 'Product 3' },
-            { id: 4, product: 'Product 1' },
-        ],
-        categories: [
-            { id: 1, category: 'Category 1' },
-            { id: 2, category: 'Category 2' },
-        ],
-        value: [
-            { id: 1, value: 737 },
-            { id: 2, value: 155 },
-            { id: 3, value: 112 },
-            { id: 4, value: 319 },
-        ]
-    },
+let structure = {
+    dimensionHierarchies: [
+        {
+            dimensionTable: {
+                dimension: 'regions',
+                keyProps: ['region'],
+                members: [
+                    { id: 1, region: 'North' },
+                    { id: 2, region: 'South' },
+                    { id: 3, region: 'West' }
+                ],
+                otherProps: []
+            },
+            dependency: []
+        },
+        {
+            dimensionTable: {
+                dimension: 'date',
+                keyProps: ['year', 'month'],
+                members: [
+                    { id: 1, year: 2017, month: 'January' },
+                    { id: 2, year: 2017, month: 'April' },
+                    { id: 3, year: 2018, month: 'April' }
+                ],
+                otherProps: []
+            },
+            dependency: []
+        },
+        {
+            dimensionTable: {
+                dimension: 'products',
+                keyProps: ['product'],
+                members: [
+                    { id: 1, product: 'Product 1', categories_id: 1 },
+                    { id: 2, product: 'Product 2', categories_id: 1 },
+                    { id: 3, product: 'Product 3', categories_id: 2 },
+                    { id: 4, product: 'Product 1', categories_id: 2 },
+                ],
+                otherProps: []
+            },
+            dependency: [
+                {
+                    dimensionTable: {
+                        dimension: 'categories',
+                        keyProps: ['category'],
+                        members: [
+                            { id: 1, category: 'Category 1' },
+                            { id: 2, category: 'Category 2' },
+                        ],
+                        otherProps: []
+                    },
+                    dependency: []
+                }
+            ]
+        }
+    ],
     cellTable: [
-        { id: 1, regions_id: 1, date_id: 1, products_id: 1, categories_id: 1, value_id: 1 },
-        { id: 2, regions_id: 2, date_id: 2, products_id: 2, categories_id: 1, value_id: 2 },
-        { id: 3, regions_id: 3, date_id: 3, products_id: 3, categories_id: 2, value_id: 3 },
-        { id: 4, regions_id: 3, date_id: 3, products_id: 4, categories_id: 2, value_id: 4 },
+        { id: 1, regions_id: 1, date_id: 1, products_id: 1, value: 737 },
+        { id: 2, regions_id: 2, date_id: 2, products_id: 2, value: 155 },
+        { id: 3, regions_id: 3, date_id: 3, products_id: 3, value: 112 },
+        { id: 4, regions_id: 3, date_id: 3, products_id: 4, value: 319 },
     ]
-}
+};
 ```
 
 [8]: https://en.wikipedia.org/wiki/Set_(mathematics)
@@ -165,7 +196,7 @@ Now using different types of sets, you can access the elements of the cube
 #### Access to facts of the fact table
 
 ##### Set <br/>
-Define the set with maximum cardinality. For this fixate all dimensions of the first level:
+Define the set with maximum cardinality. For this fixate all dimensions of the first level of the hierarchy:
 ```js
 let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } }
 cube.getFactsBySet(set)
@@ -173,15 +204,15 @@ cube.getFactsBySet(set)
 return:
 ```js
 [
-    { category: "Category 1", id: 1, month: "January", product: "Product 1", region: "North", value: 737, year: 2017 }
+    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
 ]
 ```
 
 ##### Subset <br/>
 Fixate some of the dimensions:
 ```js
-let subset = { regions: { id: 3 } }
-cube.getFactsBySet(subset)
+let subSet = { regions: { id: 3 } }
+cube.getFactsBySet(subSet)
 ```
 return:
 ```js
@@ -193,8 +224,8 @@ return:
 ##### EmptySet <br/>
 This way you can take all the facts from the cube back:
 ```js
-let emptyset = {}
-cube.getFactsBySet(emptyset)
+let emptySet = {}
+cube.getFactsBySet(emptySet)
 // or little shorter
 cube.getFacts()
 ```
@@ -210,8 +241,8 @@ return:
 ##### Multiset <br/>
 Fixate a plurality of dimension values:
 ```js
-let multiset = { date: [ { id: 1 }, { id: 2 } ] }
-cube.getFactsBySet(multiset)
+let multiSet = { regions: [ { id: 1 }, { id: 2 } ] }
+cube.getFactsBySet(multiSet)
 ```
 return:
 ```js
@@ -231,10 +262,10 @@ cube.getDimensionMembers('products')
 return:
 ```js
 [
-    { id: 1, product: 'Product 1' },
-    { id: 2, product: 'Product 2' },
-    { id: 3, product: 'Product 3' },
-    { id: 4, product: 'Product 1' },
+    { id: 1, product: 'Product 1', categories_id: 1 },
+    { id: 2, product: 'Product 2', categories_id: 1 },
+    { id: 3, product: 'Product 3', categories_id: 2 },
+    { id: 4, product: 'Product 1', categories_id: 2 },
 ]
 ```
 ##### SubSet <br/>
@@ -246,8 +277,8 @@ cube.getDimensionMembersBySet('products', { categories: { id: 1 } })
 return:
 ```js
 [
-    { id: 1, product: 'Product 1' },
-    { id: 2, product: 'Product 2' },
+    { id: 1, product: 'Product 1', categories_id: 1 },
+    { id: 2, product: 'Product 2', categories_id: 1 },
 ]
 ```
 Other example:
@@ -261,15 +292,6 @@ return:
     { id: 2, region: 'South' },
 ]
 ```
-Other example:
-```js
-cube.getDimensionMembersBySet('value', { date: { id: 1 } } )
-```
-```js
-[
-    { id: 1, value: 737 },
-]
-```
 
 ##### Multiset <br/>
 ```js
@@ -278,9 +300,9 @@ cube.getDimensionMembersBySet('products', { regions: [{ id: 2 }, { id: 3 }] } )
 return:
 ```js
 [
-    { id: 2, product: 'Product 2' },
-    { id: 3, product: 'Product 3' },
-    { id: 4, product: 'Product 1' },
+    { id: 2, product: 'Product 2', categories_id: 1 },
+    { id: 3, product: 'Product 3', categories_id: 2 },
+    { id: 4, product: 'Product 1', categories_id: 2 },
 ]
 ```
 
@@ -288,31 +310,27 @@ return:
 Fills the fact table with all possible missing combinations. For example, for a table, such data will represent empty cells
 
 ```js
-let schema = {
-    dimension: 'value',
-    keyProps: ['value'],
-    dependency: [
-        {
-            dimension: 'regions',
-            keyProps: ['region']
-        },{
-            dimension: 'products',
-            keyProps: ['product']
-        }
-    ]
-};
+let dimensionHierarchies = [
+     {
+         dimension: 'regions',
+         keyProps: ['region']
+     },{
+         dimension: 'products',
+         keyProps: ['product']
+     }
+ ];
 
 let facts = [
     { id: 1, region: 'North', product: 'Product 1', value: 10 },
     { id: 2, region: 'South', product: 'Product 2', value: 20 }
 ];
-let cube = new Cube(facts, schema)
+let cube = Cube.create(facts, dimensionHierarchies)
 ```
 
 Execute filling:
 ```js
-let props = { value: 0 }; // properties for empty cells
-cube.fill(props);
+let defaultMeasures = { value: 0 }; // properties for empty cells
+cube.fill(defaultMeasures);
 ```
 
 Now get the facts back:
@@ -355,24 +373,25 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 ## Todo
 In future versions:
 
-- Refactor tree, add validation for schema tree, fix remove error
-- Change API: Cube.create(facts, schema) method
-- Use forgotten otherProps
+- Add a new interface for roll-up and drill-down methods
+- Add a new interface for adding / removing facts
+- Add validation for all public methods
+- Fix using forgotten otherProps (additional attributes of the members)
 - Add eslint
-- Update readme file
-- Method delete empty cells(+ to example)
-- ES5/ES6 builds
-- Exclude set param
-- Unbalanced, ragged hierarchies
-- Each cube dimension can contains more then one hierarchies (Multiple hierarchies)
-- Use additional attributes of the members
+- Fix test cover
 - Remove responsibility for "id" prop at facts
-- Add protection for the "id" property in members
+- Update code with JsDoc
+- Update readme file (rename Set to Space?)
+- Update simplify spec tests
+- Add method delete empty cells(+ to example)
+- Add amd/umd/common/ES6 builds
+- Add exclude set param
+- Security protection for the "id" property in members
 - Add optional parameter name "id"
-- Add support for snowflake schema
-- Single keyProp
-- AddMember without rollup options (then more than one member will be added)
-- Calculated members
-- MDX query language
-- Several fact tables
+- Add support for single keyProp in schema
+- Update method addMember without rollup options (then more than one member will be added)
+- Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
+- Add Speed tests
+- Add calculated members
+- Add MDX query language
 

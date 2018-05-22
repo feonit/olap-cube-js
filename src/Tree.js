@@ -1,141 +1,140 @@
-class Node {
-	constructor({value, childNodes = []}){
-		this.value = value;
-		this.childNodes = childNodes.length ? childNodes.map( childNode => new Node(childNode) ) : childNodes;
-	}
-}
+/**
+ * Data definition for Tree
+ * @typedef {object} INode
+ * @property {any} nodeValue
+ * @property {INode[]} childNodes
+ * @property {INode} parentNode
+ * */
 
 /**
- *
+ * @class Tree
+ * @abstract class cannot be instantiated with new
  * */
 export default class Tree {
-	constructor(tree){
-		this._root = new Node(tree)
-	}
-	getRoot(){
-		return this._root;
-	}
-	createIterator(order){
-		let i = 0;
-
-		return {
-			next: ()=>{
-				let done = (i >= order.length);
-				let value = !done ? order[i++] : void 0;
-				return {
-					done,
-					value
-				}
-			}
-		}
+	/**
+	 * method
+	 * */
+	getTreeValue(){
+		throw 'abstract method'
 	}
 	/**
-	 * A walk in which each parent node is traversed before its children
-	 */
-	preOrder(callback){
-		const reqursively = node => {
-			callback(node.value, node);
-			if (node.childNodes.length){
-				node.childNodes.forEach( childNode => {
-					reqursively(childNode)
-				})
-			}
-		};
-		reqursively(this.getRoot());
+	 * method
+	 * */
+	getParentTree(){
+		throw 'abstract method'
 	}
-	preOrderQueue(){
-		const queue = [];
-		const reqursively = node => {
-			queue.push(node);
-			if (node.childNodes.length){
-				node.childNodes.forEach( childNode => {
-					reqursively(childNode)
-				})
+	/**
+	 * method
+	 * */
+	getChildTrees(){
+		throw 'abstract method'
+	}
+	/**
+	 * @return {boolean}
+	 * */
+	isExternal(){
+		return !this.getChildTrees().length;
+	}
+	/**
+	 * @return {boolean}
+	 * */
+	isRoot(){
+		return this.getParentTree() === null;
+	}
+	isFirstLevel(){
+		return !this.isRoot() && ( this.getParentTree().getParentTree() === null )
+	}
+	/**
+	 * @return {Tree}
+	 * */
+	getRootTree(){
+		let root;
+		this.traceUpOrder((Tree)=>{
+			if (Tree.isRoot()){
+				root = Tree;
 			}
-		};
-		reqursively(this.getRoot());
-		return queue;
+		});
+		return root;
+	}
+	/**
+	 * Search method
+	 * */
+	searchValue(callback){
+		let search = void 0;
+		this.tracePostOrder((nodeValue, tree)=>{
+			if ( callback(tree) ){
+				search = tree
+			}
+		});
+		return search;
+	}
+	/**
+	 * A walk to root from current Tree, the current Tree and root entered to the chain
+	 * @param {function} callback
+	 * */
+	traceUpOrder(callback){
+		(function reqursively(tree) {
+			const parentNode = tree.getParentTree();
+			callback(tree);
+			if ( parentNode !== null ){
+				reqursively(parentNode);
+			}
+		})(this);
 	}
 	/**
 	 * A walk in which the children are traversed before their respective parents are traversed
+	 * @param {function} callback
 	 * */
-	postOrder(callback){
-		const reqursively = (node) => {
-			if (node.childNodes.length){
-				node.childNodes.forEach( childNode => {
+	tracePostOrder(callback){
+		(function reqursively(tree) {
+			const childNodes = tree.getChildTrees();
+			const nodeValue = tree.getTreeValue();
+			if (childNodes.length){
+				childNodes.forEach( childNode => {
 					reqursively(childNode);
 				});
 			}
-			callback(node.value, node);
-		};
-		reqursively(this.getRoot());
+			callback(nodeValue, tree);
+		})(this);
 	}
 	/**
-	 * A walk in which a node's left subtree, then the node itself, and finally its right subtree are traversed
+	 *  A walk in which each parent node is traversed before its children is called a pre-order walk
 	 * */
-	inOrder(callback){
-
+	tracePreOrder(callback){
+		(function reqursively(tree) {
+			const childNodes = tree.getChildTrees();
+			const nodeValue = tree.getTreeValue();
+			callback(nodeValue, tree);
+			if (childNodes.length){
+				childNodes.forEach( childNode => {
+					reqursively(childNode);
+				});
+			}
+		})(this);
 	}
 	/**
-	 * A walk effectively performs a breadth-first search over the entirety of a tree; nodes are traversed level by level, where the root node is visited first
+	 * A child nodes with no children.
+	 * @return {Tree[]}
 	 * */
-	levelOrder(callback){
-
-	}
-	isInternal(node){
-		return !!node.childNodes.length;
-	}
-	isExternal(node){
-		return !node.childNodes.length;
-	}
-	isRoot(node){
-		return this._root === node;
-	}
-	getParentOf(node){
-		// if (node === this._root){
-		//     return null;
-		// }
-		let find = false;
-		this.preOrder((value, currentNode)=>{
-			if (currentNode.childNodes && currentNode.childNodes.length && currentNode.childNodes.indexOf(node) !== -1){
-				find = currentNode;
+	getExternals(){
+		const externals = [];
+		this.tracePostOrder((nodeValue, tree)=>{
+			if (tree.isExternal(tree)){
+				externals.push(tree)
 			}
 		});
-		return find;
+		return externals;
 	}
-	search(data){
-
-	}
-
-	getBranches(){
-		const final = this.getRoot().childNodes.map( childNode => childNode );
-		return final.map( node => {
-			const branch = [];
-
-			const recursive = (node)=>{
-				branch.push(node.value);
-
-				if (node.childNodes.length){
-					node.childNodes.forEach((node)=>{
-						recursive(node)
-					})
-				}
-			};
-
-			recursive(node);
-
-			return branch;
+	/**
+	 * Get root for that tree
+	 * */
+	getRoot(){
+		let root;
+		this.traceUpOrder((tracedTree)=>{
+			if (tracedTree.isRoot()){
+				root = tracedTree;
+			}
 		})
-	}
-
-	getLeafs(){
-		const nodes = this.preOrderQueue();
-		const leafs = [];
-		nodes.forEach( node => {
-			if (node.childNodes.length){
-				leafs.push(node);
-			}
-		});
-		return leafs;
+		return root;
 	}
 }

@@ -7,7 +7,7 @@ export default class TupleTable extends Array {
 			Object.assign(this, array.map(item => new Tuple(item)))
 		}
 	}
-	add(data){
+	addTuple(data){
 		this.push(new Tuple(data))
 	}
 	forEach(){

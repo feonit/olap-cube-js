@@ -5,13 +5,6 @@ export class NotCompletelySpaceException extends Error {
 	}
 }
 
-export class AddDimensionOfCellException extends Error {
-	constructor(dimension){
-		super();
-		this.message = `You can not add a second member to the dimension for the cell: "${dimension}"`;
-	}
-}
-
 export class CantAddMemberRollupException extends Error {
 	constructor(dimension, id){
 		super();
@@ -30,6 +23,13 @@ export class CreateInstanceException extends Error {
 	constructor(){
 		super();
 		this.message = 'this must have prototype of Cube'
+	}
+}
+
+export class DimensionException extends Error {
+	constructor(dimension){
+		super();
+		this.message = `For the name "${dimension}" the dimension is already set`;
 	}
 }
 

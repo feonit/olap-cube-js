@@ -77,3 +77,19 @@ http://www.cfin.ru/itm/olap/glossary.shtml
         ]
     ]
 ]
+
+sets example:
+https://codepen.io/beaucarnes/pen/dvGeeq?editors=0012
+https://habrahabr.ru/company/netologyru/blog/334914/
+http://www.vertabelo.com/blog/technical-articles/data-warehouse-modeling-the-snowflake-schema
+
+cells это агрегированные данные
+snowflaking процесс нормализации таблиц измерений
+member.getData
+member.setData
+member.getId
+member.getDependency
+
+cell заменить на measure, применить метод getMeasureBySet, убрать определение меры из схемы как рутового измерения
+
+- Change place of logo image to special branch

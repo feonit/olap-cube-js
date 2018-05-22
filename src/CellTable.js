@@ -13,4 +13,11 @@ export default class CellTable extends Array {
 			return cell[ENTITY_ID] === id;
 		});
 	}
+	addCell(cell){
+		this.push(cell)
+	}
+	removeCell(cell){
+		const index = this.indexOf(cell);
+		this.splice(index, 1);
+	}
 }

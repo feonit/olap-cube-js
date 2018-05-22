@@ -1,8 +1,8 @@
 import Fact from '../src/Fact.js';
-import {isEqual, jsonParseStringify} from './helpers/helpers.js'
+import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
 import {NotFoundFactId} from "../src/errors.js";
 
-describe('[ Fact ]', ()=>{
+describe('class Fact', ()=>{
 	it('must assign properties with only simple values', ()=>{
 		class Data {
 			constructor(){
