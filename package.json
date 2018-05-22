@@ -1,6 +1,6 @@
 {
   "name": "olap-cube-js",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "A package olap-cube-js for client OLAP cube",
   "main": "index.js",
   "devDependencies": {
