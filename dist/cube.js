@@ -896,8 +896,6 @@ var DynamicCube = function (_Cube) {
 			var _tree$getTreeValue2 = tree.getTreeValue(),
 			    keyProps = _tree$getTreeValue2.keyProps,
 			    dimension = _tree$getTreeValue2.dimension;
-			//todo childDimensions это и есть dependencyNames
-
 
 			var childDimensions = tree.getChildTrees().map(function (tree) {
 				return tree.getTreeValue().dimension;
@@ -2004,14 +2002,7 @@ var DimensionTree = function (_Tree) {
 	}], [{
 		key: "createDimensionTree",
 		value: function createDimensionTree(dimensionTreeData) {
-			var dimensionTree = new DimensionTree(dimensionTreeData);
-			dimensionTree.tracePostOrder(function (nodeValue, node) {
-				nodeValue.dependencyNames = node.getChildTrees().map(function (node) {
-					return node.getTreeValue().dimension;
-				});
-			});
-
-			return dimensionTree;
+			return new DimensionTree(dimensionTreeData);
 		}
 	}]);
 
@@ -2047,8 +2038,6 @@ var DimensionTable = function () {
 		    keyProps = _ref.keyProps,
 		    _ref$otherProps = _ref.otherProps,
 		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
-		    _ref$dependencyNames = _ref.dependencyNames,
-		    dependencyNames = _ref$dependencyNames === undefined ? [] : _ref$dependencyNames,
 		    _ref$members = _ref.members,
 		    members = _ref$members === undefined ? [] : _ref$members;
 
@@ -2067,9 +2056,7 @@ var DimensionTable = function () {
 		this.otherProps = otherProps.map(function (otherProp) {
 			return otherProp;
 		});
-		/** The list of dimensions with which the current dimension is directly related */
-		this.dependencyNames = dependencyNames;
-
+		/** List of members */
 		this.members = new _MemberList2.default(members);
 	}
 
@@ -2471,8 +2458,10 @@ var SnowflakeBuilder = function () {
 			    keyProps = _dimensionTable$keyPr === undefined ? [] : _dimensionTable$keyPr,
 			    _dimensionTable$other = dimensionTable.otherProps,
 			    otherProps = _dimensionTable$other === undefined ? [] : _dimensionTable$other;
-			var dependencyNames = dimensionTable.dependencyNames;
 
+			var dependencyNames = node.getChildTrees().map(function (tree) {
+				return tree.getTreeValue().dimension;
+			});
 
 			var memberList = void 0;
 			var args = [cellTable, dimension, keyProps, otherProps, cellTable, isFirstLevel];
