@@ -1,9 +1,8 @@
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
-import {createProductCube} from './data/products.js';
-import Cube from "./Cube.js";
+import {createProductCube} from './data/products.js'
+import Cube from './Cube.js'
 
 describe('method Cube.prototype.getMeasure', () => {
-	let cube, debug;
+	let cube;
 
 	beforeEach(() => {
 		cube = createProductCube();
@@ -16,5 +15,4 @@ describe('method Cube.prototype.getMeasure', () => {
 	it('query should return list of members for dimension of cells', () => {
 		expect(cube.getMeasure().length).toBe(15);
 	});
-
 });

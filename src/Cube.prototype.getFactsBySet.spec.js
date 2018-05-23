@@ -1,6 +1,5 @@
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
-import {createProductCube} from './data/products.js';
-import Cube from "./Cube.js";
+import {createProductCube} from './data/products.js'
+import Cube from './Cube.js'
 
 describe('method Cube.prototype.getFactsBySet', () => {
 	let cube;

@@ -2,7 +2,7 @@ import Cube from '../src/Cube.js';
 import {CreateInstanceException} from '../src/errors.js'
 import {recursiveObjectsNotHaveCommonLinks} from '../spec/helpers/helpers.js'
 
-describe('class Cube', function(){
+describe('class Cube', function() {
 	let debug;
 
 	it('generation unique entity ID from exist entities if they have empty list', () => {
@@ -36,8 +36,9 @@ describe('class Cube', function(){
 	});
 
 	describe('[ Copy ]', () => {
+		let cube;
+		let cubeCopy;
 
-		let cube, cubeCopy
 		beforeEach(()=>{
 			const factTable = [
 				{ id: 1, x: 0, y: 0, xy: null },
@@ -65,14 +66,14 @@ describe('class Cube', function(){
 			let debug;
 
 			recursiveObjectsNotHaveCommonLinks(cube, cubeCopy)
-			expect(debug=cube !== cubeCopy).toBe(true);
-			expect(debug=cube.getDimensionMembers('x') !== cubeCopy.getDimensionMembers('x')).toBe(true);
-			expect(debug=cube.getDimensionMembers('x')[0] !== cubeCopy.getDimensionMembers('x')[0]).toBe(true);
-			expect(debug=cube.getDimensionMembers('y') !== cubeCopy.getDimensionMembers('y')).toBe(true);
-			expect(debug=cube.getDimensionMembers('y')[0] !== cubeCopy.getDimensionMembers('y')[0]).toBe(true);
-			expect(debug=cube.getFacts() !== cubeCopy.getFacts()).toBe(true);
-			expect(debug=cube.getFacts()[0] !== cubeCopy.getFacts()[0]).toBe(true);
-			expect(debug=cube.dimensionHierarchies !== cubeCopy.dimensionHierarchies).toBe(true);
+			expect(debug = cube !== cubeCopy).toBe(true);
+			expect(debug = cube.getDimensionMembers('x') !== cubeCopy.getDimensionMembers('x')).toBe(true);
+			expect(debug = cube.getDimensionMembers('x')[0] !== cubeCopy.getDimensionMembers('x')[0]).toBe(true);
+			expect(debug = cube.getDimensionMembers('y') !== cubeCopy.getDimensionMembers('y')).toBe(true);
+			expect(debug = cube.getDimensionMembers('y')[0] !== cubeCopy.getDimensionMembers('y')[0]).toBe(true);
+			expect(debug = cube.getFacts() !== cubeCopy.getFacts()).toBe(true);
+			expect(debug = cube.getFacts()[0] !== cubeCopy.getFacts()[0]).toBe(true);
+			expect(debug = cube.dimensionHierarchies !== cubeCopy.dimensionHierarchies).toBe(true);
 		});
 
 	});
@@ -112,19 +113,19 @@ describe('class Cube', function(){
 		Object.setPrototypeOf(CustomCube, Cube);
 
 		const cube = new CustomCube(factTable, dimensionHierarchies);
-		expect(debug=(cube instanceof CustomCube)).toBe(true);
-		expect(debug=(cube instanceof Cube)).toBe(true)
+		expect(debug = (cube instanceof CustomCube)).toBe(true);
+		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
 
 	it('inheritance of cube must work ES6', ()=>{
 		class CustomCube extends Cube {}
 		const cube = CustomCube.create(factTable, dimensionHierarchies);
-		expect(debug=(cube instanceof CustomCube)).toBe(true)
-		expect(debug=(cube instanceof Cube)).toBe(true)
+		expect(debug = (cube instanceof CustomCube)).toBe(true)
+		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
 
 	it('should throw when execute create static method without context of Cube constructor of its interface', ()=>{
-		class CustomCube extends Cube{}
+		class CustomCube extends Cube {}
 		const createCube = CustomCube.create;
 		expect(()=>{
 			createCube(factTable, dimensionHierarchies)
@@ -135,9 +136,9 @@ describe('class Cube', function(){
 		class CustomCube extends Cube{}
 		const createCube = CustomCube.create;
 		let error;
-		try{
+		try {
 			const cube = createCube(factTable, dimensionHierarchies);
-		} catch (e){
+		} catch (e) {
 			error = e;
 		}
 		expect(error instanceof CreateInstanceException).toBe(true)

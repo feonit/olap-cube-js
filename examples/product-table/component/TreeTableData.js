@@ -1,5 +1,5 @@
-angular.module('demo').factory('TreeTableData', function(){
-	return function TreeTableData (options){
+angular.module('demo').factory('TreeTableData', function() {
+	return function TreeTableData(options) {
 		this.member = options.member || {};
 		this.rows = options.rows;
 		this.headerName = options.headerName;
@@ -7,4 +7,4 @@ angular.module('demo').factory('TreeTableData', function(){
 		this.remove = options.remove;
 		this.add = options.add;
 	}
-})
+});

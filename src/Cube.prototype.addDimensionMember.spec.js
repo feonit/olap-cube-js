@@ -56,40 +56,40 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		xit('should throw when defined not completely space for added member level 1', ()=>{
 			expect(() => {
-				cube.addDimensionMember('xxx', { xxx: 1 } )
+				cube.addDimensionMember('xxx', { xxx: 1 })
 			}).toThrow();
 		});
 
 		xit('should throw when defined not completely space for added member level 2', ()=>{
 			expect(() => {
-				cube.addDimensionMember('xx', { xx: 1 } )
+				cube.addDimensionMember('xx', { xx: 1 })
 			}).toThrow();
 		});
 
 		xit('should throw specified error when defined not completely space for added member', ()=>{
 			let err;
 			try {
-				cube.addDimensionMember('xxx', { xxx: 1 } )
+				cube.addDimensionMember('xxx', { xxx: 1 })
 			} catch (error) {
 				err = error;
 			}
-			expect( err instanceof NotCompletelySpaceException).toBe(true);
+			expect(err instanceof NotCompletelySpaceException).toBe(true);
 		});
 
 		it('should throw when was try add member with not existed rollup member', ()=>{
 			expect(() => {
-				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } })
 			}).toThrow();
 		});
 
 		it('should throw specified error when was try add member with not existed rollup member', ()=>{
 			let err;
 			try {
-				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } } )
+				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } })
 			} catch (error) {
 				err = error;
 			}
-			expect( err instanceof CantAddMemberRollupException).toBe(true);
+			expect(err instanceof CantAddMemberRollupException).toBe(true);
 		});
 
 	});
@@ -125,7 +125,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it('target dimension must be changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
+				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
 					{ id: 1, x: 0 },
 					{ id: 2, x: 1 }
 				])
@@ -134,7 +134,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
+				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
 					{ id: 1, x: 0 },
 					{ id: 2, x: 1 },
 					{ id: 3, x: 2 }
@@ -144,7 +144,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it('other dimensions must be not changed', ()=>{
 			expect(
-				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
+				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
 					{ id: 1, y: 0 },
 					{ id: 2, y: 1 }
 				])
@@ -153,7 +153,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
 			expect(
-				isEqual( jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
+				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
 					{ id: 1, y: 0 },
 					{ id: 2, y: 1 }
 				])
@@ -162,7 +162,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it('fact table must be changed', ()=>{
 			expect(
-				debug=isEqual( jsonParseStringify(cube.getFacts()), [
+				debug = isEqual(jsonParseStringify(cube.getFacts()), [
 					{ id: 1, x: 0, y: 0, value: 10 },
 					{ id: 2, x: 0, y: 1, value: 100 },
 					{ id: 3, x: 1, y: 0, value: 1000 },
@@ -173,13 +173,13 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			cube.addDimensionMember('coordinateX', { x: 2 }, {}, {}, { value: null });
 
 			expect(
-				debug=isEqual( jsonParseStringify(cube.getFacts()), [
+				debug = isEqual(jsonParseStringify(cube.getFacts()), [
 					{ id: 1, x: 0, y: 0, value: 10 },
 					{ id: 2, x: 0, y: 1, value: 100 },
 					{ id: 3, x: 1, y: 0, value: 1000 },
 					{ id: 4, x: 1, y: 1, value: 10000 },
-						   { x: 2, y: 0, value: null },
-						   { x: 2, y: 1, value: null },
+					{ x: 2, y: 0, value: null },
+					{ x: 2, y: 1, value: null },
 				])
 			).toBe(true);
 		});
@@ -187,7 +187,6 @@ describe('method Cube.prototype.addDimensionMember', () => {
 	});
 
 	describe('should add member to cube data with dependency columns', () => {
-
 		let cube;
 		let debug;
 		let factTable;
@@ -199,7 +198,6 @@ describe('method Cube.prototype.addDimensionMember', () => {
 						dimension: 'product',
 						keyProps: ['product'],
 					},
-					// todo fix
 					dependency: [
 						{
 							dimensionTable: {
@@ -269,24 +267,24 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it ('level 1, where node has not hierarchy', () => {
 			const factTableBefore = cube.getFacts();
-			cube.addDimensionMember('product', { product: 'clock' }, { category: { id: 1 } }, {}, { money: null } );
+			cube.addDimensionMember('product', { product: 'clock' }, { category: { id: 1 } }, {}, { money: null });
 
 			// product
-			debug=isEqualObjects(cube.getDimensionMembers('product'), product.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('product'), product.concat([
 				{ id: 3, product: 'clock', category_id: 1 }
 			]));
 
 			// day
-			debug=isEqualObjects(cube.getDimensionMembers('day'), day);
+			debug = isEqualObjects(cube.getDimensionMembers('day'), day);
 
 			// month
-			debug=isEqualObjects(cube.getDimensionMembers('month'), month);
+			debug = isEqualObjects(cube.getDimensionMembers('month'), month);
 
 			// year
-			debug=isEqualObjects(cube.getDimensionMembers('year'), year);
+			debug = isEqualObjects(cube.getDimensionMembers('year'), year);
 
 			// fact table
-			debug=isEqualObjects(cube.getFacts(), factTableBefore.concat([
+			debug = isEqualObjects(cube.getFacts(), factTableBefore.concat([
 				{ category: 'electronic', product: 'clock', money: null, year: '2017', month: 'january', day: 1 },
 				{ category: 'electronic', product: 'clock', money: null, year: '2017', month: 'january', day: 2 },
 				{ category: 'electronic', product: 'clock', money: null, year: '2018', month: 'january', day: 2 },
@@ -296,21 +294,21 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it ('level 1', ()=>{
 			const factTableBefore = cube.getFacts();
-			cube.addDimensionMember('day', { day : 4 }, { month: { id: 1 } }, {}, { money: null } );
+			cube.addDimensionMember('day', { day: 4 }, { month: { id: 1 } }, {}, { money: null });
 
 			// day
-			debug=isEqualObjects(cube.getDimensionMembers('day'), day.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('day'), day.concat([
 				{ id: 5, day: 4, month_id: 1 }
 			]))
 
 			// month
-			debug=isEqualObjects(cube.getDimensionMembers('month'), month);
+			debug = isEqualObjects(cube.getDimensionMembers('month'), month);
 
 			// year
-			debug=isEqualObjects(cube.getDimensionMembers('year'), year);
+			debug = isEqualObjects(cube.getDimensionMembers('year'), year);
 
 			// fact table
-			debug=isEqualObjects(cube.getFacts(), factTableBefore.concat([
+			debug = isEqualObjects(cube.getFacts(), factTableBefore.concat([
 				{ category: 'electronic', product: 'telephone', money: null, year: '2017', month: 'january', day: 4 },
 				{ category: 'electronic', product: 'tv', money: null, year: '2017', month: 'january', day: 4 }
 			]));
@@ -318,23 +316,23 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it ('level 2', ()=>{
 			const factTableBefore = cube.getFacts();
-			cube.addDimensionMember('month', { month : 'april' }, { year: { id: 1 } }, { day: { day: null } }, { money: null } );
+			cube.addDimensionMember('month', { month: 'april' }, { year: { id: 1 } }, { day: { day: null } }, { money: null });
 
 			// day
-			debug=isEqualObjects(cube.getDimensionMembers('day'), day.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('day'), day.concat([
 				{ id: 5, day: null, month_id: 3 }
 			]));
 
 			// month
-			debug=isEqualObjects(cube.getDimensionMembers('month'), month.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('month'), month.concat([
 				{ id: 3, month: 'april', year_id: 1 }
 			]));
 
 			// year
-			debug=isEqualObjects(cube.getDimensionMembers('year'), year);
+			debug = isEqualObjects(cube.getDimensionMembers('year'), year);
 
 			// fact table
-			debug=isEqualObjects(cube.getFacts(), factTableBefore.concat([
+			debug = isEqualObjects(cube.getFacts(), factTableBefore.concat([
 				{ category: 'electronic', product: 'telephone', money: null, year: '2017', month: 'april', day: null },
 				{ category: 'electronic', product: 'tv', money: null, year: '2017', month: 'april', day: null }
 			]));
@@ -343,25 +341,25 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		it ('level 3', ()=>{
 			const factTableBefore = cube.getFacts();
-			cube.addDimensionMember('year', { year : '2019' }, {}, { day: { day: null }, month: { month: null } }, { money: null } );
+			cube.addDimensionMember('year', { year: '2019' }, {}, { day: { day: null }, month: { month: null } }, { money: null });
 
 			// day
-			debug=isEqualObjects(cube.getDimensionMembers('day'), day.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('day'), day.concat([
 				{ id: 5, day: null, month_id: 3 }
 			]));
 
 			// month
-			debug=isEqualObjects(cube.getDimensionMembers('month'), month.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('month'), month.concat([
 				{ id: 3, month: null, year_id: 3 }
 			]));
 
 			// year
-			debug=isEqualObjects(cube.getDimensionMembers('year'), year.concat([
+			debug = isEqualObjects(cube.getDimensionMembers('year'), year.concat([
 				{ id: 3, year: '2019' }
 			]));
 
 			// fact table
-			debug=isEqualObjects(cube.getFacts(), factTableBefore.concat([
+			debug = isEqualObjects(cube.getFacts(), factTableBefore.concat([
 				{ category: 'electronic', product: 'telephone', money: null, year: '2019', month: null, day: null },
 				{ category: 'electronic', product: 'tv', money: null, year: '2019', month: null, day: null }
 			]));

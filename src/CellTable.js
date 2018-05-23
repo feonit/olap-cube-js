@@ -1,22 +1,22 @@
-import Cell from "./Cell.js";
-import {ENTITY_ID} from "./const.js";
+import Cell from './Cell.js'
+import {ENTITY_ID} from './const.js'
 
 export default class CellTable extends Array {
-	constructor(array){
+	constructor(array) {
 		super();
-		if (Array.isArray(array)){
+		if (Array.isArray(array)) {
 			Object.assign(this, array.map(item => new Cell(item)))
 		}
 	}
-	findById(id){
-		return this.find( cell => {
+	findById(id) {
+		return this.find(cell => {
 			return cell[ENTITY_ID] === id;
 		});
 	}
-	addCell(cell){
+	addCell(cell) {
 		this.push(cell)
 	}
-	removeCell(cell){
+	removeCell(cell) {
 		const index = this.indexOf(cell);
 		this.splice(index, 1);
 	}

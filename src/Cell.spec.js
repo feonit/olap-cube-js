@@ -1,13 +1,13 @@
-import Cell from '../src/Cell.js';
+import Cell from '../src/Cell.js'
 
-describe('class Cell', function(){
+describe('class Cell', function() {
 	it('throws when trying to create bad cell without id param', () => {
 		expect(() => {
 			try {
 				new Cell({});
-			} catch (error){
+			} catch (error) {
 				throw error;
 			}
 		}).toThrow();
 	});
-})
+});

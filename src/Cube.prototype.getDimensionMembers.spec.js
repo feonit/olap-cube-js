@@ -1,6 +1,6 @@
 import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
-import {createProductCube} from './data/products.js';
-import Cube from "./Cube.js";
+import {createProductCube} from './data/products.js'
+import Cube from './Cube.js'
 
 describe('method Cube.prototype.getDimensionMembers', () => {
 	let cube;
@@ -18,12 +18,12 @@ describe('method Cube.prototype.getDimensionMembers', () => {
 			{ id: 1, product: 'TV' },
 			{ id: 2, product: 'Phone' },
 			{ id: 3, product: 'Clock' }
-		], jsonParseStringify( cube.getDimensionMembers('product') ))).toBe(true);
+		], jsonParseStringify(cube.getDimensionMembers('product')))).toBe(true);
 		expect(isEqual([
 			{ id: 1, mark: 'SONY' },
 			{ id: 2, mark: 'APPLE' },
 			{ id: 3, mark: 'LG' }
-		], jsonParseStringify( cube.getDimensionMembers('mark') ))).toBe(true);
+		], jsonParseStringify(cube.getDimensionMembers('mark')))).toBe(true);
 		expect(cube.getDimensionMembers('month').length).toBe(13);
 	});
 

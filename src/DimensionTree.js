@@ -1,15 +1,15 @@
-import DimensionTable from "./DimensionTable.js";
-import Tree from "./Tree.js";
+import DimensionTable from './DimensionTable.js'
+import Tree from './Tree.js'
 import {DimensionException} from './errors.js'
-import Cube from "./Cube.js";
-import {ENTITY_ID} from "./const.js";
+import Cube from './Cube.js'
+import {ENTITY_ID} from './const.js'
 
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
  * @throws {DimensionException}
  * */
 export default class DimensionTree extends Tree {
-	constructor(tree){
+	constructor(tree) {
 		super();
 
 		const {dimensionTable, dependency = [], parentNode = null} = tree;
@@ -19,7 +19,7 @@ export default class DimensionTree extends Tree {
 			 * @property
 			 * @name Tree#nodeValue
 			 * */
-			'dimensionTable': {
+			dimensionTable: {
 				value: new DimensionTable(dimensionTable),
 				enumerable: true,
 				editable: false
@@ -28,7 +28,7 @@ export default class DimensionTree extends Tree {
 			 * @property {Tree|null}
 			 * @name Tree#parentNode
 			 * */
-			'parentNode': {
+			parentNode: {
 				value: parentNode,
 				enumerable: false,
 				editable: false
@@ -37,50 +37,54 @@ export default class DimensionTree extends Tree {
 			 * @property {Tree[]}
 			 * @name Tree#childNodes
 			 * */
-			'dependency': {
-				value: dependency.map( (dimensionTreeData) => {
+			dependency: {
+				value: dependency.map(dimensionTreeData => {
 					return new DimensionTree({ ...dimensionTreeData, parentNode: this })
-				}
-			),
+				}),
 				enumerable: true,
 				editable: false
 			}
 		});
 	}
-	static createDimensionTree(dimensionTreeData){
-		return new DimensionTree(dimensionTreeData);
+	static createDimensionTree(dimensionTreeData) {
+		const dimensionTree = new DimensionTree(dimensionTreeData);
+		dimensionTree.tracePostOrder((nodeValue, node)=>{
+			nodeValue.dependencyNames = node.getChildTrees().map(node => node.getTreeValue().dimension)
+		});
+
+		return dimensionTree;
 	}
-	getTreeValue(){
+	getTreeValue() {
 		return this.dimensionTable;
 	}
-	getParentTree(){
+	getParentTree() {
 		return this.parentNode;
 	}
-	getChildTrees(){
+	getChildTrees() {
 		return this.dependency;
 	}
-	getSpace(){
+	getSpace() {
 		const space = {};
 		this.getRoot().tracePostOrder(({dimension, members})=>{
 			space[dimension] = members
 		});
 		return space
 	}
-	traceUp(dimension, callback){
+	traceUp(dimension, callback) {
 		let node = this.searchValueDimension(dimension);
 		node.traceUpOrder((tracedNode)=>{
 			callback(tracedNode.getTreeValue())
 		});
 	}
 
-	searchValueDimension(dimension){
-		return this.searchValue( tree => {
+	searchValueDimension(dimension) {
+		return this.searchValue(tree => {
 			const treeValue = tree.getTreeValue();
 			return treeValue.dimension === dimension;
 		});
 	}
 
-	recoveryTreeProjectionOfMember(dimension, member){
+	recoveryTreeProjectionOfMember(dimension, member) {
 		const searchedInTree = this.searchValueDimension(dimension);
 
 		let lastMembers;
@@ -95,11 +99,11 @@ export default class DimensionTree extends Tree {
 				dimension: tracedDimension
 			} = tracedTree.getTreeValue();
 
-			if (tracedTree == searchedInTree){
+			if (tracedTree == searchedInTree) {
 				const searchedMember = tracedMembers.find(childMember=>{
 					return childMember[ENTITY_ID] === member[ENTITY_ID]
 				});
-				if (!searchedMember){
+				if (!searchedMember) {
 					throw 'member not found'
 				}
 				lastMembers = [searchedMember];
@@ -110,7 +114,7 @@ export default class DimensionTree extends Tree {
 				const relations = [];
 				tracedMembers.forEach(tracedMember=>{
 					lastMembers.forEach(lastMember=>{
-						if (tracedMember[idAttribute]===lastMember[ENTITY_ID]){
+						if (tracedMember[idAttribute] === lastMember[ENTITY_ID]){
 							relations.push(tracedMember)
 						}
 					});
@@ -126,7 +130,7 @@ export default class DimensionTree extends Tree {
 		return newDimensionTreeByMember;
 	}
 
-	removeDimensionMember(dimension, member){
+	removeDimensionMember(dimension, member) {
 		// travers up
 		let removalInTree = this.searchValueDimension(dimension);
 
@@ -143,7 +147,7 @@ export default class DimensionTree extends Tree {
 		const space = this.getSpace();
 
 		// travers down
-		if (space[dimension].members === 1){
+		if (space[dimension].members === 1) {
 			removalInTree.tracePreOrder((downTree)=>{
 				const {members: childMembers, dimension: childDimension} = downTree.getTreeValue();
 				toBeRemovedSpace[childDimension] = childMembers;
@@ -167,7 +171,7 @@ export default class DimensionTree extends Tree {
 		return endToBeRemovedMember;
 	}
 
-	clearDimensionTablesMembers(){
+	clearDimensionTablesMembers() {
 		this.tracePostOrder((treeValue, tree)=>{
 			const dimensionTable = tree.getTreeValue();
 			dimensionTable.clearMemberList();
@@ -177,9 +181,9 @@ export default class DimensionTree extends Tree {
 	/**
 	 *
 	 * */
-	drillDownDimensionMembers(dimension, members){
+	drillDownDimensionMembers(dimension, members) {
 		const tree = this.getRoot().searchValueDimension(dimension);
-		if (tree.isRoot()){
+		if (tree.isRoot()) {
 			return members;
 		}
 		const parentTree = tree.getParentTree();
@@ -188,8 +192,8 @@ export default class DimensionTree extends Tree {
 		const drillDownMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
-				if (parentMember[idAttribute] === member[ENTITY_ID]){
-					if (drillDownMembers.indexOf(parentMember)=== -1){
+				if (parentMember[idAttribute] === member[ENTITY_ID]) {
+					if (drillDownMembers.indexOf(parentMember) === -1) {
 						drillDownMembers.push(parentMember)
 					}
 				}
@@ -200,9 +204,9 @@ export default class DimensionTree extends Tree {
 	/**
 	 *
 	 * */
-	rollUpDimensionMembers(dimension, members){
+	rollUpDimensionMembers(dimension, members) {
 		const tree = this.getRoot().searchValueDimension(dimension);
-		if (tree.isExternal()){
+		if (tree.isExternal()) {
 			return members;
 		}
 		const childTree = tree.getChildTrees()[0]; // for one child always
@@ -211,8 +215,8 @@ export default class DimensionTree extends Tree {
 		const rollUpMembers = [];
 		members.forEach(member => {
 			childMembers.forEach(childMember => {
-				if (member[idAttribute] === childMember[ENTITY_ID]){
-					if (rollUpMembers.indexOf(childMember)=== -1){
+				if (member[idAttribute] === childMember[ENTITY_ID]) {
+					if (rollUpMembers.indexOf(childMember) === -1) {
 						rollUpMembers.push(childMember)
 					}
 				}

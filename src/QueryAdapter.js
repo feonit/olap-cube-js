@@ -5,10 +5,10 @@ export default class QueryAdapter {
 	 * @param {object} fixSpaceOptions
 	 * @param {Space} space
 	 * */
-	applyAdapter(fixSpaceOptions, space){
+	applyAdapter(fixSpaceOptions, space) {
 		this.removeEmptyFilds(fixSpaceOptions);
 
-		Object.keys(fixSpaceOptions).forEach( dimension => {
+		Object.keys(fixSpaceOptions).forEach(dimension => {
 			const value = fixSpaceOptions[dimension];
 
 			const filterValue = (dimension, value) => {
@@ -21,7 +21,7 @@ export default class QueryAdapter {
 				return memberList ? memberList.searchData(data) : void 0;
 			};
 
-			if (typeof value === "string"){
+			if (typeof value === 'string') {
 				fixSpaceOptions[dimension] = filterValue(dimension, value) || [];
 			}
 
@@ -31,11 +31,11 @@ export default class QueryAdapter {
 
 			if (Array.isArray(value) && value.length){
 
-				if (typeof value[0] === "string"){
+				if (typeof value[0] === 'string'){
 					fixSpaceOptions[dimension] = [];
-					value.reduce( (accumulated, value) => {
+					value.reduce((accumulated, value) => {
 						const found = filterValue(dimension, value);
-						if (found){
+						if (found) {
 							[].splice.apply(accumulated, [accumulated.length, 0].concat(found))
 						}
 						return accumulated;

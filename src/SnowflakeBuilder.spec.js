@@ -1,6 +1,6 @@
-import SnowflakeBuilder from "../src/SnowflakeBuilder.js";
-import DimensionTree from "../src/DimensionTree.js";
-import CellTable from "../src/CellTable.js";
+import SnowflakeBuilder from '../src/SnowflakeBuilder.js'
+import DimensionTree from '../src/DimensionTree.js'
+import CellTable from '../src/CellTable.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('class SnowflakeBuilder', () => {
@@ -10,7 +10,6 @@ describe('class SnowflakeBuilder', () => {
 		let cellTable;
 
 		beforeEach(()=>{
-
 			let factTable = [
 				{ id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
 				{ id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},
@@ -46,7 +45,7 @@ describe('class SnowflakeBuilder', () => {
 						}
 					]
 				}
-			]
+			];
 
 			cellTable = new CellTable(factTable);
 			dimensionHierarchies = dimensionHierarchiesData.map(dimensionTreeData => DimensionTree.createDimensionTree(dimensionTreeData));
@@ -106,11 +105,11 @@ describe('class SnowflakeBuilder', () => {
 				{ id: 5, planesCount: 2, age_id: 1, companies_id: 2, prices_id: 4 }
 			]
 
-			debug=isEqualObjects(dimensionHierarchies[0].dimensionTable.members, expectedDimensionHierarchies[0].dimensionTable.members)
-			debug=isEqualObjects(dimensionHierarchies[1].dimensionTable.members, expectedDimensionHierarchies[1].dimensionTable.members)
-			debug=isEqualObjects(dimensionHierarchies[2].dimensionTable.members, expectedDimensionHierarchies[2].dimensionTable.members)
-			debug=isEqualObjects(dimensionHierarchies[2].dependency[0].dimensionTable.members, expectedDimensionHierarchies[2].dependency[0].dimensionTable.members)
-			debug=isEqualObjects(cellTable, expectedMeasure)
+			debug = isEqualObjects(dimensionHierarchies[0].dimensionTable.members, expectedDimensionHierarchies[0].dimensionTable.members);
+			debug = isEqualObjects(dimensionHierarchies[1].dimensionTable.members, expectedDimensionHierarchies[1].dimensionTable.members);
+			debug = isEqualObjects(dimensionHierarchies[2].dimensionTable.members, expectedDimensionHierarchies[2].dimensionTable.members);
+			debug = isEqualObjects(dimensionHierarchies[2].dependency[0].dimensionTable.members, expectedDimensionHierarchies[2].dependency[0].dimensionTable.members);
+			debug = isEqualObjects(cellTable, expectedMeasure)
 		});
 	});
 });

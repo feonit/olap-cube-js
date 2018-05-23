@@ -1,13 +1,12 @@
 import MemberList from './MemberList.js'
-import TupleTable from "./TupleTable.js";
 /**
  * The composed aggregate object, members grouped by dimension names
  * */
-export default class Space{
-	constructor(options){
-		if (options){
-			this.getDimensionList.call(options).forEach( dimension => {
-				const memberList = options[dimension]
+export default class Space {
+	constructor(options) {
+		if (options) {
+			this.getDimensionList.call(options).forEach(dimension => {
+				const memberList = options[dimension];
 				this.setMemberList(dimension, memberList)
 			})
 		}
@@ -15,9 +14,9 @@ export default class Space{
 	/**
 	 * @param {string} dimension
 	 * */
-	getMemberList(dimension){
+	getMemberList(dimension) {
 		const memberList = this[dimension];
-		if (!memberList){
+		if (!memberList) {
 			throw Error(`dimension "${dimension}" not found`)
 		}
 		return memberList;
@@ -26,17 +25,17 @@ export default class Space{
 	 * @param {string} dimension
 	 * @param {MemberList|object[]} memberList
 	 * */
-	setMemberList(dimension, memberList){
+	setMemberList(dimension, memberList) {
 		this[dimension] = new MemberList(memberList);
 	}
 	/**
 	 * @return {string[]}
 	 * */
-	getDimensionList(){
+	getDimensionList() {
 		return Object.getOwnPropertyNames(this);
 	}
 
-	static union(){
+	static union() {
 		const newSpace = {};
 		const arg = [...arguments];
 		arg.forEach(space => {
@@ -45,9 +44,9 @@ export default class Space{
 		return newSpace;
 	}
 
-	static add(targetSpace, otherSpace){
+	static add(targetSpace, otherSpace) {
 		Object.keys(otherSpace).forEach(dimension => {
-			if (!targetSpace[dimension]){
+			if (!targetSpace[dimension]) {
 				targetSpace[dimension] = [];
 			}
 			Array.prototype.push.apply(targetSpace[dimension], otherSpace[dimension])

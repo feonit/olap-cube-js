@@ -13,31 +13,33 @@ describe('class Tree', ()=>{
 	it('should define traceUpOrder', ()=> { expect(Tree.prototype.traceUpOrder).toBeDefined(); });
 	it('should define tracePostOrder', ()=> { expect(Tree.prototype.tracePostOrder).toBeDefined(); });
 
-	let tree, CustomTree, debug;
+	let tree;
+	let CustomTree;
+	let debug;
 
 	beforeEach(()=>{
 		CustomTree = class CustomTree extends Tree {
-			constructor({nodeValue, childNodes = [], parentNode = null}){
+			constructor({nodeValue, childNodes = [], parentNode = null}) {
 				super();
 				this.nodeValue = nodeValue;
 				Object.defineProperties(this, {
-					'parentNode': {
+					parentNode: {
 						enumerable: false,
 						value: parentNode
 					},
-					'childNodes': {
+					childNodes: {
 						enumerable: true,
-						value: childNodes.map( node => new CustomTree({...node, parentNode: this}) )
+						value: childNodes.map(node => new CustomTree({...node, parentNode: this}))
 					}
 				});
 			}
-			getTreeValue(){
+			getTreeValue() {
 				return this.nodeValue
 			}
-			getParentTree(){
+			getParentTree() {
 				return this.parentNode
 			}
-			getChildTrees(){
+			getChildTrees() {
 				return this.childNodes
 			}
 		};
@@ -98,8 +100,8 @@ describe('class Tree', ()=>{
 				]
 			}
 		);
-		expect(debug=(tree.getParentTree() === null)).toBe(true);
-		expect(debug=(tree.getChildTrees()[0].getParentTree() === tree)).toBe(true);
+		expect(debug = (tree.getParentTree() === null)).toBe(true);
+		expect(debug = (tree.getChildTrees()[0].getParentTree() === tree)).toBe(true);
 	});
 
 	it('the constructor can clone', ()=>{

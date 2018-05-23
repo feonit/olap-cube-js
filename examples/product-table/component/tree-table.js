@@ -1,4 +1,4 @@
-function TreeTableController (){
+function TreeTableController() {
 	this.editEnabled = false;
 	this.addEnabled = false;
 	this.removeEnabled = false;
@@ -8,19 +8,19 @@ function TreeTableController (){
 	this.selectedData = void 0;
 }
 TreeTableController.prototype = {
-	$onInit: function(){
+	$onInit: function() {
 		this._reset();
 	},
 
-	_reset: function (){
+	_reset: function() {
 		this.isCompositen = !!this.tableData.categoryName;
-		this.keys =  this.getSortedObjectKeys(this.tableData.rows[0].member);
+		this.keys = this.getSortedObjectKeys(this.tableData.rows[0].member);
 		// this.keys = this.tableData.rows.length ? this.getSortedObjectKeys(this.tableData.rows[0].member) : [];
 	},
 
-	$onChanges: function (changesObj){
-		if (changesObj.tableData){
-			if (changesObj.tableData.currentValue !== changesObj.tableData.previousValue){
+	$onChanges: function(changesObj) {
+		if (changesObj.tableData) {
+			if (changesObj.tableData.currentValue !== changesObj.tableData.previousValue) {
 				this._reset();
 			}
 		}
@@ -28,7 +28,7 @@ TreeTableController.prototype = {
 	/**
 	 * remove member handler
 	 * */
-	handleRemove: function (composite, item){
+	handleRemove: function(composite, item) {
 		composite.remove(item);
 		if (this.onChange){
 			this.onChange();
@@ -37,18 +37,18 @@ TreeTableController.prototype = {
 	/**
 	 * add member handler
 	 * */
-	handleAdd: function (composite, item){
+	handleAdd: function(composite, item) {
 		composite.add(item, this.selectedData);
 		this.valuesToAdd = {};
-		if (this.onChange){
+		if (this.onChange) {
 			this.onChange();
 		}
 	},
 	/**
 	 * Sort where param id placed in first column
 	 * */
-	getSortedObjectKeys: function (obj) {
-		const keys = Object.keys(obj).sort(function(key1, key2){
+	getSortedObjectKeys: function(obj) {
+		const keys = Object.keys(obj).sort(function(key1, key2) {
 			return key1 === 'id' ? false : key1 > key2;
 		});
 		return keys;
@@ -56,12 +56,12 @@ TreeTableController.prototype = {
 }
 angular.module('demo').component('treeTable', {
 	bindings: {
-		"tableData": "<",
-		"editable": "<",
-		"removable": "<",
-		"added": "<",
-		"onChange": "&",
-		"selectedData": "<"
+		tableData: '<',
+		editable: '<',
+		removable: '<',
+		added: '<',
+		onChange: '&',
+		selectedData: '<'
 	},
 	controllerAs: '$ctrl',
 	templateUrl: './component/tree-table.html',

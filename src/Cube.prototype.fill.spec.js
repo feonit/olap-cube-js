@@ -27,11 +27,11 @@ describe('method Cube.prototype.fill', function(){
 
 	it('should normalize count of measure for non-normalized data', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
-		expect(debug=cube.cartesian().length).toBe(8);
-		expect(debug=cube.getFacts().length).toBe(5);
+		expect(debug = cube.cartesian().length).toBe(8);
+		expect(debug = cube.getFacts().length).toBe(5);
 		cube.fill({ is: false });
-		expect(debug=cube.cartesian().length).toBe(8);
-		expect(debug=cube.getFacts().length).toBe(8);
+		expect(debug = cube.cartesian().length).toBe(8);
+		expect(debug = cube.getFacts().length).toBe(8);
 	});
 
 	it('should normalize count of measure for non-normalized data with default props', () => {
@@ -45,7 +45,7 @@ describe('method Cube.prototype.fill', function(){
 			{ x: 1, y: 1, z: 1,is: false }
 		]);
 		const localFacts = cube.getFacts();
-		expect(isEqual(jsonParseStringify(localFacts), factTableExpectedAfter )).toBe(true);
+		expect(isEqual(jsonParseStringify(localFacts), factTableExpectedAfter)).toBe(true);
 	});
 
 	describe('[should normalize for hierarchy of dimensions]', ()=>{
@@ -86,31 +86,31 @@ describe('method Cube.prototype.fill', function(){
 
 		it('should work level 1', ()=>{
 			const factTable = [
-				{id : 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
-				{id : 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
+				{ id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
+				{ id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug=cube.cartesian().length).toBe(4);
-			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(2);
+			expect(debug = cube.cartesian().length).toBe(4);
+			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(2);
 			cube.fill({ humans: 0 });
-			expect(debug=cube.cartesian().length).toBe(4);
-			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
+			expect(debug = cube.cartesian().length).toBe(4);
+			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
 		});
 
 		it('should work level 3', ()=>{
 			const factTable = [
-				{id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
-				{id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
-				{id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
+				{ id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
+				{ id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
+				{ id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug=cube.cartesian().length).toBe(6);
-			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(3);
+			expect(debug = cube.cartesian().length).toBe(6);
+			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(3);
 			cube.fill({ humans: 0 });
-			expect(debug=cube.cartesian().length).toBe(6);
-			expect(debug=cube.cartesian().length - cube.getFacts().length).toBe(0);
+			expect(debug = cube.cartesian().length).toBe(6);
+			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
 		})
 
 	});
@@ -141,6 +141,6 @@ describe('method Cube.prototype.fill', function(){
 			{ id: 2, x: 1, y: 0, xy: true },
 			{ x: 0, y: 0, xy: false },
 			{ x: 1, y: 1, xy: false }
-		] )).toBe(true);
+		])).toBe(true);
 	})
 });

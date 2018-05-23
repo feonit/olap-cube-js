@@ -1,11 +1,11 @@
-import Fact from '../src/Fact.js';
+import Fact from '../src/Fact.js'
 import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
-import {NotFoundFactId} from "../src/errors.js";
+import {NotFoundFactId} from '../src/errors.js'
 
 describe('class Fact', ()=>{
 	it('must assign properties with only simple values', ()=>{
 		class Data {
-			constructor(){
+			constructor() {
 				Object.assign(this, {
 					id: 1,
 					prop1: 'prop1',
@@ -14,12 +14,12 @@ describe('class Fact', ()=>{
 					prop4: null,
 					prop5: void 0,
 					prop6: [],
-					prop7: function(){},
+					prop7: function() {},
 					prop8: new Date(),
 					prop9: /[0-9]/
 				})
 			}
-			getId(){
+			getId() {
 				return this.id
 			}
 		}
@@ -44,7 +44,7 @@ describe('class Fact', ()=>{
 		let err;
 		try {
 			new Fact({ region: 'North' })
-		} catch (error){
+		} catch (error) {
 			err = error
 		}
 		expect(err instanceof NotFoundFactId).toBe(true)

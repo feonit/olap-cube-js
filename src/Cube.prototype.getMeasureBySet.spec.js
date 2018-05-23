@@ -1,9 +1,9 @@
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
-import {createProductCube} from './data/products.js';
-import Cube from "./Cube.js";
+import {createProductCube} from './data/products.js'
+import Cube from './Cube.js'
 
 describe('method Cube.prototype.getMeasureBySet', () => {
-	let cube, debug;
+	let cube;
+	let debug;
 
 	beforeEach(() => {
 		cube = createProductCube();
@@ -14,7 +14,6 @@ describe('method Cube.prototype.getMeasureBySet', () => {
 	});
 
 	it('query should return list of members for dimension with space option including one dimension', () => {
-		expect(debug=cube.getMeasureBySet({ mark: { id: 1 } }).length).toBe(3);
+		expect(debug = cube.getMeasureBySet({ mark: { id: 1 } }).length).toBe(3);
 	});
-
 });

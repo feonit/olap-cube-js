@@ -44,7 +44,7 @@ For install the software you need a package manager - [npm][7] which is installe
 
 ### Installing
 Then in the console run the following command
-```js
+```bash
 npm install olap-cube-js
 ```
 
@@ -55,9 +55,9 @@ npm install olap-cube-js
 // This is an array of data from server
 let facts = [
     { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-    { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
-    { id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+    { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 
 // This is the data schema we need to obtain
@@ -217,8 +217,8 @@ cube.getFactsBySet(subSet)
 return:
 ```js
 [
-    { id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
 ##### EmptySet <br/>
@@ -233,9 +233,9 @@ return:
 ```js
 [
     { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-    { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
-    { id: 3, region: 'West',  year: 2018, month: 'April',   product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April',   product: 'Product 1', category: 'Category 2', value: 319 },
+    { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
 ##### Multiset <br/>
@@ -373,25 +373,24 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 ## Todo
 In future versions:
 
-- Add a new interface for roll-up and drill-down methods
-- Add a new interface for adding / removing facts
+- Add a new interface for roll-up, drill-down, dice, slice methods
+- Add a new interface for adding, removing facts
 - Add validation for all public methods
 - Fix using forgotten otherProps (additional attributes of the members)
-- Add eslint
 - Fix test cover
 - Remove responsibility for "id" prop at facts
 - Update code with JsDoc
 - Update readme file (rename Set to Space?)
-- Update simplify spec tests
 - Add method delete empty cells(+ to example)
 - Add amd/umd/common/ES6 builds
 - Add exclude set param
-- Security protection for the "id" property in members
-- Add optional parameter name "id"
+- Security protection for the "id" and "<dimension>_id" property in members
+- Add options for "id" or genericId method
 - Add support for single keyProp in schema
 - Update method addMember without rollup options (then more than one member will be added)
 - Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
 - Add Speed tests
 - Add calculated members
+- Add empty cells
 - Add MDX query language
 

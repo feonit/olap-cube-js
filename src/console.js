@@ -9,11 +9,11 @@ const customConsole = {
 	warnOnce: (() => {
 		const memory = {};
 		return (string)=>{
-			if (!memory[string]){
+			if (!memory[string]) {
 				memory[string] = true;
 				originalConsole.warn(`[Cube] ${string}`)
 			}
 		};
 	})()
 };
-export default customConsole;
+export default customConsole

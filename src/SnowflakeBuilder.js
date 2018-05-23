@@ -1,8 +1,8 @@
-import MemberList from "./MemberList.js";
-import Member from "./Member.js";
-import {ENTITY_ID} from "./const.js";
-import Cube from "./Cube.js";
-import FactTable from "./FactTable.js";
+import MemberList from './MemberList.js'
+import Member from './Member.js'
+import {ENTITY_ID} from './const.js'
+import Cube from './Cube.js'
+import FactTable from './FactTable.js'
 
 /**
  * The main task is to parse the data array into tables
@@ -11,18 +11,18 @@ import FactTable from "./FactTable.js";
  * where every dimension is represented by one table even if the dimensions has multiple levels
  * */
 export default class SnowflakeBuilder {
-	static anotherBuild(factTable, cellTable, dimensionsTrees){
+	static anotherBuild(factTable, cellTable, dimensionsTrees) {
 
 		// for each dimension
 		dimensionsTrees.forEach(dimensionTree => {
 			// for each hierarchy and level of dimension
-			dimensionTree.tracePostOrder( (dimensionTable, node) =>{
+			dimensionTree.tracePostOrder((dimensionTable, node) =>{
 				SnowflakeBuilder.processDimension(node, cellTable, factTable)
 			});
 		});
 	}
 
-	static processDimension(node, cellTable){
+	static processDimension(node, cellTable) {
 		const isFirstLevel = node.isFirstLevel();
 		const dimensionTable = node.getTreeValue();
 		const getMembers = (dimension)=>{
@@ -32,7 +32,7 @@ export default class SnowflakeBuilder {
 		};
 
 		const { dimension, keyProps = [], otherProps = [] } = dimensionTable;
-		const dependencyNames = node.getChildTrees().map( tree => tree.getTreeValue().dimension );
+		const dependencyNames = node.getChildTrees().map(tree => tree.getTreeValue().dimension);
 
 		let memberList;
 		const args = [cellTable, dimension, keyProps, otherProps, cellTable, isFirstLevel];
@@ -67,12 +67,12 @@ export default class SnowflakeBuilder {
 	 * @private
 	 * @return {CellTable[]}
 	 * */
-	static mapFilter(dimension, cellTable, memberList){
+	static mapFilter(dimension, cellTable, memberList) {
 		const idAttribute = Cube.genericId(dimension);
 		const cellTables = [];
 		//todo оптимизировать поиск через хеш
-		memberList.forEach( member => {
-			const cellTableFiltered = cellTable.filter( cell => {
+		memberList.forEach(member => {
+			const cellTableFiltered = cellTable.filter(cell => {
 				return cell[idAttribute] == member[ENTITY_ID];
 			});
 			cellTables.push(cellTableFiltered);
@@ -82,28 +82,28 @@ export default class SnowflakeBuilder {
 	/**
 	 * @private
 	 * */
-	static makeMemberListDependency(factTable, dimension, keyProps, otherProps, cellTable, isFirstLevel, dependencyNames, entitiesParts){
+	static makeMemberListDependency(factTable, dimension, keyProps, otherProps, cellTable, isFirstLevel, dependencyNames, entitiesParts) {
 
 		let totalMemberList = new MemberList();
 
 		let countId = 0;
-		entitiesParts.forEach( entitiesPart => {
-			if (entitiesPart.length){
+		entitiesParts.forEach(entitiesPart => {
+			if (entitiesPart.length) {
 				const memberList = SnowflakeBuilder.makeMemberList(entitiesPart, dimension, keyProps, otherProps, cellTable, isFirstLevel, countId);
 				countId = countId + memberList.length;
 
 				const etalon = entitiesPart[0];
 
-				dependencyNames.forEach( dependencyName => {
+				dependencyNames.forEach(dependencyName => {
 					const idAttribute = Cube.genericId(dependencyName);
 
-					memberList.forEach( member => {
+					memberList.forEach(member => {
 						member[idAttribute] = etalon[idAttribute];
 						member[ENTITY_ID] = totalMemberList.length + 1;
 						totalMemberList.addMember(member)
 					});
 
-					entitiesPart.forEach( entityPart => {
+					entitiesPart.forEach(entityPart => {
 						delete entityPart[idAttribute];
 					})
 
@@ -143,13 +143,13 @@ export default class SnowflakeBuilder {
 		const totalProps = [].concat(keyProps, otherProps);
 
 		// создания групп по уникальным ключам
-		entitiesPart.forEach( entityPart => {
+		entitiesPart.forEach(entityPart => {
 
 			// собрать ключ на основе ключевых значений
 			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, entityPart);
 
 			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-			if (! (surrogateKey in cache) ){
+			if (!(surrogateKey in cache)) {
 				const id = cache[surrogateKey] = ++startFrom;
 				const member = Member.create(id, totalProps, entityPart);
 				memberList.push(member);
@@ -165,25 +165,25 @@ export default class SnowflakeBuilder {
 		return memberList;
 	}
 
-	static createKeyFromProps(props, obj){
+	static createKeyFromProps(props, obj) {
 		const DIVIDER = ',';
 
-		return props.map( prop => {
+		return props.map(prop => {
 			return obj[prop]
 		}).join(DIVIDER);
 	}
 
-	static destroy(cellTable, dimensionHierarchies){
+	static destroy(cellTable, dimensionHierarchies) {
 		const factTable = new FactTable();
-		cellTable.forEach( cell => {
+		cellTable.forEach(cell => {
 			factTable.push({...cell})
 		});
 
 		const handleDimensionTree = (tree, fact)=>{
-			const { dimension, members } = tree.getTreeValue()
+			const { dimension, members } = tree.getTreeValue();
 			const idAttribute = Cube.genericId(dimension);
 			const idValue = fact[idAttribute];
-			const member = members.find( member => {
+			const member = members.find(member => {
 				return member[ENTITY_ID] === idValue;
 			});
 			const memberCopy = {...member};
@@ -191,7 +191,7 @@ export default class SnowflakeBuilder {
 			delete fact[idAttribute];
 			Object.assign(fact, memberCopy)
 		};
-		factTable.forEach( fact => {
+		factTable.forEach(fact => {
 			dimensionHierarchies.forEach(dimensionTree => {
 				handleDimensionTree(dimensionTree, fact);
 				dimensionTree.tracePreOrder((value, dimensionTree)=>{
