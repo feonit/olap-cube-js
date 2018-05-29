@@ -8,7 +8,7 @@ const customConsole = {
 	},
 	warnOnce: (() => {
 		const memory = {};
-		return (string)=>{
+		return string => {
 			if (!memory[string]) {
 				memory[string] = true;
 				originalConsole.warn(`[Cube] ${string}`)

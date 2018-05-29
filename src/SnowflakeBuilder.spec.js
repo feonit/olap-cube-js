@@ -1,6 +1,7 @@
 import SnowflakeBuilder from '../src/SnowflakeBuilder.js'
 import DimensionTree from '../src/DimensionTree.js'
 import CellTable from '../src/CellTable.js'
+import Cell from '../src/Cell.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('class SnowflakeBuilder', () => {
@@ -8,6 +9,7 @@ describe('class SnowflakeBuilder', () => {
 	describe('common', ()=>{
 		let dimensionHierarchies;
 		let cellTable;
+		let cells;
 
 		beforeEach(()=>{
 			let factTable = [
@@ -47,9 +49,11 @@ describe('class SnowflakeBuilder', () => {
 				}
 			];
 
-			cellTable = new CellTable(factTable);
+			cells = factTable.map(fact => new Cell(fact));
+			cellTable = new CellTable([]);
+			cellTable.addCells(cells);
 			dimensionHierarchies = dimensionHierarchiesData.map(dimensionTreeData => DimensionTree.createDimensionTree(dimensionTreeData));
-			SnowflakeBuilder.anotherBuild(factTable, cellTable, dimensionHierarchies);
+			SnowflakeBuilder.anotherBuild(factTable, cells, dimensionHierarchies, cellTable);
 		});
 
 		it('must be equal etalon and expected cube data', () => {

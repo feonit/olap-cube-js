@@ -17,6 +17,8 @@
 [5]: https://feonit.github.io/olap-cube-js/spec/
 [6]: https://feonit.github.io/olap-cube-js/examples/product-table/index.html
 [7]: https://nodejs.org/en/
+[8]: https://en.wikipedia.org/wiki/Surrogate_key
+[9]: https://docs.oracle.com/en/cloud/paas/analytics-cloud/adess/scenario-4-typical-multidimensional-problem.html
 
 # OLAP Cube.js
 The simplest data analysis tools written in javascript.
@@ -28,11 +30,11 @@ This solution is a means for extracting and replenishing data, which together wi
 - [Balanced][4] hierarchies
 - Multi-level hierarchies
 - Each cube [dimension][3] contains one hierarchies
-- One [fact table][2]
+- Dynamic [fact table][2]
 - OLAP data is typically stored in a [snowflake schema][1]
-- Analysis of only the key attributes of the members of the dimensions
+- [Surrogate key][8] is internally generated as unique identifier for dimension member (used composite dimension keys)
 - The ability to edit data
-- Composite dimension keys
+- Filling - solution for [Typical Multidimensional Problem: missing values][9]
 
 [Specification][5] [Demo][6]
 
@@ -348,23 +350,39 @@ factsFilled will be:
 ]
 ```
 
-### Editing data in a cube
+### Editing members data in a cube
 ```js
 let regions = cube.getDimensionMembers('regions')
 let member = regions[0]
 member['region'] = 'East'; 
 ```
 
-### Adding data to the cube
+### Adding dimension members to the cube
 ```js
 let member = { product: 'Product 3' }
 cube.addDimensionMember('products', member)
 ```
 
-### Deleting data from a cube
+### Deleting dimension members from a cube
 ```js
 let member = { id: 2 }
 cube.removeDimensionMember('products', member)
+```
+
+### Adding facts to cube
+```js
+let facts = [
+    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+]
+cube.addFacts(facts)
+```
+
+### Removing facts from cube
+```js
+let facts = [
+    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+]
+cube.removeFacts(facts)
 ```
 
 ## Versioning
@@ -373,24 +391,32 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 ## Todo
 In future versions:
 
+API
 - Add a new interface for roll-up, drill-down, dice, slice methods
-- Add a new interface for adding, removing facts
-- Add validation for all public methods
+- Add a new interface for dinamic hierarchy, dimension tables
 - Fix using forgotten otherProps (additional attributes of the members)
-- Fix test cover
-- Remove responsibility for "id" prop at facts
-- Update code with JsDoc
-- Update readme file (rename Set to Space?)
 - Add method delete empty cells(+ to example)
-- Add amd/umd/common/ES6 builds
 - Add exclude set param
-- Security protection for the "id" and "<dimension>_id" property in members
 - Add options for "id" or genericId method
 - Add support for single keyProp in schema
 - Update method addMember without rollup options (then more than one member will be added)
-- Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
-- Add Speed tests
-- Add calculated members
-- Add empty cells
-- Add MDX query language
 
+Code quality
+- Update code with JsDoc
+- Add amd/umd/common/ES6 builds
+- Security protection for the "id" and "<dimension>_id" property in members
+- Add empty cells
+- Add validation for all public methods
+- Remove responsibility for "id" prop at facts
+
+Perhaps
+- Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
+- Add calculated members
+- Add MDX query language
+- Add Speed tests
+
+Deploy
+- Fix test cover
+
+Docs
+- Update readme file (rename Set to Space?)

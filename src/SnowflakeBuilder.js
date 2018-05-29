@@ -11,68 +11,63 @@ import FactTable from './FactTable.js'
  * where every dimension is represented by one table even if the dimensions has multiple levels
  * */
 export default class SnowflakeBuilder {
-	static anotherBuild(factTable, cellTable, dimensionsTrees) {
+	static anotherBuild(factTable, cells, dimensionsTrees, cellTable) {
 
 		// for each dimension
 		dimensionsTrees.forEach(dimensionTree => {
 			// for each hierarchy and level of dimension
-			dimensionTree.tracePostOrder((dimensionTable, node) =>{
-				SnowflakeBuilder.processDimension(node, cellTable, factTable)
+			dimensionTree.tracePostOrder((dimensionTable, dimensionTree) =>{
+				SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable)
 			});
 		});
 	}
 
-	static processDimension(node, cellTable) {
-		const isFirstLevel = node.isFirstLevel();
-		const dimensionTable = node.getTreeValue();
-		const getMembers = (dimension)=>{
-			const searchedNode = node.searchValueDimension(dimension);
-
-			return searchedNode.getTreeValue().members
-		};
-
+	static processDimension(dimensionTree, cells, cellTable, factTable) {
+		const isFirstLevel = dimensionTree.isFirstLevel();
+		const dimensionTable = dimensionTree.getTreeValue();
 		const { dimension, keyProps = [], otherProps = [] } = dimensionTable;
-		const dependencyNames = node.getChildTrees().map(tree => tree.getTreeValue().dimension);
+		const childDimensions = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension);
 
 		let memberList;
-		const args = [cellTable, dimension, keyProps, otherProps, cellTable, isFirstLevel];
+		let members;
 
-		if (!dependencyNames.length){
-			memberList = SnowflakeBuilder.makeMemberList.apply(null, args);
+		memberList = dimensionTree.getTreeValue().members;
+		const existMemberCount = memberList.length;
+		const args = [existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable];
+
+		if (!childDimensions.length) {
+			members = SnowflakeBuilder.makeMemberList.apply(null, args);
 		} else {
-
 			let entitiesParts = [];
-			const memberListForFilter = getMembers(dependencyNames[0]);
-			entitiesParts = SnowflakeBuilder.mapFilter(dependencyNames, cellTable, memberListForFilter);
-			memberList = SnowflakeBuilder.makeMemberListDependency.apply(null, args.concat([dependencyNames, entitiesParts]));
+			const memberListForFilter = dimensionTree.getDimensionTreeByDimension(childDimensions[0]).getTreeValue().members;
+			entitiesParts = SnowflakeBuilder.mapFilter(childDimensions, cells, memberListForFilter);
+			members = SnowflakeBuilder.makeMemberListDependency.apply(null, args.concat([childDimensions, entitiesParts]));
 		}
-
-		// const id = fact[ENTITY_ID];
 
 		// только после того как список сформирован, удалаять данные из ячеек
 		const totalProps = [].concat(keyProps, otherProps);
-		cellTable.forEach(cell=>{
+		cells.forEach(cell=>{
 			cell.deleteProps(totalProps);
 		});
 
-		dimensionTable.setMemberList(memberList);
-
-		return memberList;
+		members.forEach(member => {
+			memberList.addMember(member)
+		});
 	}
 	/**
 	 * Method filter cells by members of a dimension
 	 * @param {string} dimension
-	 * @param {CellTable} cellTable
+	 * @param {Cell[]} cells
 	 * @param {MemberList} memberList
 	 * @private
 	 * @return {CellTable[]}
 	 * */
-	static mapFilter(dimension, cellTable, memberList) {
+	static mapFilter(dimension, cells, memberList) {
 		const idAttribute = Cube.genericId(dimension);
 		const cellTables = [];
 		//todo оптимизировать поиск через хеш
 		memberList.forEach(member => {
-			const cellTableFiltered = cellTable.filter(cell => {
+			const cellTableFiltered = cells.filter(cell => {
 				return cell[idAttribute] == member[ENTITY_ID];
 			});
 			cellTables.push(cellTableFiltered);
@@ -82,25 +77,24 @@ export default class SnowflakeBuilder {
 	/**
 	 * @private
 	 * */
-	static makeMemberListDependency(factTable, dimension, keyProps, otherProps, cellTable, isFirstLevel, dependencyNames, entitiesParts) {
-
-		let totalMemberList = new MemberList();
+	static makeMemberListDependency(existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, childDimensions, entitiesParts) {
+		let totalMemberList = [];
 
 		let countId = 0;
 		entitiesParts.forEach(entitiesPart => {
 			if (entitiesPart.length) {
-				const memberList = SnowflakeBuilder.makeMemberList(entitiesPart, dimension, keyProps, otherProps, cellTable, isFirstLevel, countId);
-				countId = countId + memberList.length;
+				const members = SnowflakeBuilder.makeMemberList(existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, countId);
+				countId = countId + members.length;
 
 				const etalon = entitiesPart[0];
 
-				dependencyNames.forEach(dependencyName => {
+				childDimensions.forEach(dependencyName => {
 					const idAttribute = Cube.genericId(dependencyName);
 
-					memberList.forEach(member => {
+					members.forEach(member => {
 						member[idAttribute] = etalon[idAttribute];
-						member[ENTITY_ID] = totalMemberList.length + 1;
-						totalMemberList.addMember(member)
+						member[ENTITY_ID] = existMemberCount + totalMemberList.length + 1;
+						totalMemberList.push(member)
 					});
 
 					entitiesPart.forEach(entityPart => {
@@ -123,24 +117,43 @@ export default class SnowflakeBuilder {
 	 * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
 	 * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
 	 * @param {boolean} isFirstLevel
+	 * @param {Cell} cells
 	 * @param {CellTable} cellTable
-	 * @return {MemberList}
+	 * @return {[]}
 	 * @private
 	 * */
 	static makeMemberList(
+		existMemberCount,
+		factTable,
 		entitiesPart,
 		dimension,
 		keyProps = [],
 		otherProps = [],
-		cellTable,
+		cells,
 		isFirstLevel,
+		cellTable,
 		startFrom = 0
-	){
+	) {
 		// соотношение созданных id к ключам
 		const cache = {};
-		const memberList = new MemberList();
+		const restoredCache = {};
+		const members = [];
 		// полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
 		const totalProps = [].concat(keyProps, otherProps);
+
+		// need restore cache
+		const existedCells = cellTable.filter(cell => {
+			return cells.indexOf(cell) === -1
+		});
+		existedCells.forEach(cell => {
+			// собрать ключ на основе ключевых значений
+			const fact = factTable.find(fact => fact[ENTITY_ID] === cell[ENTITY_ID]);
+			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, fact);
+			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
+			if (!(surrogateKey in restoredCache)) {
+				restoredCache[surrogateKey] = ++startFrom;
+			}
+		});
 
 		// создания групп по уникальным ключам
 		entitiesPart.forEach(entityPart => {
@@ -149,20 +162,27 @@ export default class SnowflakeBuilder {
 			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, entityPart);
 
 			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-			if (!(surrogateKey in cache)) {
+			if (!(surrogateKey in cache) && !(surrogateKey in restoredCache)) {
 				const id = cache[surrogateKey] = ++startFrom;
-				const member = Member.create(id, totalProps, entityPart);
-				memberList.push(member);
+				// const member = Member.create(id, totalProps, entityPart);
+				// members.push(member);
 			}
 
 			// оставить в нормальной форме ссылку на id под сущности
-			const value = cache[surrogateKey];
+			const id = cache[surrogateKey];
 			const idAttribute = Cube.genericId(dimension);
-
-			entityPart[idAttribute] = value;
+			entityPart[idAttribute] = id;
 		});
 
-		return memberList;
+		Object.keys(cache).forEach(key => {
+			const id = cache[key];
+			const idAttribute = Cube.genericId(dimension);
+			const entityPart = entitiesPart.find(entityPart => entityPart[idAttribute] === id);
+			const member = Member.create(id, totalProps, entityPart);
+			members.push(member);
+		});
+
+		return members;
 	}
 
 	static createKeyFromProps(props, obj) {
@@ -173,19 +193,37 @@ export default class SnowflakeBuilder {
 		}).join(DIVIDER);
 	}
 
-	static destroy(cellTable, dimensionHierarchies) {
+	static destroy(cellTable, removedCells, dimensionHierarchies, cube) {
+		// first remove cells
+		removedCells.forEach(cell => {
+			cellTable.removeCell(cell)
+		});
+		// then remove members
+		const handleMember = (member, memberList, dimension)=>{
+			const { cellTable } = cube.projection({ [dimension]: member });
+			// last cell was removed at the beginning of the algorithm,
+			// so if the member is no longer used, the projection will be empty
+			if (!cellTable.length) {
+				memberList.removeMember(member)
+			}
+		};
+		this.denormalize(removedCells, dimensionHierarchies, handleMember)
+	}
+
+	static denormalize(cellTable, dimensionHierarchies, handleMember = ()=>{}) {
 		const factTable = new FactTable();
 		cellTable.forEach(cell => {
 			factTable.push({...cell})
 		});
 
-		const handleDimensionTree = (tree, fact)=>{
-			const { dimension, members } = tree.getTreeValue();
+		const handleDimensionTree = (dimensionTree, fact)=>{
+			const { dimension, members: memberList } = dimensionTree.getTreeValue();
 			const idAttribute = Cube.genericId(dimension);
 			const idValue = fact[idAttribute];
-			const member = members.find(member => {
+			const member = memberList.find(member => {
 				return member[ENTITY_ID] === idValue;
 			});
+			handleMember(member, memberList, dimension);
 			const memberCopy = {...member};
 			delete memberCopy[ENTITY_ID];
 			delete fact[idAttribute];
@@ -193,7 +231,6 @@ export default class SnowflakeBuilder {
 		};
 		factTable.forEach(fact => {
 			dimensionHierarchies.forEach(dimensionTree => {
-				handleDimensionTree(dimensionTree, fact);
 				dimensionTree.tracePreOrder((value, dimensionTree)=>{
 					handleDimensionTree(dimensionTree, fact)
 				})

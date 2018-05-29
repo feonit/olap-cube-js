@@ -9,35 +9,35 @@ import {ENTITY_ID} from './const.js'
  * @throws {DimensionException}
  * */
 export default class DimensionTree extends Tree {
-	constructor(tree) {
+	constructor(dimensionTree) {
 		super();
 
-		const {dimensionTable, dependency = [], parentNode = null} = tree;
+		const {dimensionTable, dependency = [], parentNode = null} = dimensionTree;
 
 		Object.defineProperties(this, {
-			/**
-			 * @property
-			 * @name Tree#nodeValue
-			 * */
 			dimensionTable: {
+				/**
+				 * @property
+				 * @name DimensionTree#dimensionTable
+				 * */
 				value: new DimensionTable(dimensionTable),
-				enumerable: true,
-				editable: false
+				editable: false,
+				enumerable: true
 			},
-			/**
-			 * @property {Tree|null}
-			 * @name Tree#parentNode
-			 * */
 			parentNode: {
+				/**
+				 * @property {DimensionTree|null}
+				 * @name DimensionTree#parentNode
+				 * */
 				value: parentNode,
 				enumerable: false,
 				editable: false
 			},
-			/**
-			 * @property {Tree[]}
-			 * @name Tree#childNodes
-			 * */
 			dependency: {
+				/**
+				 * @property {DimensionTree[]}
+				 * @name DimensionTree#dependency
+				 * */
 				value: dependency.map(dimensionTreeData => {
 					return new DimensionTree({ ...dimensionTreeData, parentNode: this })
 				}),
@@ -48,145 +48,142 @@ export default class DimensionTree extends Tree {
 	}
 	static createDimensionTree(dimensionTreeData) {
 		const dimensionTree = new DimensionTree(dimensionTreeData);
-		dimensionTree.tracePostOrder((nodeValue, node)=>{
-			nodeValue.dependencyNames = node.getChildTrees().map(node => node.getTreeValue().dimension)
+		dimensionTree.tracePostOrder((dimensionTreeValue, dimensionTree) => {
+			dimensionTreeValue.dependencyNames = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension)
 		});
 
 		return dimensionTree;
 	}
+	/**
+	 * @public
+	 * @return {DimensionTable}
+	 * */
 	getTreeValue() {
 		return this.dimensionTable;
 	}
+	/**
+	 * @public
+	 * @return {DimensionTree|null}
+	 * */
 	getParentTree() {
 		return this.parentNode;
 	}
+	/**
+	 * @public
+	 * @return {DimensionTree[]}
+	 * */
 	getChildTrees() {
 		return this.dependency;
 	}
-	getSpace() {
-		const space = {};
-		this.getRoot().tracePostOrder(({dimension, members})=>{
-			space[dimension] = members
-		});
-		return space
-	}
-	traceUp(dimension, callback) {
-		let node = this.searchValueDimension(dimension);
-		node.traceUpOrder((tracedNode)=>{
-			callback(tracedNode.getTreeValue())
+	/**
+	 * @public
+	 * @param {string} dimension
+	 * @return {DimensionTree|undefined}
+	 * */
+	getDimensionTreeByDimension(dimension) {
+		return this.getRoot().searchTreeByTreeValue(dimensionTree => {
+			const dimensionTreeValue = dimensionTree.getTreeValue();
+			return dimensionTreeValue.dimension === dimension;
 		});
 	}
-
-	searchValueDimension(dimension) {
-		return this.searchValue(tree => {
-			const treeValue = tree.getTreeValue();
-			return treeValue.dimension === dimension;
+	/**
+	 * @public
+	 * @param {string} dimension
+	 * @param {Member} member
+	 * @return {DimensionTree|undefined}
+	 * */
+	createProjectionOntoMember(dimension, member) {
+		// 1 create copy of hierarchy with empty members
+		const newDimensionTreeByMember = new DimensionTree(this.getRoot());
+		newDimensionTreeByMember.tracePostOrder((dimensionTreeValue, dimensionTree)=>{
+			const dimensionTable = dimensionTree.getTreeValue();
+			dimensionTable.clearMemberList();
 		});
-	}
-
-	recoveryTreeProjectionOfMember(dimension, member) {
-		const searchedInTree = this.searchValueDimension(dimension);
-
+		// 2 get dimensionTree by dimension
+		const searchedInTree = this.getDimensionTreeByDimension(dimension);
 		let lastMembers;
 		let lastDimension;
+		// 3 trace up
+		searchedInTree.traceUpOrder(tracedTree => {
+			const { dimension: tracedDimension } = tracedTree.getTreeValue();
 
-		const newDimensionTreeByMember = new DimensionTree(this.getRoot());
-		newDimensionTreeByMember.clearDimensionTablesMembers();
+			// 4 get drill down of last members
+			const drillDownedMembers = tracedTree == searchedInTree
+				? [member]
+				: this.drillDownDimensionMembers(lastDimension, lastMembers);
 
-		searchedInTree.traceUpOrder((tracedTree)=>{
-			const {
-				members: tracedMembers,
-				dimension: tracedDimension
-			} = tracedTree.getTreeValue();
+			// 5 set members
+			newDimensionTreeByMember
+				.getDimensionTreeByDimension(tracedDimension)
+				.getTreeValue()
+				.setMemberList(drillDownedMembers);
 
-			if (tracedTree == searchedInTree) {
-				const searchedMember = tracedMembers.find(childMember=>{
-					return childMember[ENTITY_ID] === member[ENTITY_ID]
-				});
-				if (!searchedMember) {
-					throw 'member not found'
-				}
-				lastMembers = [searchedMember];
-				lastDimension = tracedDimension;
-
-			} else {
-				const idAttribute = Cube.genericId(lastDimension);
-				const relations = [];
-				tracedMembers.forEach(tracedMember=>{
-					lastMembers.forEach(lastMember=>{
-						if (tracedMember[idAttribute] === lastMember[ENTITY_ID]){
-							relations.push(tracedMember)
-						}
-					});
-				});
-				lastMembers = relations;
-				lastDimension = tracedDimension;
-			}
-
-			const dimensionTree = newDimensionTreeByMember.searchValueDimension(lastDimension);
-			dimensionTree.getTreeValue().setMemberList(lastMembers);
+			// 6 save current dimension and drill downed members
+			lastDimension = tracedDimension;
+			lastMembers = drillDownedMembers;
 		});
-
 		return newDimensionTreeByMember;
 	}
-
+	/**
+	 * @public
+	 * @param {string} dimension
+	 * @param {Member} member
+	 * */
 	removeDimensionMember(dimension, member) {
 		// travers up
-		let removalInTree = this.searchValueDimension(dimension);
+		let removalInTree = this.getDimensionTreeByDimension(dimension);
 
-		const treeProjection = removalInTree.recoveryTreeProjectionOfMember(dimension, member);
+		const projectionDimensionTree = removalInTree.createProjectionOntoMember(dimension, member);
 
+		// remove intersection
 		const toBeRemovedSpace = {};
 		const endToBeRemovedMember = {};
 
-		treeProjection.tracePostOrder((treeValue)=>{
-			const {dimension, members} = treeValue;
+		projectionDimensionTree.tracePostOrder(dimensionTreeValue => {
+			const {dimension, members} = dimensionTreeValue;
 			toBeRemovedSpace[dimension] = members;
 		});
 
-		const space = this.getSpace();
+		const memberList = removalInTree.getTreeValue().members;
 
 		// travers down
-		if (space[dimension].members === 1) {
-			removalInTree.tracePreOrder((downTree)=>{
+		if (memberList.length === 1) {
+			removalInTree.tracePreOrder(downTree => {
 				const {members: childMembers, dimension: childDimension} = downTree.getTreeValue();
 				toBeRemovedSpace[childDimension] = childMembers;
 			})
 		}
 
 		// remove removal space
-		Object.keys(toBeRemovedSpace).forEach(dimension=>{
-			toBeRemovedSpace[dimension].forEach(member=>{
-				space[dimension].removeMember(member);
+		Object.keys(toBeRemovedSpace).forEach(dimension => {
+			const currentDimensionTree = this.getDimensionTreeByDimension(dimension);
+			const currentMemberList = currentDimensionTree.getTreeValue().members;
+			toBeRemovedSpace[dimension].forEach(member => {
+				currentMemberList.removeMember(member);
 			})
 		});
 
 		const {
 			dimension: dimensionProjection,
 			members: membersProjection
-		} = treeProjection.getRoot().getTreeValue();
+		} = projectionDimensionTree.getRoot().getTreeValue();
 
 		endToBeRemovedMember[dimensionProjection] = membersProjection;
 
 		return endToBeRemovedMember;
 	}
-
-	clearDimensionTablesMembers() {
-		this.tracePostOrder((treeValue, tree)=>{
-			const dimensionTable = tree.getTreeValue();
-			dimensionTable.clearMemberList();
-		})
-	}
-
 	/**
-	 *
+	 * @public
+	 * @param {string} dimension
+	 * @param {Member[]} members
+	 * @return {Member[]}
 	 * */
 	drillDownDimensionMembers(dimension, members) {
-		const tree = this.getRoot().searchValueDimension(dimension);
-		if (tree.isRoot()) {
+		const dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
+		if (dimensionTree.isRoot()) {
 			return members;
 		}
-		const parentTree = tree.getParentTree();
+		const parentTree = dimensionTree.getParentTree();
 		const { members: parentMembers } = parentTree.getTreeValue();
 		const idAttribute = Cube.genericId(dimension);
 		const drillDownMembers = [];
@@ -202,14 +199,17 @@ export default class DimensionTree extends Tree {
 		return drillDownMembers;
 	}
 	/**
-	 *
+	 * @public
+	 * @param {string} dimension
+	 * @param {Member[]} members
+	 * @return {Member[]}
 	 * */
 	rollUpDimensionMembers(dimension, members) {
-		const tree = this.getRoot().searchValueDimension(dimension);
-		if (tree.isExternal()) {
+		const dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
+		if (dimensionTree.isExternal()) {
 			return members;
 		}
-		const childTree = tree.getChildTrees()[0]; // for one child always
+		const childTree = dimensionTree.getChildTrees()[0]; // for one child always
 		const { members: childMembers, dimension: childDimension } = childTree.getTreeValue();
 		const idAttribute = Cube.genericId(childDimension);
 		const rollUpMembers = [];

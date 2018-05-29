@@ -33,7 +33,7 @@ export class DimensionException extends Error {
 	}
 }
 
-export const handleError = (error)=>{
+export const handleError = error => {
 	if (error instanceof Error) {
 		error.message = `[Cube] ${error.message}`
 	}

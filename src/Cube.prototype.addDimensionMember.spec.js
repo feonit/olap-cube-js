@@ -265,7 +265,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			{ id: 2, category_id: 1, product: 'tv' }
 		];
 
-		it ('level 1, where node has not hierarchy', () => {
+		it ('level 1, where dimensionTree has not hierarchy', () => {
 			const factTableBefore = cube.getFacts();
 			cube.addDimensionMember('product', { product: 'clock' }, { category: { id: 1 } }, {}, { money: null });
 
