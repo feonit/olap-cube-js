@@ -13,16 +13,6 @@ export default class Space {
 	}
 	/**
 	 * @param {string} dimension
-	 * */
-	getMemberList(dimension) {
-		const memberList = this[dimension];
-		if (!memberList) {
-			throw Error(`dimension "${dimension}" not found`)
-		}
-		return memberList;
-	}
-	/**
-	 * @param {string} dimension
 	 * @param {MemberList|object[]} memberList
 	 * */
 	setMemberList(dimension, memberList) {

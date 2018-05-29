@@ -1,67 +1,67 @@
 import Tree from '../src/Tree.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('class Tree', ()=>{
+describe('class Tree', () => {
 
-	it('should define getTreeValue', ()=> { expect(Tree.prototype.getTreeValue).toBeDefined(); });
-	it('should define getParentTree', ()=> { expect(Tree.prototype.getParentTree).toBeDefined(); });
-	it('should define getChildTrees', ()=> { expect(Tree.prototype.getChildTrees).toBeDefined(); });
-	it('should define isExternal', ()=> { expect(Tree.prototype.isExternal).toBeDefined(); });
-	it('should define isRoot', ()=> { expect(Tree.prototype.isRoot).toBeDefined(); });
-	it('should define getRootTree', ()=> { expect(Tree.prototype.getRootTree).toBeDefined(); });
-	it('should define searchValue', ()=> { expect(Tree.prototype.searchValue).toBeDefined(); });
-	it('should define traceUpOrder', ()=> { expect(Tree.prototype.traceUpOrder).toBeDefined(); });
-	it('should define tracePostOrder', ()=> { expect(Tree.prototype.tracePostOrder).toBeDefined(); });
+	it('should define getTreeValue', () => { expect(Tree.prototype.getTreeValue).toBeDefined(); });
+	it('should define getParentTree', () => { expect(Tree.prototype.getParentTree).toBeDefined(); });
+	it('should define getChildTrees', () => { expect(Tree.prototype.getChildTrees).toBeDefined(); });
+	it('should define isExternal', () => { expect(Tree.prototype.isExternal).toBeDefined(); });
+	it('should define isRoot', () => { expect(Tree.prototype.isRoot).toBeDefined(); });
+	it('should define getRoot', () => { expect(Tree.prototype.getRoot).toBeDefined(); });
+	it('should define searchTreeByTreeValue', () => { expect(Tree.prototype.searchTreeByTreeValue).toBeDefined(); });
+	it('should define traceUpOrder', () => { expect(Tree.prototype.traceUpOrder).toBeDefined(); });
+	it('should define tracePostOrder', () => { expect(Tree.prototype.tracePostOrder).toBeDefined(); });
 
 	let tree;
 	let CustomTree;
 	let debug;
 
-	beforeEach(()=>{
+	beforeEach(() => {
 		CustomTree = class CustomTree extends Tree {
-			constructor({nodeValue, childNodes = [], parentNode = null}) {
+			constructor({treeValue, childTrees = [], parentTree = null}) {
 				super();
-				this.nodeValue = nodeValue;
+				this.treeValue = treeValue;
 				Object.defineProperties(this, {
-					parentNode: {
+					parentTree: {
 						enumerable: false,
-						value: parentNode
+						value: parentTree
 					},
-					childNodes: {
+					childTrees: {
 						enumerable: true,
-						value: childNodes.map(node => new CustomTree({...node, parentNode: this}))
+						value: childTrees.map(tree => new CustomTree({...tree, parentTree: this}))
 					}
 				});
 			}
 			getTreeValue() {
-				return this.nodeValue
+				return this.treeValue
 			}
 			getParentTree() {
-				return this.parentNode
+				return this.parentTree
 			}
 			getChildTrees() {
-				return this.childNodes
+				return this.childTrees
 			}
 		};
 		tree = new CustomTree({
-			nodeValue: 1,
-			childNodes: [
+			treeValue: 1,
+			childTrees: [
 				{
-					nodeValue: 10,
-					childNodes: [
+					treeValue: 10,
+					childTrees: [
 						{
-							nodeValue: 100
+							treeValue: 100
 						},
 						{
-							nodeValue: 101
+							treeValue: 101
 						}
 					]
 				},
 				{
-					nodeValue: 20,
-					childNodes: [
+					treeValue: 20,
+					childTrees: [
 						{
-							nodeValue: 201
+							treeValue: 201
 						}
 					]
 				}
@@ -69,31 +69,31 @@ describe('class Tree', ()=>{
 		});
 	});
 
-	it('constructor should work with default params', ()=>{
+	it('constructor should work with default params', () => {
 		debug = isEqualObjects(
 			tree,
 			{
-				nodeValue: 1,
-				childNodes: [
+				treeValue: 1,
+				childTrees: [
 					{
-						nodeValue: 10,
-						childNodes: [
+						treeValue: 10,
+						childTrees: [
 							{
-								nodeValue: 100,
-								childNodes: []
+								treeValue: 100,
+								childTrees: []
 							},
 							{
-								nodeValue: 101,
-								childNodes: []
+								treeValue: 101,
+								childTrees: []
 							}
 						]
 					},
 					{
-						nodeValue: 20,
-						childNodes: [
+						treeValue: 20,
+						childTrees: [
 							{
-								nodeValue: 201,
-								childNodes: []
+								treeValue: 201,
+								childTrees: []
 							}
 						]
 					}
@@ -104,34 +104,34 @@ describe('class Tree', ()=>{
 		expect(debug = (tree.getChildTrees()[0].getParentTree() === tree)).toBe(true);
 	});
 
-	it('the constructor can clone', ()=>{
+	it('the constructor can clone', () => {
 		const newTree = new CustomTree(tree);
 		isEqualObjects(tree, newTree)
 	});
 
-	it('references to child and parent nodes are not available for change', ()=>{
+	it('references to child and parent trees are not available for change', () => {
 		expect(tree.getParentTree() === null).toBe(true);
 
-		const link = tree.childNodes;
-		expect(()=>{
-			tree.childNodes = [];
+		const link = tree.childTrees;
+		expect(() => {
+			tree.childTrees = [];
 		}).toThrow();
-		expect(tree.childNodes === link).toBe(true);
+		expect(tree.childTrees === link).toBe(true);
 	});
 
-	it('should correctly work method traceUpOrder (A walk to root from current node, the current node and root entered to the chain)',()=>{
+	it('should correctly work method traceUpOrder (A walk to root from current tree, the current tree and root entered to the chain)',()=>{
 		const order = [];
-		const lastNode = tree.getChildTrees()[0].getChildTrees()[0];
-		lastNode.traceUpOrder((node)=>{
-			order.push(node.getTreeValue())
+		const lastTree = tree.getChildTrees()[0].getChildTrees()[0];
+		lastTree.traceUpOrder(tree => {
+			order.push(tree.getTreeValue())
 		});
 		isEqualObjects(order, [100, 10, 1])
 	});
 
 	it('should correctly work method tracePostOrder (A walk in which the children are traversed before their respective parents are traversed)',()=>{
 		const order = [];
-		tree.tracePostOrder((nodeValue, node)=>{
-			order.push(nodeValue)
+		tree.tracePostOrder((treeValue, tree)=>{
+			order.push(treeValue)
 		});
 		isEqualObjects(order, [100, 101, 10, 201, 20, 1])
 	})

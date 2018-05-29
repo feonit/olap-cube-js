@@ -46,38 +46,38 @@ describe('readme', ()=>{
 		// We send it all to the constructor
 		let cube = Cube.create(facts, dimensionHierarchies);
 
-		let expected = {
-			regions: [
-				{ id: 1, region: 'North' },
-				{ id: 2, region: 'South' },
-				{ id: 3, region: 'West' }
-			],
-			date: [
-				{ id: 1, year: 2017, month: 'January' },
-				{ id: 2, year: 2017, month: 'April' },
-				{ id: 3, year: 2018, month: 'April' }
-			],
-			products: [
-				{ id: 1, product: 'Product 1', categories_id: 1 },
-				{ id: 2, product: 'Product 2', categories_id: 1 },
-				{ id: 3, product: 'Product 3', categories_id: 2 },
-				{ id: 4, product: 'Product 1', categories_id: 2 },
-			],
-			categories: [
-				{ id: 1, category: 'Category 1' },
-				{ id: 2, category: 'Category 2' },
-			]
-		};
+		const regions = [
+			{ id: 1, region: 'North' },
+			{ id: 2, region: 'South' },
+			{ id: 3, region: 'West' }
+		];
+		const date = [
+			{ id: 1, year: 2017, month: 'January' },
+			{ id: 2, year: 2017, month: 'April' },
+			{ id: 3, year: 2018, month: 'April' }
+		];
+		const products = [
+			{ id: 1, product: 'Product 1', categories_id: 1 },
+			{ id: 2, product: 'Product 2', categories_id: 1 },
+			{ id: 3, product: 'Product 3', categories_id: 2 },
+			{ id: 4, product: 'Product 1', categories_id: 2 },
+		];
+		const categories = [
+			{ id: 1, category: 'Category 1' },
+			{ id: 2, category: 'Category 2' },
+		];
 
-		let measure = [
+		let cellTable = [
 			{ id: 1, regions_id: 1, date_id: 1, products_id: 1, value: 737 },
 			{ id: 2, regions_id: 2, date_id: 2, products_id: 2, value: 155 },
 			{ id: 3, regions_id: 3, date_id: 3, products_id: 3, value: 112 },
 			{ id: 4, regions_id: 3, date_id: 3, products_id: 4, value: 319 },
 		];
 
-		const space = cube.getSpace();
-		debug = isEqualObjects(expected, space);
+		debug = isEqualObjects(regions, cube.getDimensionMembers('regions'));
+		debug = isEqualObjects(date, cube.getDimensionMembers('date'));
+		debug = isEqualObjects(products, cube.getDimensionMembers('products'));
+		debug = isEqualObjects(categories, cube.getDimensionMembers('categories'));
 
 		const result = cube.projection({ categories: [{ id: 1 }] });
 

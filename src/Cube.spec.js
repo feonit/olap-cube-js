@@ -13,33 +13,35 @@ describe('class Cube', function() {
 		expect(Cube.reduceId([{id: 1}, {id: 3}])).toBe(4)
 	});
 
-	describe(`[ API prototype ${Cube.name}]`,()=>{
+	describe(`[ API prototype ${Cube.name}]`,() => {
 
-		it('should define residuals', ()=> {
+		it('should define residuals', () => {
 			expect(Cube.prototype.residuals).toBeDefined();
 		});
 
-		it('should define denormalize', ()=> {
+		it('should define denormalize', () => {
 			expect(Cube.prototype.denormalize).toBeDefined();
 		});
 
-		it('should define unfilled', ()=> {
+		it('should define unfilled', () => {
 			expect(Cube.prototype.unfilled).toBeDefined();
 		});
 	});
 
-	describe(`[ API static ${Cube.name}]`,()=>{
+	describe(`[ API static ${Cube.name}]`,() => {
 
-		it('should define create', ()=> {
+		it('should define create', () => {
 			expect(Cube.create).toBeDefined();
 		});
 	});
+
+	// todo new Cube({dimensionHierarchies, cellTable})
 
 	describe('[ Copy ]', () => {
 		let cube;
 		let cubeCopy;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 			const factTable = [
 				{ id: 1, x: 0, y: 0, xy: null },
 			];
@@ -97,7 +99,7 @@ describe('class Cube', function() {
 		}
 	];
 
-	it('inheritance of cube must work ES5', ()=>{
+	it('inheritance of cube must work ES5', () => {
 		function CustomCube(factTable, dimensionHierarchies){
 			// if Cube.js not esm module
 			try {
@@ -117,14 +119,14 @@ describe('class Cube', function() {
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
 
-	it('inheritance of cube must work ES6', ()=>{
+	it('inheritance of cube must work ES6', () => {
 		class CustomCube extends Cube {}
 		const cube = CustomCube.create(factTable, dimensionHierarchies);
 		expect(debug = (cube instanceof CustomCube)).toBe(true)
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
 
-	it('should throw when execute create static method without context of Cube constructor of its interface', ()=>{
+	it('should throw when execute create static method without context of Cube constructor of its interface', () => {
 		class CustomCube extends Cube {}
 		const createCube = CustomCube.create;
 		expect(()=>{
@@ -132,8 +134,8 @@ describe('class Cube', function() {
 		}).toThrow()
 	});
 
-	it('should specific throw when execute create static method without context of Cube constructor of its interface', ()=>{
-		class CustomCube extends Cube{}
+	it('should specific throw when execute create static method without context of Cube constructor of its interface', () => {
+		class CustomCube extends Cube {}
 		const createCube = CustomCube.create;
 		let error;
 		try {
@@ -149,7 +151,7 @@ describe('class Cube', function() {
 	});
 
 
-	it('should define cartesian', ()=> {
+	it('should define cartesian', () => {
 		expect(Cube.prototype.cartesian).toBeDefined();
 	});
 });

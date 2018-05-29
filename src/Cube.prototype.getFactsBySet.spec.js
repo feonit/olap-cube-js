@@ -19,19 +19,4 @@ describe('method Cube.prototype.getFactsBySet', () => {
 	it('query with the space option in which there can be a list of members of the dimension', () => {
 		expect(cube.getFactsBySet({ mark: [{ id: 1 }, { id: 2 }] }).length).toBe(7);
 	});
-
-	xit('query with the space option in which there may be a plurality of terms of dimension determined by the represented key - value', () => {
-		expect(cube.getFactsBySet({ mark: { mark: 'SONY' } }).length).toBe(3);
-		expect(cube.getFactsBySet({ mark: { mark: 'APPLE' } }).length).toBe(4);
-	});
-
-	// @deprecated
-	it('query with the space option in which there may be a plurality of terms of dimension determined by the represented value', () => {
-		expect(cube.getFactsBySet({ mark: 'SONY' }).length).toBe(3);
-		expect(cube.getFactsBySet({ mark: 'APPLE' }).length).toBe(4);
-	});
-
-	it('query with the space option in which there may be a plurality of terms of dimension determined by the represented values', () => {
-		expect(cube.getFactsBySet({ mark: ['SONY', 'APPLE'] }).length).toBe(7);
-	});
 });

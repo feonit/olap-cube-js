@@ -35,30 +35,4 @@ describe('method Cube.prototype.getDimensionMembersBySet', () => {
 	it('query with the space option in which there can be a list of members of the dimension', () => {
 		expect(debug = cube.getFactsBySet({ mark: [{ id: 1 }, { id: 2 }] }).length).toBe(7);
 	});
-
-	xit('query with the space option in which there may be a plurality of terms of dimension determined by the represented key - value', () => {
-		expect(debug = cube.getFactsBySet({ mark: { mark: 'SONY' } }).length).toBe(3);
-		expect(debug = cube.getFactsBySet({ mark: { mark: 'APPLE' } }).length).toBe(4);
-	});
-
-	// @deprecated
-	it('query with the space option in which there may be a plurality of terms of dimension determined by the represented value', () => {
-		expect(debug = cube.getFactsBySet({ mark: 'SONY' }).length).toBe(3);
-		expect(debug = cube.getFactsBySet({ mark: 'APPLE' }).length).toBe(4);
-	});
-
-	it('query with the space option in which there may be a plurality of terms of dimension determined by the represented values', () => {
-		expect(debug = cube.getFactsBySet({ mark: ['SONY', 'APPLE'] }).length).toBe(7);
-	});
-
-	it('query with empty the space option', () => {
-		const res = [
-			{ id: 1, mark: 'SONY' },
-			{ id: 2, mark: 'APPLE' },
-			{ id: 3, mark: 'LG' }
-		];
-		const expectation = cube.getDimensionMembersBySet('mark', { product: void 0 });
-		const check = isEqual(jsonParseStringify(res), jsonParseStringify(expectation));
-		expect(check).toBe(true);
-	})
 });

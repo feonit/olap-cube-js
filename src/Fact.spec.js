@@ -2,8 +2,8 @@ import Fact from '../src/Fact.js'
 import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
 import {NotFoundFactId} from '../src/errors.js'
 
-describe('class Fact', ()=>{
-	it('must assign properties with only simple values', ()=>{
+describe('class Fact', () => {
+	it('must assign properties with only simple values', () => {
 		class Data {
 			constructor() {
 				Object.assign(this, {
@@ -34,13 +34,13 @@ describe('class Fact', ()=>{
 		)).toBe(true)
 	});
 
-	it('should throw error if not found id param', ()=>{
-		expect(()=>{
+	it('should throw error if not found id param', () => {
+		expect(() => {
 			new Fact({name: 'me'})
 		}).toThrow();
 	});
 
-	it('should throw special error if not found id param', ()=>{
+	it('should throw special error if not found id param', () => {
 		let err;
 		try {
 			new Fact({ region: 'North' })

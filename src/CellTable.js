@@ -16,6 +16,11 @@ export default class CellTable extends Array {
 	addCell(cell) {
 		this.push(cell)
 	}
+	addCells(cells) {
+		cells.forEach(cell => {
+			this.addCell(cell)
+		})
+	}
 	removeCell(cell) {
 		const index = this.indexOf(cell);
 		this.splice(index, 1);

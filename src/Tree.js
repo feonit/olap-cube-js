@@ -1,67 +1,75 @@
 /**
- * Data definition for Tree
- * @typedef {object} INode
- * @property {any} nodeValue
- * @property {INode[]} childNodes
- * @property {INode} parentNode
- * */
-
-/**
  * @class Tree
  * @abstract class cannot be instantiated with new
  * */
 export default class Tree {
 	/**
-	 * method
+	 * @public
+	 * @abstract
+	 * @return {Object}
 	 * */
 	getTreeValue() {
 		throw 'abstract method'
 	}
 	/**
-	 * method
+	 * @public
+	 * @abstract
+	 * @return {Tree|null}
 	 * */
 	getParentTree() {
 		throw 'abstract method'
 	}
 	/**
-	 * method
+	 * @public
+	 * @abstract
+	 * @return {Tree[]}
 	 * */
 	getChildTrees() {
 		throw 'abstract method'
 	}
 	/**
+	 * @public
 	 * @return {boolean}
 	 * */
 	isExternal() {
 		return !this.getChildTrees().length;
 	}
 	/**
+	 * @public
+	 * @return {boolean}
+	 * */
+	isFirstLevel() {
+		return !this.isRoot() && (this.getParentTree().getParentTree() === null)
+	}
+	/**
+	 * @public
 	 * @return {boolean}
 	 * */
 	isRoot() {
 		return this.getParentTree() === null;
 	}
-	isFirstLevel() {
-		return !this.isRoot() && (this.getParentTree().getParentTree() === null)
-	}
 	/**
+	 * @public
+	 * Get root for that tree
 	 * @return {Tree}
 	 * */
-	getRootTree() {
-		let root;
-		this.traceUpOrder((Tree)=>{
-			if (Tree.isRoot()) {
-				root = Tree;
+	getRoot() {
+		let root = this;
+		this.traceUpOrder(tracedTree => {
+			if (tracedTree.isRoot()) {
+				root = tracedTree;
 			}
 		});
 		return root;
 	}
 	/**
+	 * @public
 	 * Search method
+	 * @return {Tree|undefined}
 	 * */
-	searchValue(callback) {
+	searchTreeByTreeValue(callback) {
 		let search = void 0;
-		this.tracePostOrder((nodeValue, tree)=>{
+		this.tracePostOrder((treeValue, tree) => {
 			if (callback(tree)) {
 				search = tree
 			}
@@ -69,6 +77,7 @@ export default class Tree {
 		return search;
 	}
 	/**
+	 * @public
 	 * A walk to root from current Tree, the current Tree and root entered to the chain
 	 * @param {function} callback
 	 * */
@@ -82,59 +91,36 @@ export default class Tree {
 		}(this));
 	}
 	/**
+	 * @public
 	 * A walk in which the children are traversed before their respective parents are traversed
 	 * @param {function} callback
 	 * */
 	tracePostOrder(callback) {
 		(function reqursively(tree) {
-			const childNodes = tree.getChildTrees();
-			const nodeValue = tree.getTreeValue();
-			if (childNodes.length) {
-				childNodes.forEach(childNode => {
-					reqursively(childNode);
+			const childTrees = tree.getChildTrees();
+			const treeValue = tree.getTreeValue();
+			if (childTrees.length) {
+				childTrees.forEach(childTree => {
+					reqursively(childTree);
 				});
 			}
-			callback(nodeValue, tree);
+			callback(treeValue, tree);
 		}(this));
 	}
 	/**
-	 *  A walk in which each parent node is traversed before its children is called a pre-order walk
+	 * @public
+	 *  A walk in which each parent tree is traversed before its children is called a pre-order walk
 	 * */
 	tracePreOrder(callback) {
 		(function reqursively(tree) {
-			const childNodes = tree.getChildTrees();
-			const nodeValue = tree.getTreeValue();
-			callback(nodeValue, tree);
-			if (childNodes.length) {
-				childNodes.forEach(childNode => {
-					reqursively(childNode);
+			const childTrees = tree.getChildTrees();
+			const treeValue = tree.getTreeValue();
+			callback(treeValue, tree);
+			if (childTrees.length) {
+				childTrees.forEach(childTree => {
+					reqursively(childTree);
 				});
 			}
 		}(this));
-	}
-	/**
-	 * A child nodes with no children.
-	 * @return {Tree[]}
-	 * */
-	getExternals() {
-		const externals = [];
-		this.tracePostOrder((nodeValue, tree)=>{
-			if (tree.isExternal(tree)) {
-				externals.push(tree)
-			}
-		});
-		return externals;
-	}
-	/**
-	 * Get root for that tree
-	 * */
-	getRoot() {
-		let root;
-		this.traceUpOrder((tracedTree)=>{
-			if (tracedTree.isRoot()) {
-				root = tracedTree;
-			}
-		});
-		return root;
 	}
 }
