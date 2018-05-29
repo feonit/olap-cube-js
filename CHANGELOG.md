@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.6.0*
+- Added new methods: addFacts, removeFacts
+
 *0.5.1*
 - Added ESLint
  
