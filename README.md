@@ -19,12 +19,34 @@
 [7]: https://nodejs.org/en/
 [8]: https://en.wikipedia.org/wiki/Surrogate_key
 [9]: https://docs.oracle.com/en/cloud/paas/analytics-cloud/adess/scenario-4-typical-multidimensional-problem.html
+[10]: https://github.com/feonit/olap-cube-js/blob/master/CHANGELOG.md
 
-# OLAP Cube.js
+# OLAP cube.js
 The simplest data analysis tools written in javascript.
 This solution is a means for extracting and replenishing data, which together with your data storage means and a means of providing aggregate data, is intended for decision making.
 
-## Support:
+## Table of Contents
+- [Features](#features)
+- [Getting Started](#start)
+- [How Cube is work?](#work)
+  - [Structure](#structure)
+  - [Sets](#sets)
+- [API](#api)
+  - [Access to facts of the fact table](#access-to-facts-of-the-fact-table)
+  - [Access to members of the dimensions tables](#access-to-members-of-the-dimensions-tables)
+  - [Editing dimension members](#editing-dimension-members)
+  - [Adding dimension members](#adding-dimension-members)
+  - [Removing dimension members](#removing-dimension-members)
+  - [Adding facts](#adding-facts)
+  - [Removing facts](#removing-facts)
+  - [Filling empty cells](#filling-empty-cells)
+- [Versioning](#versioning)
+- [Todo](#todo)
+- [Demo][6]
+- [Specification][5]
+- [Changelog][10]
+
+## Features:
 - Multidimensional conceptual data representation
 - Tree structure for representing hierarchical data
 - [Balanced][4] hierarchies
@@ -35,8 +57,6 @@ This solution is a means for extracting and replenishing data, which together wi
 - [Surrogate key][8] is internally generated as unique identifier for dimension member (used composite dimension keys)
 - The ability to edit data
 - Filling - solution for [Typical Multidimensional Problem: missing values][9]
-
-[Specification][5] [Demo][6]
 
 ## Getting Started
 
@@ -52,6 +72,7 @@ npm install olap-cube-js
 
 ## How Cube is work?
 
+### Structure
 ```js
 
 // This is an array of data from server
@@ -195,7 +216,9 @@ Access to the elements of the OLAP-cube can be carried out several types of sets
 <br/>
 Now using different types of sets, you can access the elements of the cube
 
-#### Access to facts of the fact table
+## API
+
+### Access to facts of the fact table
 
 ##### Set <br/>
 Define the set with maximum cardinality. For this fixate all dimensions of the first level of the hierarchy:
@@ -253,7 +276,7 @@ return:
     { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
 ]
 ```
-#### Access to members of the dimensions tables
+### Access to members of the dimensions tables
 ##### EmptySet <br/>
 Simple call return all members of the dimension:
 ```js
@@ -308,7 +331,43 @@ return:
 ]
 ```
 
-### Cube filling
+### Editing dimension members
+```js
+let regions = cube.getDimensionMembers('regions')
+let member = regions[0]
+member['region'] = 'East'; 
+```
+
+### Adding dimension members
+```js
+let member = { product: 'Product 3' }
+cube.addDimensionMember('products', member)
+```
+
+### Removing dimension members
+```js
+let member = { id: 2 }
+cube.removeDimensionMember('products', member)
+```
+
+### Adding facts
+```js
+let facts = [
+    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+]
+cube.addFacts(facts)
+```
+
+### Removing facts
+```js
+let facts = [
+    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+]
+cube.removeFacts(facts)
+```
+
+
+### Filling empty cells
 Fills the fact table with all possible missing combinations. For example, for a table, such data will represent empty cells
 
 ```js
@@ -348,41 +407,6 @@ factsFilled will be:
     { region: 'North', product: 'Product 2', value: 0 },
     { region: 'South', product: 'Product 1', value: 0 }
 ]
-```
-
-### Editing members data in a cube
-```js
-let regions = cube.getDimensionMembers('regions')
-let member = regions[0]
-member['region'] = 'East'; 
-```
-
-### Adding dimension members to the cube
-```js
-let member = { product: 'Product 3' }
-cube.addDimensionMember('products', member)
-```
-
-### Deleting dimension members from a cube
-```js
-let member = { id: 2 }
-cube.removeDimensionMember('products', member)
-```
-
-### Adding facts to cube
-```js
-let facts = [
-    { id: 3, region: 'South', product: 'Product 3', value: 30 }
-]
-cube.addFacts(facts)
-```
-
-### Removing facts from cube
-```js
-let facts = [
-    { id: 3, region: 'South', product: 'Product 3', value: 30 }
-]
-cube.removeFacts(facts)
 ```
 
 ## Versioning

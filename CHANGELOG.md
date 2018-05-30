@@ -1,7 +1,7 @@
 ## Change Log
 
 *0.6.0*
-- Added new methods: addFacts, removeFacts
+- Added new api methods: `addFacts`, `removeFacts`
 
 *0.5.1*
 - Added ESLint
@@ -17,7 +17,7 @@
 - Updated example, now example support old browsers
 
 *0.4.0* 
-- Changed the way to import the module from Cube.default to Cube, deprecated Cube.default
+- Changed the way to import the module from Cube.default to Cube, deprecated `Cube.default`
 
 *0.3.1* 
 - Added version to banner
