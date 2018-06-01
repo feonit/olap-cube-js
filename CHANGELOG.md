@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.7.0*
+- Added new api setting: `templateForeignKey`
+
 *0.6.0*
 - Added new api methods: `addFacts`, `removeFacts`
 

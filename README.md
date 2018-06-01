@@ -40,6 +40,7 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Adding facts](#adding-facts)
   - [Removing facts](#removing-facts)
   - [Filling empty cells](#filling-empty-cells)
+  - [Settings](#settings)
 - [Versioning](#versioning)
 - [Todo](#todo)
 - [Demo][6]
@@ -408,6 +409,13 @@ factsFilled will be:
     { region: 'South', product: 'Product 1', value: 0 }
 ]
 ```
+
+### Settings
+You can pass some settings to cube via third argument, example
+`Cube.create(facts, dimensionHierarchies, settings)`
+
+Possible options:
+- `templateForeignKey` default value: `%s_id`, where %s will be replaced by dimension
 
 ## Versioning
 We use <a href="https://semver.org/">SemVer</a> for versioning.
