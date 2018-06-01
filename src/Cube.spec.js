@@ -1,17 +1,11 @@
 import Cube from '../src/Cube.js';
 import {CreateInstanceException} from '../src/errors.js'
 import {recursiveObjectsNotHaveCommonLinks} from '../spec/helpers/helpers.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
+
 
 describe('class Cube', function() {
 	let debug;
-
-	it('generation unique entity ID from exist entities if they have empty list', () => {
-		expect(Cube.reduceId([])).toBe(1)
-	});
-
-	it('generation unique entity ID from exist entities if they have one or more elements', () => {
-		expect(Cube.reduceId([{id: 1}, {id: 3}])).toBe(4)
-	});
 
 	describe(`[ API prototype ${Cube.name}]`,() => {
 
@@ -34,8 +28,6 @@ describe('class Cube', function() {
 			expect(Cube.create).toBeDefined();
 		});
 	});
-
-	// todo new Cube({dimensionHierarchies, cellTable})
 
 	describe('[ Copy ]', () => {
 		let cube;
@@ -146,12 +138,32 @@ describe('class Cube', function() {
 		expect(error instanceof CreateInstanceException).toBe(true)
 	});
 
-	it('generation unique entity ID name', () => {
-		expect(Cube.genericId('entity')).toBe('entity_id')
-	});
-
-
 	it('should define cartesian', () => {
 		expect(Cube.prototype.cartesian).toBeDefined();
 	});
+
+	it('setting for templateForeignKey must work', () => {
+		const factTable = [
+			{ id: 1, x: 0 },
+		];
+
+		const dimensionHierarchies = [
+			{
+				dimensionTable: {
+					dimension: 'x',
+					keyProps: ['x']
+				}
+			}
+		];
+
+		const options = {
+			templateForeignKey: '%sId'
+		};
+		const cube = Cube.create(factTable, dimensionHierarchies, options);
+
+		isEqualObjects(
+			cube.cellTable[0],
+			{ id: 1, xId: 1 }
+		)
+	})
 });

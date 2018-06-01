@@ -1,5 +1,7 @@
 import Cell from './Cell.js'
 import {ENTITY_ID} from './const.js'
+import Cube from "./Cube.js";
+import InputCell from "./InputCell.js";
 
 export default class CellTable extends Array {
 	constructor(array) {
@@ -24,5 +26,12 @@ export default class CellTable extends Array {
 	removeCell(cell) {
 		const index = this.indexOf(cell);
 		this.splice(index, 1);
+	}
+	/**
+	 * @public
+	 * */
+	createCell(options) {
+		const cell = new InputCell(options);
+		this.addCell(cell);
 	}
 }

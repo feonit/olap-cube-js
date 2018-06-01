@@ -13,7 +13,6 @@ describe('class DimensionTree', function() {
 				dimension: 'xxx',
 				keyProps: ['xxx'],
 				otherProps: [],
-				dependencyNames: [],
 				members: [
 					{ id: 1, xxx: 0.186, xx_id: 1 },
 					{ id: 2, xxx: 0.868, xx_id: 2 },
@@ -26,7 +25,6 @@ describe('class DimensionTree', function() {
 						dimension: 'xx',
 						keyProps: ['xx'],
 						otherProps: [],
-						dependencyNames: [],
 						members: [
 							{ id: 1, xx: 0.19, x_id: 1 },
 							{ id: 2, xx: 0.87, x_id: 2 }
@@ -38,7 +36,6 @@ describe('class DimensionTree', function() {
 								dimension: 'x',
 								keyProps: ['x'],
 								otherProps: [],
-								dependencyNames: [],
 								members: [
 									{ id: 1, x: 0.2 },
 									{ id: 2, x: 0.9 }
@@ -54,13 +51,13 @@ describe('class DimensionTree', function() {
 
 	xit(('should create dimensionTree', ()=>{
 		expect(()=>{
-			const dimensionTree = new DimensionTree(dimensionTreeData);
+			const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		}).not.toThrow();
 	}));
 
 	xit('should create copy', ()=>{
-		const dimensionTree = new DimensionTree(dimensionTreeData);
-		const dimensionTreeCopy = new DimensionTree(dimensionTree);
+		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
+		const dimensionTreeCopy = DimensionTree.createDimensionTree(dimensionTree);
 		recursiveObjectsNotHaveCommonLinks(dimensionTree, dimensionTreeCopy)
 	});
 
@@ -102,8 +99,8 @@ describe('class DimensionTree', function() {
 		});
 	});
 
-	it('drillDownDimensionMembers and rollUpDimensionMembers methods must work', ()=>{
-		const dimensionTree = new DimensionTree(dimensionTreeData);
+	it('drillDownDimensionMembers and rollUpDimensionMembers methods must work', () => {
+		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		const memberLevel_1 = dimensionTree.getTreeValue().members[0];
 		const memberLevel_2 = dimensionTree.dependency[0].getTreeValue().members[0];
 		const memberLevel_3 = dimensionTree.dependency[0].dependency[0].getTreeValue().members[0];

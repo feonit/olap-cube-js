@@ -1,7 +1,6 @@
 import InputCell from './InputCell.js'
 import {ENTITY_ID} from './const.js'
 import Member from './Member.js'
-import InputMember from './InputMember.js'
 import DimensionTree from './DimensionTree.js'
 import FactTable from './FactTable.js'
 import {
@@ -24,9 +23,14 @@ import Cell from './Cell.js'
  * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 class Cube {
-	constructor(options) {
-		const { dimensionHierarchies, cellTable = [] } = options;
-		this.dimensionHierarchies = dimensionHierarchies.map(DimensionTree.createDimensionTree);
+	constructor(cube) {
+		const { dimensionHierarchies, cellTable = [], settings = {} } = cube;
+
+		this.settings = { ...settings };
+
+		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => {
+			return DimensionTree.createDimensionTree(dimensionHierarchy, this.settings);
+		});
 		this.cellTable = new CellTable(cellTable);
 
 		// const residuals = this.residuals();
@@ -38,15 +42,23 @@ class Cube {
 	/**
 	 * @public
 	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
-	 * @param {object} dimensionHierarchiesData
+	 * @param {object} dimensionHierarchies
 	 * @param {object[]} facts
+	 * @param {object} options
+	 * @param {string} options.templateForeignKey
 	 * @return {Cube}
 	 * */
-	static create(facts, dimensionHierarchiesData) {
+	static create(facts, dimensionHierarchies, options = {}) {
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
-		const cube = new this({ dimensionHierarchies: dimensionHierarchiesData });
+
+		const cube = new this({
+			dimensionHierarchies: dimensionHierarchies,
+			settings: options
+		});
+
+		// build 2: members
 		cube.addFacts(facts);
 		return cube;
 	}
@@ -166,7 +178,7 @@ class Cube {
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
 				const members = space[dimension];
-				const idAttribute = Cube.genericId(dimension);
+				const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
 				const finded = members.find(member => {
 					return member[ENTITY_ID] === cell[idAttribute]
 				});
@@ -190,7 +202,7 @@ class Cube {
 	 * */
 	findDimensionTreeByDimension(dimension) {
 		let findDimensionTree;
-		this.dimensionHierarchies.forEach(dimensionTree =>{
+		this.dimensionHierarchies.forEach(dimensionTree => {
 			const searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
 			if (searchedDimensionTree) {
 				findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
@@ -203,23 +215,19 @@ class Cube {
 	 * */
 	getDimensionMembersFromCells(dimension, cells) {
 		const searchedDimensionTree = this.findDimensionTreeByDimension(dimension);
-		let rootMembers;
-		let rootDimension;
 
-		if (searchedDimensionTree.isRoot()) {
-			rootMembers = searchedDimensionTree.getTreeValue().members;
-			rootDimension = searchedDimensionTree.getTreeValue().dimension;
-		} else {
-			rootMembers = searchedDimensionTree.getRoot().getTreeValue().members;
-			rootDimension = searchedDimensionTree.getRoot().getTreeValue().dimension;
-		}
+		const {
+			members: rootMembers,
+			dimension: rootDimension,
+			idAttribute: rootIdAttribute
+		} = searchedDimensionTree.getRoot().getTreeValue();
 
-		const idAttribute = Cube.genericId(rootDimension);
 		const members = [];
 
+		// todo смахивает на mapFilter
 		cells.forEach(cell => {
 			rootMembers.forEach(rootMember => {
-				if (cell[idAttribute] === rootMember[ENTITY_ID]) {
+				if (cell[rootIdAttribute] === rootMember[ENTITY_ID]) {
 					if (members.indexOf(rootMember) === -1) {
 						members.push(rootMember)
 					}
@@ -319,13 +327,6 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * A way to create a name for a property in which a unique identifier will be stored
-	 * */
-	static genericId(entityName) {
-		return entityName + '_' + ENTITY_ID;
-	}
-	/**
-	 * @public
 	 * @param {string} dimension - dimension in which the member is created
 	 * @param {object?} memberOptions - properties for the created member
 	 * @param {object?} rollupCoordinatesData
@@ -353,23 +354,26 @@ class Cube {
 		const dimensionTree = this.findDimensionTreeByDimension(dimension);
 		const childDimensionTrees = dimensionTree.getChildTrees();
 		childDimensionTrees.forEach(childDimensionTree => {
-			const { dimension } = childDimensionTree.getTreeValue();
+			const dimensionTable = childDimensionTree.getTreeValue();
+			const { dimension, idAttribute } = dimensionTable;
 			const member = rollupCoordinatesData[dimension];
 			if (!member) {
 				throw new CantAddMemberRollupException(dimension)
 			} else {
-				memberOptions[Cube.genericId(dimension)] = member[ENTITY_ID];
+				memberOptions[idAttribute] = member[ENTITY_ID];
 			}
 		});
-		let saveMember = this._createMember(dimensionTree, memberOptions);
-		let saveDimension = dimension;
+		const dimensionTable = dimensionTree.getTreeValue();
+		const { idAttribute } = dimensionTable;
+		let saveMember = dimensionTree.createMember(memberOptions);
+		let saveIdAttribute = idAttribute;
 		dimensionTree.traceUpOrder(tracedDimensionTree => {
 			if (dimensionTree !== tracedDimensionTree) {
-				const { dimension: parentDimension } = tracedDimensionTree.getTreeValue();
-				const drillDownCoordinatesData = { [Cube.genericId(saveDimension)]: saveMember[ENTITY_ID] };
+				const { dimension: parentDimension, idAttribute: parentIdAttribute } = tracedDimensionTree.getTreeValue();
+				const drillDownCoordinatesData = { [ saveIdAttribute]: saveMember[ENTITY_ID] };
 				Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
-				saveMember = this._createMember(tracedDimensionTree, drillDownCoordinatesData);
-				saveDimension = parentDimension;
+				saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
+				saveIdAttribute = parentIdAttribute;
 			}
 		});
 		this.fill(measureData);
@@ -382,23 +386,25 @@ class Cube {
 	removeDimensionMember(dimension, member) {
 		const dimensionTree = this.findDimensionTreeByDimension(dimension);
 		const endToBeRemoved = dimensionTree.removeDimensionMember(dimension, member);
-		const measures = this.getMeasure();
+		const cellTable = this.getMeasure();
 		const getRemoveMeasures = (dimension, members) => {
-			const removedMeasures = [];
-			const idAttribute = Cube.genericId(dimension);
-			measures.forEach(measure => {
+			const removedCells = [];
+			const idAttribute = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue().idAttribute;
+
+			// todo mapFilter похоже
+			cellTable.forEach(cell => {
 				members.forEach(member => {
-					if (measure[idAttribute] == member[ENTITY_ID]) {
-						removedMeasures.push(measure)
+					if (cell[idAttribute] == member[ENTITY_ID]) {
+						removedCells.push(cell)
 					}
 				})
 			});
-			return removedMeasures;
+			return removedCells;
 		};
 		Object.keys(endToBeRemoved).map(dimension =>{
 			const removedMeasures = getRemoveMeasures(dimension, endToBeRemoved[dimension]);
-			removedMeasures.forEach(measure => {
-				measures.removeCell(measure);
+			removedMeasures.forEach(cell => {
+				cellTable.removeCell(cell);
 			})
 		})
 	}
@@ -413,7 +419,13 @@ class Cube {
 			tuples.forEach(combination => {
 				const unique = this.getMeasureBySet(combination);
 				if (!unique.length) {
-					this._createNormalizeData(combination, props);
+					let options = {};
+					Object.keys(combination).forEach(dimension => {
+						const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
+						options[idAttribute] = combination[dimension][ENTITY_ID]
+					});
+					options = {...options, ...props};
+					this.cellTable.createCell(options);
 				}
 			});
 		}
@@ -432,49 +444,6 @@ class Cube {
 			}
 		});
 		return unfilled;
-	}
-	/**
-	 * @private
-	 * */
-	_createNormalizeData(obj, props) {
-		let options = {};
-		Object.keys(obj).forEach(key => {
-			options[Cube.genericId(key)] = obj[key][ENTITY_ID]
-		});
-		options = {...options, ...props};
-		const newNormaliseData = new InputCell(options);
-		this.getMeasure().addCell(newNormaliseData);
-	}
-	/**
-	 * @private
-	 * @param {DimensionTree} dimensionTree
-	 * @param {object?} props
-	 * */
-	_createMember(dimensionTree, props = {}) {
-		const {keyProps, dimension} = dimensionTree.getTreeValue();
-		const childDimensionTrees = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension);
-		const linkProps = [];
-		childDimensionTrees.forEach(dimension => {
-			linkProps.push(Cube.genericId(dimension))
-		});
-		const memberList = dimensionTree.getTreeValue().members;
-		const id = Cube.reduceId(memberList);
-		const member = InputMember.create(id, keyProps.concat(linkProps), props);
-		memberList.addMember(member);
-		return member;
-	}
-	/**
-	 * @private
-	 * Method of generating a unique identifier within the selected space
-	 * */
-	static reduceId(array) {
-		if (array.length) {
-			return array.reduce((acc, curValue) => {
-				return acc[ENTITY_ID] > curValue[ENTITY_ID] ? acc : curValue;
-			}, 0).id + 1
-		} else {
-			return 1;
-		}
 	}
 }
 

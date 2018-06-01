@@ -3,6 +3,7 @@ import Tree from './Tree.js'
 import {DimensionException} from './errors.js'
 import Cube from './Cube.js'
 import {ENTITY_ID} from './const.js'
+import { DEFUALT_TEMPLATE_FOREIGN_KEY } from './const.js'
 
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
@@ -46,13 +47,23 @@ export default class DimensionTree extends Tree {
 			}
 		});
 	}
-	static createDimensionTree(dimensionTreeData) {
+	static createDimensionTree(dimensionTreeData, { templateForeignKey = DEFUALT_TEMPLATE_FOREIGN_KEY } = {}) {
+		// build 1: idAttributes
+		const buildIdAttributeDimensionTable = (dimensionTable) => {
+			if (!dimensionTable.idAttribute) {
+				dimensionTable.idAttribute = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey)
+			}
+		};
 		const dimensionTree = new DimensionTree(dimensionTreeData);
-		dimensionTree.tracePostOrder((dimensionTreeValue, dimensionTree) => {
-			dimensionTreeValue.dependencyNames = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension)
-		});
-
+		dimensionTree.tracePostOrder(buildIdAttributeDimensionTable);
 		return dimensionTree;
+	}
+	/**
+	 * @public
+	 * A way to create a name for a property in which a unique identifier will be stored
+	 * */
+	static genericId(dimension, templateForeignKey) {
+		return templateForeignKey.replace('%s', dimension);
 	}
 	/**
 	 * @public
@@ -185,7 +196,7 @@ export default class DimensionTree extends Tree {
 		}
 		const parentTree = dimensionTree.getParentTree();
 		const { members: parentMembers } = parentTree.getTreeValue();
-		const idAttribute = Cube.genericId(dimension);
+		const { idAttribute } = dimensionTree.getTreeValue();
 		const drillDownMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
@@ -210,8 +221,7 @@ export default class DimensionTree extends Tree {
 			return members;
 		}
 		const childTree = dimensionTree.getChildTrees()[0]; // for one child always
-		const { members: childMembers, dimension: childDimension } = childTree.getTreeValue();
-		const idAttribute = Cube.genericId(childDimension);
+		const { members: childMembers, idAttribute } = childTree.getTreeValue();
 		const rollUpMembers = [];
 		members.forEach(member => {
 			childMembers.forEach(childMember => {
@@ -223,5 +233,20 @@ export default class DimensionTree extends Tree {
 			})
 		});
 		return rollUpMembers;
+	}
+	/**
+	 * @public
+	 * @param {object?} props
+	 * */
+	createMember(props = {}) {
+		const dimensionTable = this.getTreeValue();
+		const childIdAttributes = this.getChildTrees().map(dimensionTree =>
+			dimensionTree.getTreeValue().idAttribute
+		);
+		const linkProps = [];
+		childIdAttributes.forEach(idAttribute => {
+			linkProps.push(idAttribute)
+		});
+		return dimensionTable.createMember(props, linkProps)
 	}
 }
