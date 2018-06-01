@@ -1,5 +1,5 @@
 /*!
- * Version: "0.6.0"
+ * Version: "0.7.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -75,7 +75,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -89,6 +89,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var ENTITY_ID = exports.ENTITY_ID = 'id';
+var DEFUALT_TEMPLATE_FOREIGN_KEY = exports.DEFUALT_TEMPLATE_FOREIGN_KEY = '%s_id';
 
 /***/ }),
 /* 1 */
@@ -105,78 +106,21 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _const = __webpack_require__(0);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * Element of dimension. Serving to determine the position and description of the data element
- * */
-var Member = function () {
-	function Member(data) {
-		_classCallCheck(this, Member);
-
-		_extends(this, data);
-	}
-
-	_createClass(Member, null, [{
-		key: 'create',
-		value: function create(id, props, data) {
-			if (!(this === Member || Member.isPrototypeOf(this))) {
-				throw Error('this.constructor must be prototype of Member');
-			}
-			var memberData = {};
-			memberData[_const.ENTITY_ID] = id;
-
-			props.forEach(function (prop) {
-				// исключить идентификатор самой сущности
-				if (prop !== _const.ENTITY_ID) {
-					memberData[prop] = data[prop];
-				}
-			});
-			return new this(memberData);
-		}
-	}]);
-
-	return Member;
-}();
-
-exports.default = Member;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _InputCell = __webpack_require__(9);
+var _InputCell = __webpack_require__(5);
 
 var _InputCell2 = _interopRequireDefault(_InputCell);
 
 var _const = __webpack_require__(0);
 
-var _Member = __webpack_require__(1);
+var _Member = __webpack_require__(2);
 
 var _Member2 = _interopRequireDefault(_Member);
 
-var _InputMember = __webpack_require__(10);
-
-var _InputMember2 = _interopRequireDefault(_InputMember);
-
-var _DimensionTree = __webpack_require__(11);
+var _DimensionTree = __webpack_require__(10);
 
 var _DimensionTree2 = _interopRequireDefault(_DimensionTree);
 
-var _FactTable = __webpack_require__(8);
+var _FactTable = __webpack_require__(9);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -223,14 +167,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 var Cube = function () {
-	function Cube(options) {
+	function Cube(cube) {
+		var _this = this;
+
 		_classCallCheck(this, Cube);
 
-		var dimensionHierarchies = options.dimensionHierarchies,
-		    _options$cellTable = options.cellTable,
-		    cellTable = _options$cellTable === undefined ? [] : _options$cellTable;
+		var dimensionHierarchies = cube.dimensionHierarchies,
+		    _cube$cellTable = cube.cellTable,
+		    cellTable = _cube$cellTable === undefined ? [] : _cube$cellTable,
+		    _cube$settings = cube.settings,
+		    settings = _cube$settings === undefined ? {} : _cube$settings;
 
-		this.dimensionHierarchies = dimensionHierarchies.map(_DimensionTree2.default.createDimensionTree);
+
+		this.settings = _extends({}, settings);
+
+		this.dimensionHierarchies = dimensionHierarchies.map(function (dimensionHierarchy) {
+			return _DimensionTree2.default.createDimensionTree(dimensionHierarchy, _this.settings);
+		});
 		this.cellTable = new _CellTable2.default(cellTable);
 
 		// const residuals = this.residuals();
@@ -242,8 +195,10 @@ var Cube = function () {
 	/**
   * @public
   * Fabric method for creating cube from facts and dimensionHierarchiesData data
-  * @param {object} dimensionHierarchiesData
+  * @param {object} dimensionHierarchies
   * @param {object[]} facts
+  * @param {object} options
+  * @param {string} options.templateForeignKey
   * @return {Cube}
   * */
 
@@ -355,7 +310,7 @@ var Cube = function () {
 	}, {
 		key: 'projection',
 		value: function projection(fixSpaceOptions) {
-			var _this = this;
+			var _this2 = this;
 
 			if (!fixSpaceOptions) {
 				return;
@@ -376,7 +331,7 @@ var Cube = function () {
 				// ищется его расширенная версия для каждого члена
 				var spacesForCells = fixSpace[dimension].map(function (member) {
 
-					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
+					var searchedInTree = _this2.findDimensionTreeByDimension(dimension);
 
 					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(dimension, member);
 
@@ -399,7 +354,10 @@ var Cube = function () {
 			var cellBelongsToSpace = function cellBelongsToSpace(cell, space) {
 				var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
 					var members = space[dimension];
-					var idAttribute = Cube.genericId(dimension);
+
+					var _findDimensionTreeByD = _this2.findDimensionTreeByDimension(dimension).getTreeValue(),
+					    idAttribute = _findDimensionTreeByD.idAttribute;
+
 					var finded = members.find(function (member) {
 						return member[_const.ENTITY_ID] === cell[idAttribute];
 					});
@@ -442,23 +400,18 @@ var Cube = function () {
 		key: 'getDimensionMembersFromCells',
 		value: function getDimensionMembersFromCells(dimension, cells) {
 			var searchedDimensionTree = this.findDimensionTreeByDimension(dimension);
-			var rootMembers = void 0;
-			var rootDimension = void 0;
 
-			if (searchedDimensionTree.isRoot()) {
-				rootMembers = searchedDimensionTree.getTreeValue().members;
-				rootDimension = searchedDimensionTree.getTreeValue().dimension;
-			} else {
-				rootMembers = searchedDimensionTree.getRoot().getTreeValue().members;
-				rootDimension = searchedDimensionTree.getRoot().getTreeValue().dimension;
-			}
+			var _searchedDimensionTre = searchedDimensionTree.getRoot().getTreeValue(),
+			    rootMembers = _searchedDimensionTre.members,
+			    rootDimension = _searchedDimensionTre.dimension,
+			    rootIdAttribute = _searchedDimensionTre.idAttribute;
 
-			var idAttribute = Cube.genericId(rootDimension);
 			var members = [];
 
+			// todo смахивает на mapFilter
 			cells.forEach(function (cell) {
 				rootMembers.forEach(function (rootMember) {
-					if (cell[idAttribute] === rootMember[_const.ENTITY_ID]) {
+					if (cell[rootIdAttribute] === rootMember[_const.ENTITY_ID]) {
 						if (members.indexOf(rootMember) === -1) {
 							members.push(rootMember);
 						}
@@ -568,12 +521,12 @@ var Cube = function () {
 	}, {
 		key: 'residuals',
 		value: function residuals() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var tuples = this.cartesian();
 			var totalFacts = [];
 			tuples.forEach(function (tuple) {
-				var partFacts = _this2.getFactsBySet(tuple);
+				var partFacts = _this3.getFactsBySet(tuple);
 				if (partFacts.length > 1) {
 					totalFacts.push(tuple);
 				}
@@ -582,25 +535,20 @@ var Cube = function () {
 		}
 		/**
    * @public
-   * A way to create a name for a property in which a unique identifier will be stored
-   * */
-
-	}, {
-		key: 'addDimensionMember',
-
-		/**
-   * @public
    * @param {string} dimension - dimension in which the member is created
    * @param {object?} memberOptions - properties for the created member
    * @param {object?} rollupCoordinatesData
    * @param {object?} drillDownCoordinatesOptions
    * @param {object?} measureData
    * */
+
+	}, {
+		key: 'addDimensionMember',
 		value: function addDimensionMember(dimension) {
 			var memberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 			var rollupCoordinatesData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-			var _this3 = this;
+			var _this4 = this;
 
 			var drillDownCoordinatesOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 			var measureData = arguments[4];
@@ -611,7 +559,7 @@ var Cube = function () {
 			var rollupCoordinates = {};
 			Object.keys(rollupCoordinatesData).forEach(function (dimension) {
 				var memberData = rollupCoordinatesData[dimension];
-				var memberList = _this3.getDimensionMembers(dimension);
+				var memberList = _this4.getDimensionMembers(dimension);
 				var id = memberData[_const.ENTITY_ID];
 				var find = memberList.find(function (member) {
 					return id === member[_const.ENTITY_ID];
@@ -625,27 +573,32 @@ var Cube = function () {
 			var dimensionTree = this.findDimensionTreeByDimension(dimension);
 			var childDimensionTrees = dimensionTree.getChildTrees();
 			childDimensionTrees.forEach(function (childDimensionTree) {
-				var _childDimensionTree$g = childDimensionTree.getTreeValue(),
-				    dimension = _childDimensionTree$g.dimension;
+				var dimensionTable = childDimensionTree.getTreeValue();
+				var dimension = dimensionTable.dimension,
+				    idAttribute = dimensionTable.idAttribute;
 
 				var member = rollupCoordinatesData[dimension];
 				if (!member) {
 					throw new _errors.CantAddMemberRollupException(dimension);
 				} else {
-					memberOptions[Cube.genericId(dimension)] = member[_const.ENTITY_ID];
+					memberOptions[idAttribute] = member[_const.ENTITY_ID];
 				}
 			});
-			var saveMember = this._createMember(dimensionTree, memberOptions);
-			var saveDimension = dimension;
+			var dimensionTable = dimensionTree.getTreeValue();
+			var idAttribute = dimensionTable.idAttribute;
+
+			var saveMember = dimensionTree.createMember(memberOptions);
+			var saveIdAttribute = idAttribute;
 			dimensionTree.traceUpOrder(function (tracedDimensionTree) {
 				if (dimensionTree !== tracedDimensionTree) {
 					var _tracedDimensionTree$ = tracedDimensionTree.getTreeValue(),
-					    parentDimension = _tracedDimensionTree$.dimension;
+					    parentDimension = _tracedDimensionTree$.dimension,
+					    parentIdAttribute = _tracedDimensionTree$.idAttribute;
 
-					var drillDownCoordinatesData = _defineProperty({}, Cube.genericId(saveDimension), saveMember[_const.ENTITY_ID]);
+					var drillDownCoordinatesData = _defineProperty({}, saveIdAttribute, saveMember[_const.ENTITY_ID]);
 					_extends(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
-					saveMember = _this3._createMember(tracedDimensionTree, drillDownCoordinatesData);
-					saveDimension = parentDimension;
+					saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
+					saveIdAttribute = parentIdAttribute;
 				}
 			});
 			this.fill(measureData);
@@ -661,23 +614,25 @@ var Cube = function () {
 		value: function removeDimensionMember(dimension, member) {
 			var dimensionTree = this.findDimensionTreeByDimension(dimension);
 			var endToBeRemoved = dimensionTree.removeDimensionMember(dimension, member);
-			var measures = this.getMeasure();
+			var cellTable = this.getMeasure();
 			var getRemoveMeasures = function getRemoveMeasures(dimension, members) {
-				var removedMeasures = [];
-				var idAttribute = Cube.genericId(dimension);
-				measures.forEach(function (measure) {
+				var removedCells = [];
+				var idAttribute = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue().idAttribute;
+
+				// todo mapFilter похоже
+				cellTable.forEach(function (cell) {
 					members.forEach(function (member) {
-						if (measure[idAttribute] == member[_const.ENTITY_ID]) {
-							removedMeasures.push(measure);
+						if (cell[idAttribute] == member[_const.ENTITY_ID]) {
+							removedCells.push(cell);
 						}
 					});
 				});
-				return removedMeasures;
+				return removedCells;
 			};
 			Object.keys(endToBeRemoved).map(function (dimension) {
 				var removedMeasures = getRemoveMeasures(dimension, endToBeRemoved[dimension]);
-				removedMeasures.forEach(function (measure) {
-					measures.removeCell(measure);
+				removedMeasures.forEach(function (cell) {
+					cellTable.removeCell(cell);
 				});
 			});
 		}
@@ -690,14 +645,22 @@ var Cube = function () {
 	}, {
 		key: 'fill',
 		value: function fill(props) {
-			var _this4 = this;
+			var _this5 = this;
 
 			if (!this.residuals().length) {
 				var tuples = this.cartesian();
 				tuples.forEach(function (combination) {
-					var unique = _this4.getMeasureBySet(combination);
+					var unique = _this5.getMeasureBySet(combination);
 					if (!unique.length) {
-						_this4._createNormalizeData(combination, props);
+						var options = {};
+						Object.keys(combination).forEach(function (dimension) {
+							var _findDimensionTreeByD2 = _this5.findDimensionTreeByDimension(dimension).getTreeValue(),
+							    idAttribute = _findDimensionTreeByD2.idAttribute;
+
+							options[idAttribute] = combination[dimension][_const.ENTITY_ID];
+						});
+						options = _extends({}, options, props);
+						_this5.cellTable.createCell(options);
 					}
 				});
 			}
@@ -710,91 +673,35 @@ var Cube = function () {
 	}, {
 		key: 'unfilled',
 		value: function unfilled() {
-			var _this5 = this;
+			var _this6 = this;
 
 			var tuples = this.cartesian();
 			var unfilled = [];
 			tuples.forEach(function (tuple) {
-				var members = _this5.getFactsBySet(tuple);
+				var members = _this6.getFactsBySet(tuple);
 				if (members.length === 0) {
 					unfilled.push(tuple);
 				}
 			});
 			return unfilled;
 		}
-		/**
-   * @private
-   * */
-
-	}, {
-		key: '_createNormalizeData',
-		value: function _createNormalizeData(obj, props) {
-			var options = {};
-			Object.keys(obj).forEach(function (key) {
-				options[Cube.genericId(key)] = obj[key][_const.ENTITY_ID];
-			});
-			options = _extends({}, options, props);
-			var newNormaliseData = new _InputCell2.default(options);
-			this.getMeasure().addCell(newNormaliseData);
-		}
-		/**
-   * @private
-   * @param {DimensionTree} dimensionTree
-   * @param {object?} props
-   * */
-
-	}, {
-		key: '_createMember',
-		value: function _createMember(dimensionTree) {
-			var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-			var _dimensionTree$getTre = dimensionTree.getTreeValue(),
-			    keyProps = _dimensionTree$getTre.keyProps,
-			    dimension = _dimensionTree$getTre.dimension;
-
-			var childDimensionTrees = dimensionTree.getChildTrees().map(function (dimensionTree) {
-				return dimensionTree.getTreeValue().dimension;
-			});
-			var linkProps = [];
-			childDimensionTrees.forEach(function (dimension) {
-				linkProps.push(Cube.genericId(dimension));
-			});
-			var memberList = dimensionTree.getTreeValue().members;
-			var id = Cube.reduceId(memberList);
-			var member = _InputMember2.default.create(id, keyProps.concat(linkProps), props);
-			memberList.addMember(member);
-			return member;
-		}
-		/**
-   * @private
-   * Method of generating a unique identifier within the selected space
-   * */
-
 	}], [{
 		key: 'create',
-		value: function create(facts, dimensionHierarchiesData) {
+		value: function create(facts, dimensionHierarchies) {
+			var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
 			if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 				throw new _errors.CreateInstanceException();
 			}
-			var cube = new this({ dimensionHierarchies: dimensionHierarchiesData });
+
+			var cube = new this({
+				dimensionHierarchies: dimensionHierarchies,
+				settings: options
+			});
+
+			// build 2: members
 			cube.addFacts(facts);
 			return cube;
-		}
-	}, {
-		key: 'genericId',
-		value: function genericId(entityName) {
-			return entityName + '_' + _const.ENTITY_ID;
-		}
-	}, {
-		key: 'reduceId',
-		value: function reduceId(array) {
-			if (array.length) {
-				return array.reduce(function (acc, curValue) {
-					return acc[_const.ENTITY_ID] > curValue[_const.ENTITY_ID] ? acc : curValue;
-				}, 0).id + 1;
-			} else {
-				return 1;
-			}
 		}
 	}]);
 
@@ -802,6 +709,59 @@ var Cube = function () {
 }();
 
 exports.default = Cube;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _const = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Element of dimension. Serving to determine the position and description of the data element
+ * */
+var Member = function () {
+	function Member(data) {
+		_classCallCheck(this, Member);
+
+		_extends(this, data);
+	}
+
+	_createClass(Member, null, [{
+		key: 'create',
+		value: function create(id, props, data) {
+			if (!(this === Member || Member.isPrototypeOf(this))) {
+				throw Error('this.constructor must be prototype of Member');
+			}
+			var memberData = {};
+			memberData[_const.ENTITY_ID] = id;
+
+			props.forEach(function (prop) {
+				// исключить идентификатор самой сущности
+				if (prop !== _const.ENTITY_ID) {
+					memberData[prop] = data[prop];
+				}
+			});
+			return new this(memberData);
+		}
+	}]);
+
+	return Member;
+}();
+
+exports.default = Member;
 
 /***/ }),
 /* 3 */
@@ -1097,15 +1057,9 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _Cell2 = __webpack_require__(3);
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _const = __webpack_require__(0);
-
-var _Member = __webpack_require__(1);
-
-var _Member2 = _interopRequireDefault(_Member);
+var _Cell3 = _interopRequireDefault(_Cell2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1115,85 +1069,30 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _extendableBuiltin(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
+function uuidv4() {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+		var r = Math.random() * 16 | 0;
+		var v = c == 'x' ? r : r & 0x3 | 0x8;
+		return v.toString(16);
 	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
 }
 
-/**
- * */
-var MemberList = function (_extendableBuiltin2) {
-	_inherits(MemberList, _extendableBuiltin2);
+var InputCell = function (_Cell) {
+	_inherits(InputCell, _Cell);
 
-	function MemberList(array) {
-		_classCallCheck(this, MemberList);
+	function InputCell(data, options) {
+		_classCallCheck(this, InputCell);
 
-		var _this = _possibleConstructorReturn(this, (MemberList.__proto__ || Object.getPrototypeOf(MemberList)).call(this));
-
-		if (Array.isArray(array)) {
-			array = array.map(function (member) {
-				return new _Member2.default(member);
-			});
-			_extends(_this, array);
+		if (!data.id) {
+			data.id = uuidv4();
 		}
-		return _this;
+		return _possibleConstructorReturn(this, (InputCell.__proto__ || Object.getPrototypeOf(InputCell)).call(this, data, options));
 	}
 
-	_createClass(MemberList, [{
-		key: 'filter',
-		value: function filter() {
-			return [].filter.apply(this, arguments);
-		}
-	}, {
-		key: 'addMember',
-		value: function addMember(member) {
-			if (this.indexOf(member[_const.ENTITY_ID] === -1)) {
-				this.push(member);
-			} else {
-				debugger;
-			}
-		}
-	}, {
-		key: 'removeMember',
-		value: function removeMember(member) {
-			var index = this.indexOf(member);
-			if (index === -1) {
-				throw new Error('represented member was not found', member);
-			}
-			this.splice(index, 1);
-		}
-	}, {
-		key: 'setMembers',
-		value: function setMembers(members) {
-			this.splice(0, this.length);
-			_extends(this, members);
-		}
-	}]);
+	return InputCell;
+}(_Cell3.default);
 
-	return MemberList;
-}(_extendableBuiltin(Array));
-
-exports.default = MemberList;
+exports.default = InputCell;
 
 /***/ }),
 /* 6 */
@@ -1297,6 +1196,173 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _const = __webpack_require__(0);
+
+var _Member = __webpack_require__(2);
+
+var _Member2 = _interopRequireDefault(_Member);
+
+var _InputMember = __webpack_require__(12);
+
+var _InputMember2 = _interopRequireDefault(_InputMember);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _extendableBuiltin(cls) {
+	function ExtendableBuiltin() {
+		var instance = Reflect.construct(cls, Array.from(arguments));
+		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+		return instance;
+	}
+
+	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
+		constructor: {
+			value: cls,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (Object.setPrototypeOf) {
+		Object.setPrototypeOf(ExtendableBuiltin, cls);
+	} else {
+		ExtendableBuiltin.__proto__ = cls;
+	}
+
+	return ExtendableBuiltin;
+}
+
+/**
+ * */
+var MemberList = function (_extendableBuiltin2) {
+	_inherits(MemberList, _extendableBuiltin2);
+
+	function MemberList() {
+		var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+		_classCallCheck(this, MemberList);
+
+		var _this = _possibleConstructorReturn(this, (MemberList.__proto__ || Object.getPrototypeOf(MemberList)).call(this));
+
+		if (Array.isArray(array)) {
+			array = array.map(function (member) {
+				return new _Member2.default(member);
+			});
+			_extends(_this, array);
+		}
+		return _this;
+	}
+	/**
+  *
+  * */
+
+
+	_createClass(MemberList, [{
+		key: 'filter',
+		value: function filter() {
+			return [].filter.apply(this, arguments);
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'addMember',
+		value: function addMember(member) {
+			if (this.indexOf(member[_const.ENTITY_ID] === -1)) {
+				this.push(member);
+			} else {
+				debugger;
+			}
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'removeMember',
+		value: function removeMember(member) {
+			var index = this.indexOf(member);
+			if (index === -1) {
+				throw new Error('represented member was not found', member);
+			}
+			this.splice(index, 1);
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'setMembers',
+		value: function setMembers(members) {
+			this.splice(0, this.length);
+			_extends(this, members);
+		}
+		/**
+   * Fabric method
+   * */
+
+	}, {
+		key: 'createMember',
+		value: function createMember(keys, props, type) {
+			var id = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.reduceId();
+
+			var MemberConstructor = void 0;
+			switch (type) {
+				case 'input':
+					MemberConstructor = _InputMember2.default;break;
+				default:
+					MemberConstructor = _Member2.default;
+			}
+			var member = MemberConstructor.create(id, keys, props);
+			this.addMember(member);
+			return member;
+		}
+		/**
+   * @public
+   * Method of generating a unique identifier within the selected space
+   * */
+
+	}, {
+		key: 'reduceId',
+		value: function reduceId() {
+			if (this.length) {
+				return this.reduce(function (acc, curValue) {
+					return acc[_const.ENTITY_ID] > curValue[_const.ENTITY_ID] ? acc : curValue;
+				}, 0).id + 1;
+			} else {
+				return 1;
+			}
+		}
+	}]);
+
+	return MemberList;
+}(_extendableBuiltin(Array));
+
+exports.default = MemberList;
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _Fact = __webpack_require__(6);
 
 var _Fact2 = _interopRequireDefault(_Fact);
@@ -1356,114 +1422,7 @@ var FactTable = function (_extendableBuiltin2) {
 exports.default = FactTable;
 
 /***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _Cell2 = __webpack_require__(3);
-
-var _Cell3 = _interopRequireDefault(_Cell2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function uuidv4() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = Math.random() * 16 | 0;
-		var v = c == 'x' ? r : r & 0x3 | 0x8;
-		return v.toString(16);
-	});
-}
-
-var InputCell = function (_Cell) {
-	_inherits(InputCell, _Cell);
-
-	function InputCell(data, options) {
-		_classCallCheck(this, InputCell);
-
-		if (!data.id) {
-			data.id = uuidv4();
-		}
-		return _possibleConstructorReturn(this, (InputCell.__proto__ || Object.getPrototypeOf(InputCell)).call(this, data, options));
-	}
-
-	return InputCell;
-}(_Cell3.default);
-
-exports.default = InputCell;
-
-/***/ }),
 /* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _Member2 = __webpack_require__(1);
-
-var _Member3 = _interopRequireDefault(_Member2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-/**
- * Introductory elements. Input elements have values that are manually loaded
- * that is, they are not the result of calculating data
- * */
-var InputMember = function (_Member) {
-	_inherits(InputMember, _Member);
-
-	function InputMember() {
-		_classCallCheck(this, InputMember);
-
-		return _possibleConstructorReturn(this, (InputMember.__proto__ || Object.getPrototypeOf(InputMember)).apply(this, arguments));
-	}
-
-	_createClass(InputMember, null, [{
-		key: 'create',
-		value: function create(id, props, data) {
-			var defaultValue = null;
-			var defaultData = {};
-
-			props.forEach(function (propName) {
-				defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue;
-			});
-
-			return _get(InputMember.__proto__ || Object.getPrototypeOf(InputMember), 'create', this).call(this, id, props, defaultData);
-		}
-	}]);
-
-	return InputMember;
-}(_Member3.default);
-
-exports.default = InputMember;
-
-/***/ }),
-/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1477,7 +1436,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _DimensionTable = __webpack_require__(12);
+var _DimensionTable = __webpack_require__(11);
 
 var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
 
@@ -1487,7 +1446,7 @@ var _Tree3 = _interopRequireDefault(_Tree2);
 
 var _errors = __webpack_require__(4);
 
-var _Cube = __webpack_require__(2);
+var _Cube = __webpack_require__(1);
 
 var _Cube2 = _interopRequireDefault(_Cube);
 
@@ -1715,7 +1674,9 @@ var DimensionTree = function (_Tree) {
 			var _parentTree$getTreeVa = parentTree.getTreeValue(),
 			    parentMembers = _parentTree$getTreeVa.members;
 
-			var idAttribute = _Cube2.default.genericId(dimension);
+			var _dimensionTree$getTre = dimensionTree.getTreeValue(),
+			    idAttribute = _dimensionTree$getTre.idAttribute;
+
 			var drillDownMembers = [];
 			members.forEach(function (member) {
 				parentMembers.forEach(function (parentMember) {
@@ -1746,9 +1707,8 @@ var DimensionTree = function (_Tree) {
 
 			var _childTree$getTreeVal = childTree.getTreeValue(),
 			    childMembers = _childTree$getTreeVal.members,
-			    childDimension = _childTree$getTreeVal.dimension;
+			    idAttribute = _childTree$getTreeVal.idAttribute;
 
-			var idAttribute = _Cube2.default.genericId(childDimension);
 			var rollUpMembers = [];
 			members.forEach(function (member) {
 				childMembers.forEach(function (childMember) {
@@ -1761,17 +1721,52 @@ var DimensionTree = function (_Tree) {
 			});
 			return rollUpMembers;
 		}
+		/**
+   * @public
+   * @param {object?} props
+   * */
+
+	}, {
+		key: 'createMember',
+		value: function createMember() {
+			var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			var dimensionTable = this.getTreeValue();
+			var childIdAttributes = this.getChildTrees().map(function (dimensionTree) {
+				return dimensionTree.getTreeValue().idAttribute;
+			});
+			var linkProps = [];
+			childIdAttributes.forEach(function (idAttribute) {
+				linkProps.push(idAttribute);
+			});
+			return dimensionTable.createMember(props, linkProps);
+		}
 	}], [{
 		key: 'createDimensionTree',
 		value: function createDimensionTree(dimensionTreeData) {
-			var dimensionTree = new DimensionTree(dimensionTreeData);
-			dimensionTree.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
-				dimensionTreeValue.dependencyNames = dimensionTree.getChildTrees().map(function (dimensionTree) {
-					return dimensionTree.getTreeValue().dimension;
-				});
-			});
+			var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+			    _ref$templateForeignK = _ref.templateForeignKey,
+			    templateForeignKey = _ref$templateForeignK === undefined ? _const.DEFUALT_TEMPLATE_FOREIGN_KEY : _ref$templateForeignK;
 
+			// build 1: idAttributes
+			var buildIdAttributeDimensionTable = function buildIdAttributeDimensionTable(dimensionTable) {
+				if (!dimensionTable.idAttribute) {
+					dimensionTable.idAttribute = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey);
+				}
+			};
+			var dimensionTree = new DimensionTree(dimensionTreeData);
+			dimensionTree.tracePostOrder(buildIdAttributeDimensionTable);
 			return dimensionTree;
+		}
+		/**
+   * @public
+   * A way to create a name for a property in which a unique identifier will be stored
+   * */
+
+	}, {
+		key: 'genericId',
+		value: function genericId(dimension, templateForeignKey) {
+			return templateForeignKey.replace('%s', dimension);
 		}
 	}]);
 
@@ -1779,6 +1774,100 @@ var DimensionTree = function (_Tree) {
 }(_Tree3.default);
 
 exports.default = DimensionTree;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _MemberList = __webpack_require__(8);
+
+var _MemberList2 = _interopRequireDefault(_MemberList);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DimensionTable = function () {
+	function DimensionTable(_ref) {
+		var dimension = _ref.dimension,
+		    idAttribute = _ref.idAttribute,
+		    keyProps = _ref.keyProps,
+		    _ref$otherProps = _ref.otherProps,
+		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
+		    _ref$members = _ref.members,
+		    members = _ref$members === undefined ? [] : _ref$members;
+
+		_classCallCheck(this, DimensionTable);
+
+		if (!dimension || !keyProps) {
+			throw Error("Bad definition DimensionTable, params 'dimension' and 'keyProps' is required");
+		}
+		/** Name of the dimension */
+		this.dimension = dimension;
+		/** id name */
+		this.idAttribute = idAttribute;
+		/** List of key names properties of the table belonging to the current dimension */
+		this.keyProps = keyProps.map(function (keyProp) {
+			return keyProp;
+		});
+		/** List of additional names properties of the table belonging to the current dimension */
+		this.otherProps = otherProps.map(function (otherProp) {
+			return otherProp;
+		});
+		/** member list */
+		this.members = new _MemberList2.default(members);
+	}
+	/**
+  *
+  * */
+
+
+	_createClass(DimensionTable, [{
+		key: "setMemberList",
+		value: function setMemberList(members) {
+			this.members.setMembers(members);
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: "clearMemberList",
+		value: function clearMemberList() {
+			this.members = new _MemberList2.default([]);
+		}
+		/**
+   * @public
+   * @param {object} props
+   * @param {[]} linkProps
+   * @param {object?} props
+   * */
+
+	}, {
+		key: "createMember",
+		value: function createMember() {
+			var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+			var linkProps = arguments[1];
+			var keyProps = this.keyProps,
+			    members = this.members;
+
+			return members.createMember(keyProps.concat(linkProps), props);
+		}
+	}]);
+
+	return DimensionTable;
+}();
+
+exports.default = DimensionTable;
 
 /***/ }),
 /* 12 */
@@ -1793,62 +1882,51 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(5);
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _MemberList2 = _interopRequireDefault(_MemberList);
+var _Member2 = __webpack_require__(2);
+
+var _Member3 = _interopRequireDefault(_Member2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var DimensionTable = function () {
-	function DimensionTable(_ref) {
-		var dimension = _ref.dimension,
-		    keyProps = _ref.keyProps,
-		    _ref$otherProps = _ref.otherProps,
-		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
-		    _ref$dependencyNames = _ref.dependencyNames,
-		    dependencyNames = _ref$dependencyNames === undefined ? [] : _ref$dependencyNames,
-		    _ref$members = _ref.members,
-		    members = _ref$members === undefined ? [] : _ref$members;
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-		_classCallCheck(this, DimensionTable);
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-		if (!dimension || !keyProps) {
-			throw Error("Bad definition DimensionTable, params 'dimension' and 'keyProps' is required");
-		}
-		/** Name of the dimension */
-		this.dimension = dimension;
-		/** List of key names properties of the entity belonging to the current dimension */
-		this.keyProps = keyProps.map(function (keyProp) {
-			return keyProp;
-		});
-		/** List of additional names properties of the entity belonging to the current dimension */
-		this.otherProps = otherProps.map(function (otherProp) {
-			return otherProp;
-		});
-		/** The list of dimensions with which the current dimension is directly related */
-		this.dependencyNames = dependencyNames;
+/**
+ * Introductory elements. Input elements have values that are manually loaded
+ * that is, they are not the result of calculating data
+ * */
+var InputMember = function (_Member) {
+	_inherits(InputMember, _Member);
 
-		this.members = new _MemberList2.default(members);
+	function InputMember() {
+		_classCallCheck(this, InputMember);
+
+		return _possibleConstructorReturn(this, (InputMember.__proto__ || Object.getPrototypeOf(InputMember)).apply(this, arguments));
 	}
 
-	_createClass(DimensionTable, [{
-		key: "setMemberList",
-		value: function setMemberList(members) {
-			this.members.setMembers(members);
-		}
-	}, {
-		key: "clearMemberList",
-		value: function clearMemberList() {
-			this.members = new _MemberList2.default([]);
+	_createClass(InputMember, null, [{
+		key: 'create',
+		value: function create(id, props, data) {
+			var defaultValue = null;
+			var defaultData = {};
+
+			props.forEach(function (propName) {
+				defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue;
+			});
+
+			return _get(InputMember.__proto__ || Object.getPrototypeOf(InputMember), 'create', this).call(this, id, props, defaultData);
 		}
 	}]);
 
-	return DimensionTable;
-}();
+	return InputMember;
+}(_Member3.default);
 
-exports.default = DimensionTable;
+exports.default = InputMember;
 
 /***/ }),
 /* 13 */
@@ -2049,21 +2127,21 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(5);
+var _MemberList = __webpack_require__(8);
 
 var _MemberList2 = _interopRequireDefault(_MemberList);
 
-var _Member = __webpack_require__(1);
+var _Member = __webpack_require__(2);
 
 var _Member2 = _interopRequireDefault(_Member);
 
 var _const = __webpack_require__(0);
 
-var _Cube = __webpack_require__(2);
+var _Cube = __webpack_require__(1);
 
 var _Cube2 = _interopRequireDefault(_Cube);
 
-var _FactTable = __webpack_require__(8);
+var _FactTable = __webpack_require__(9);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -2105,26 +2183,29 @@ var SnowflakeBuilder = function () {
 			    _dimensionTable$keyPr = dimensionTable.keyProps,
 			    keyProps = _dimensionTable$keyPr === undefined ? [] : _dimensionTable$keyPr,
 			    _dimensionTable$other = dimensionTable.otherProps,
-			    otherProps = _dimensionTable$other === undefined ? [] : _dimensionTable$other;
+			    otherProps = _dimensionTable$other === undefined ? [] : _dimensionTable$other,
+			    memberList = dimensionTable.members,
+			    idAttribute = dimensionTable.idAttribute;
 
+			var childIdAttributes = dimensionTree.getChildTrees().map(function (dimensionTree) {
+				return dimensionTree.getTreeValue().idAttribute;
+			});
 			var childDimensions = dimensionTree.getChildTrees().map(function (dimensionTree) {
 				return dimensionTree.getTreeValue().dimension;
 			});
 
-			var memberList = void 0;
 			var members = void 0;
 
-			memberList = dimensionTree.getTreeValue().members;
 			var existMemberCount = memberList.length;
-			var args = [existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable];
+			var args = [idAttribute, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable];
 
-			if (!childDimensions.length) {
+			if (!childIdAttributes.length) {
 				members = SnowflakeBuilder.makeMemberList.apply(null, args);
 			} else {
 				var entitiesParts = [];
 				var memberListForFilter = dimensionTree.getDimensionTreeByDimension(childDimensions[0]).getTreeValue().members;
-				entitiesParts = SnowflakeBuilder.mapFilter(childDimensions, cells, memberListForFilter);
-				members = SnowflakeBuilder.makeMemberListDependency.apply(null, args.concat([childDimensions, entitiesParts]));
+				entitiesParts = SnowflakeBuilder.mapFilter(childIdAttributes[0], cells, memberListForFilter);
+				members = SnowflakeBuilder.makeMemberListDependency.apply(null, args.concat([childIdAttributes, entitiesParts]));
 			}
 
 			// только после того как список сформирован, удалаять данные из ячеек
@@ -2139,7 +2220,7 @@ var SnowflakeBuilder = function () {
 		}
 		/**
    * Method filter cells by members of a dimension
-   * @param {string} dimension
+   * @param {string} idAttribute
    * @param {Cell[]} cells
    * @param {MemberList} memberList
    * @private
@@ -2148,8 +2229,7 @@ var SnowflakeBuilder = function () {
 
 	}, {
 		key: 'mapFilter',
-		value: function mapFilter(dimension, cells, memberList) {
-			var idAttribute = _Cube2.default.genericId(dimension);
+		value: function mapFilter(idAttribute, cells, memberList) {
 			var cellTables = [];
 			//todo оптимизировать поиск через хеш
 			memberList.forEach(function (member) {
@@ -2166,28 +2246,27 @@ var SnowflakeBuilder = function () {
 
 	}, {
 		key: 'makeMemberListDependency',
-		value: function makeMemberListDependency(existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, childDimensions, entitiesParts) {
+		value: function makeMemberListDependency(idAttribute, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, childIdAttributes, entitiesParts) {
 			var totalMemberList = [];
 
 			var countId = 0;
 			entitiesParts.forEach(function (entitiesPart) {
 				if (entitiesPart.length) {
-					var members = SnowflakeBuilder.makeMemberList(existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, countId);
+					var members = SnowflakeBuilder.makeMemberList(idAttribute, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, countId);
 					countId = countId + members.length;
 
 					var etalon = entitiesPart[0];
 
-					childDimensions.forEach(function (dependencyName) {
-						var idAttribute = _Cube2.default.genericId(dependencyName);
+					childIdAttributes.forEach(function (childIdAttribute) {
 
 						members.forEach(function (member) {
-							member[idAttribute] = etalon[idAttribute];
+							member[childIdAttribute] = etalon[childIdAttribute];
 							member[_const.ENTITY_ID] = existMemberCount + totalMemberList.length + 1;
 							totalMemberList.push(member);
 						});
 
 						entitiesPart.forEach(function (entityPart) {
-							delete entityPart[idAttribute];
+							delete entityPart[childIdAttribute];
 						});
 					});
 				}
@@ -2213,13 +2292,13 @@ var SnowflakeBuilder = function () {
 
 	}, {
 		key: 'makeMemberList',
-		value: function makeMemberList(existMemberCount, factTable, entitiesPart, dimension) {
-			var keyProps = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
-			var otherProps = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : [];
-			var cells = arguments[6];
-			var isFirstLevel = arguments[7];
-			var cellTable = arguments[8];
-			var startFrom = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 0;
+		value: function makeMemberList(idAttribute, existMemberCount, factTable, entitiesPart, dimension) {
+			var keyProps = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : [];
+			var otherProps = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : [];
+			var cells = arguments[7];
+			var isFirstLevel = arguments[8];
+			var cellTable = arguments[9];
+			var startFrom = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 0;
 
 			// соотношение созданных id к ключам
 			var cache = {};
@@ -2252,20 +2331,16 @@ var SnowflakeBuilder = function () {
 
 				// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
 				if (!(surrogateKey in cache) && !(surrogateKey in restoredCache)) {
-					var _id = cache[surrogateKey] = ++startFrom;
-					// const member = Member.create(id, totalProps, entityPart);
-					// members.push(member);
+					cache[surrogateKey] = ++startFrom;
 				}
 
 				// оставить в нормальной форме ссылку на id под сущности
 				var id = cache[surrogateKey];
-				var idAttribute = _Cube2.default.genericId(dimension);
 				entityPart[idAttribute] = id;
 			});
 
 			Object.keys(cache).forEach(function (key) {
 				var id = cache[key];
-				var idAttribute = _Cube2.default.genericId(dimension);
 				var entityPart = entitiesPart.find(function (entityPart) {
 					return entityPart[idAttribute] === id;
 				});
@@ -2318,9 +2393,9 @@ var SnowflakeBuilder = function () {
 			var handleDimensionTree = function handleDimensionTree(dimensionTree, fact) {
 				var _dimensionTree$getTre = dimensionTree.getTreeValue(),
 				    dimension = _dimensionTree$getTre.dimension,
-				    memberList = _dimensionTree$getTre.members;
+				    memberList = _dimensionTree$getTre.members,
+				    idAttribute = _dimensionTree$getTre.idAttribute;
 
-				var idAttribute = _Cube2.default.genericId(dimension);
 				var idValue = fact[idAttribute];
 				var member = memberList.find(function (member) {
 					return member[_const.ENTITY_ID] === idValue;
@@ -2368,6 +2443,14 @@ var _Cell = __webpack_require__(3);
 var _Cell2 = _interopRequireDefault(_Cell);
 
 var _const = __webpack_require__(0);
+
+var _Cube = __webpack_require__(1);
+
+var _Cube2 = _interopRequireDefault(_Cube);
+
+var _InputCell = __webpack_require__(5);
+
+var _InputCell2 = _interopRequireDefault(_InputCell);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2444,6 +2527,16 @@ var CellTable = function (_extendableBuiltin2) {
 		value: function removeCell(cell) {
 			var index = this.indexOf(cell);
 			this.splice(index, 1);
+		}
+		/**
+   * @public
+   * */
+
+	}, {
+		key: 'createCell',
+		value: function createCell(options) {
+			var cell = new _InputCell2.default(options);
+			this.addCell(cell);
 		}
 	}]);
 
@@ -2575,52 +2668,19 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(5);
-
-var _MemberList2 = _interopRequireDefault(_MemberList);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/**
- * The composed aggregate object, members grouped by dimension names
- * */
 var Space = function () {
-	function Space(options) {
-		var _this = this;
-
+	function Space() {
 		_classCallCheck(this, Space);
-
-		if (options) {
-			this.getDimensionList.call(options).forEach(function (dimension) {
-				var memberList = options[dimension];
-				_this.setMemberList(dimension, memberList);
-			});
-		}
 	}
-	/**
-  * @param {string} dimension
-  * @param {MemberList|object[]} memberList
-  * */
 
+	_createClass(Space, null, [{
+		key: "union",
 
-	_createClass(Space, [{
-		key: 'setMemberList',
-		value: function setMemberList(dimension, memberList) {
-			this[dimension] = new _MemberList2.default(memberList);
-		}
 		/**
-   * @return {string[]}
+   *
    * */
-
-	}, {
-		key: 'getDimensionList',
-		value: function getDimensionList() {
-			return Object.getOwnPropertyNames(this);
-		}
-	}], [{
-		key: 'union',
 		value: function union() {
 			var newSpace = {};
 			var arg = [].concat(Array.prototype.slice.call(arguments));
@@ -2629,14 +2689,18 @@ var Space = function () {
 			});
 			return newSpace;
 		}
+		/**
+   *
+   * */
+
 	}, {
-		key: 'add',
+		key: "add",
 		value: function add(targetSpace, otherSpace) {
-			Object.keys(otherSpace).forEach(function (dimension) {
-				if (!targetSpace[dimension]) {
-					targetSpace[dimension] = [];
+			Object.keys(otherSpace).forEach(function (key) {
+				if (!targetSpace[key]) {
+					targetSpace[key] = [];
 				}
-				Array.prototype.push.apply(targetSpace[dimension], otherSpace[dimension]);
+				Array.prototype.push.apply(targetSpace[key], otherSpace[key]);
 			});
 		}
 	}]);
