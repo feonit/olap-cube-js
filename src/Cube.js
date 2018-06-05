@@ -24,13 +24,11 @@ import Cell from './Cell.js'
  * */
 class Cube {
 	constructor(cube) {
-		const { dimensionHierarchies, cellTable = [], settings = {} } = cube;
+		const { dimensionHierarchies = [], cellTable = [], settings = {} } = cube;
 
 		this.settings = { ...settings };
-
-		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => {
-			return DimensionTree.createDimensionTree(dimensionHierarchy, this.settings);
-		});
+		this.dimensionHierarchies = [];
+		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
 		this.cellTable = new CellTable(cellTable);
 
 		// const residuals = this.residuals();
@@ -48,7 +46,7 @@ class Cube {
 	 * @param {string} options.templateForeignKey
 	 * @return {Cube}
 	 * */
-	static create(facts, dimensionHierarchies, options = {}) {
+	static create(facts = [], dimensionHierarchies = [], options = {}) {
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
@@ -60,6 +58,7 @@ class Cube {
 
 		// build 2: members
 		cube.addFacts(facts);
+
 		return cube;
 	}
 	/**
@@ -70,7 +69,7 @@ class Cube {
 		const newFactTable = new FactTable(facts);
 		const cells = newFactTable.map(fact => new Cell(fact));
 		this.cellTable.addCells(cells);
-		const factTable = this.denormalize(this.getMeasure());
+		const factTable = this.getFacts();
 		SnowflakeBuilder.anotherBuild(factTable, cells, this.dimensionHierarchies, this.cellTable);
 	}
 	/**
@@ -425,7 +424,8 @@ class Cube {
 						options[idAttribute] = combination[dimension][ENTITY_ID]
 					});
 					options = {...options, ...props};
-					this.cellTable.createCell(options);
+					const cell = InputCell.createCell(options);
+					this.cellTable.addCell(cell);
 				}
 			});
 		}
@@ -444,6 +444,34 @@ class Cube {
 			}
 		});
 		return unfilled;
+	}
+	/**
+	 * @param {object} dimensionHierarchy
+	 * */
+	_addDimensionHierarchy(dimensionHierarchy) {
+		const dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy, this.settings);
+		this.dimensionHierarchies.push(
+			dimensionTree
+		);
+		return dimensionTree;
+	}
+	/**
+	 * @public
+	 * @param {DimensionTree} dimensionHierarchy
+	 * */
+	addDimensionHierarchy(dimensionHierarchy) {
+		const dimensionTree = this._addDimensionHierarchy(dimensionHierarchy);
+		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.cellTable, this.cellTable, this.cellTable);
+	}
+	/**
+	 * @public
+	 * @param {DimensionTree} dimensionHierarchy
+	 * */
+	removeDimensionHierarchy(dimensionHierarchy) {
+		// first remove members
+		SnowflakeBuilder.destroyDimensionTree(this.cellTable, this.cellTable, dimensionHierarchy, this);
+		// then target dimension hierarchy
+		this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
 	}
 }
 
