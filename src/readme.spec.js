@@ -132,6 +132,35 @@ describe('readme', ()=>{
 				{ id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
 			],
 			cube.getFactsBySet({ date: [{ id: 1 }, { id: 2 }] })
-		)
+		);
+
+		{
+			const facts = [
+				{ id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
+				{ id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
+			];
+			const cube = Cube.create(facts, []);
+			cube.addDimensionHierarchy({
+				dimensionTable: {
+					dimension: 'product',
+					keyProps: ['product']
+				},
+				dependency: [
+					{
+						dimensionTable: {
+							dimension: 'mark',
+							keyProps: ['mark']
+						},
+					}
+				]
+			});
+			debug = isEqualObjects(
+				cube.cellTable,
+				[
+					{ id: 1, product_id: 1, country: 'China', count: 2 },
+					{ id: 1, product_id: 2, country: 'Niderland', count: 3 }
+				]
+			)
+		}
 	})
 });

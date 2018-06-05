@@ -39,6 +39,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Removing dimension members](#removing-dimension-members)
   - [Adding facts](#adding-facts)
   - [Removing facts](#removing-facts)
+  - [Added dimension hierarchy](#added-dimension-hierarchy)
+  - [Removing dimension hierarchy](#removing-dimension-hierarchy)
   - [Filling empty cells](#filling-empty-cells)
   - [Settings](#settings)
 - [Versioning](#versioning)
@@ -367,6 +369,42 @@ let facts = [
 cube.removeFacts(facts)
 ```
 
+### Added dimension hierarchy
+```js
+const facts = [
+    { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
+    { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
+];
+const cube = Cube.create(facts, [])
+cube.addDimensionHierarchy({
+    dimensionTable: {
+        dimension: 'product',
+        keyProps: ['product']
+    },
+    dependency: [
+        {
+            dimensionTable: {
+                dimension: 'mark',
+                keyProps: ['mark']
+            },
+        }
+    ]
+})
+console.log(cube.cellTable)
+```
+return:
+```js
+[
+    { id: 1, product_id: 1, country: 'China', count: 2 },
+    { id: 1, product_id: 2, country: 'Niderland', count: 3 }
+]
+```
+
+### Removing dimension hierarchy
+Returns the result back to the addition of the hierarchy
+```js
+cube.removeDimensionHierarchy(cube.dimensionHierarchies[0])
+```
 
 ### Filling empty cells
 Fills the fact table with all possible missing combinations. For example, for a table, such data will represent empty cells
@@ -425,7 +463,6 @@ In future versions:
 
 API
 - Add a new interface for roll-up, drill-down, dice, slice methods
-- Add a new interface for dinamic hierarchy, dimension tables
 - Fix using forgotten otherProps (additional attributes of the members)
 - Add method delete empty cells(+ to example)
 - Add exclude set param

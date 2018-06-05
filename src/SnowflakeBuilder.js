@@ -15,10 +15,14 @@ export default class SnowflakeBuilder {
 
 		// for each dimension
 		dimensionsTrees.forEach(dimensionTree => {
-			// for each hierarchy and level of dimension
-			dimensionTree.tracePostOrder((dimensionTable, dimensionTree) =>{
-				SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable)
-			});
+			SnowflakeBuilder.anotherBuildOne(dimensionTree, cells, cellTable, factTable);
+		});
+	}
+
+	static anotherBuildOne(dimensionTree, cells, cellTable, factTable) {
+		// for each hierarchy and level of dimension
+		dimensionTree.tracePostOrder((dimensionTable, dimensionTree) =>{
+			SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable)
 		});
 	}
 
@@ -189,47 +193,70 @@ export default class SnowflakeBuilder {
 
 	static destroy(cellTable, removedCells, dimensionHierarchies, cube) {
 		// first remove cells
-		removedCells.forEach(cell => {
-			cellTable.removeCell(cell)
-		});
+		cellTable.removeCells(removedCells);
 		// then remove members
-		const handleMember = (member, memberList, dimension)=>{
-			const { cellTable } = cube.projection({ [dimension]: member });
-			// last cell was removed at the beginning of the algorithm,
-			// so if the member is no longer used, the projection will be empty
-			if (!cellTable.length) {
-				memberList.removeMember(member)
-			}
-		};
-		this.denormalize(removedCells, dimensionHierarchies, handleMember)
+		removedCells.forEach(fact => {
+			dimensionHierarchies.forEach(dimensionTree => {
+				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube), SnowflakeBuilder.restoreCell]);
+			});
+		});
 	}
 
-	static denormalize(cellTable, dimensionHierarchies, handleMember = ()=>{}) {
+	/**
+	 * Method allows to generate fact tables from cells
+	 * */
+	static denormalize(cellTable, dimensionHierarchies) {
 		const factTable = new FactTable();
 		cellTable.forEach(cell => {
 			factTable.push({...cell})
 		});
-
-		const handleDimensionTree = (dimensionTree, fact)=>{
-			const { dimension, members: memberList, idAttribute } = dimensionTree.getTreeValue();
-			const idValue = fact[idAttribute];
-			const member = memberList.find(member => {
-				return member[ENTITY_ID] === idValue;
-			});
-			handleMember(member, memberList, dimension);
-			const memberCopy = {...member};
-			delete memberCopy[ENTITY_ID];
-			delete fact[idAttribute];
-			Object.assign(fact, memberCopy)
-		};
 		factTable.forEach(fact => {
 			dimensionHierarchies.forEach(dimensionTree => {
-				dimensionTree.tracePreOrder((value, dimensionTree)=>{
-					handleDimensionTree(dimensionTree, fact)
-				})
+				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
 			});
 		});
 
 		return factTable;
 	}
+	static restoreCell(member, memberList, dimension, cell, idAttribute) {
+		const memberCopy = {...member};
+		delete memberCopy[ENTITY_ID];
+		delete cell[idAttribute];
+		Object.assign(cell, memberCopy)
+	}
+	static removeMembers(cube, member, memberList, dimension, cell, idAttribute) {
+		const { cellTable } = cube.projection({ [dimension]: member });
+		// last cell was removed at the beginning of the algorithm,
+		// so if the member is no longer used, the projection will be empty
+		if (!cellTable.length) {
+			memberList.removeMember(member)
+		}
+	}
+
+	static travers(cellTable, dimensionTree, handlers = () => {}) {
+		const handleDimensionTree = (dimensionTree, cell) => {
+			const { dimension, members: memberList, idAttribute } = dimensionTree.getTreeValue();
+			const idValue = cell[idAttribute];
+			const member = memberList.find(member => {
+				return member[ENTITY_ID] === idValue;
+			});
+			handlers.forEach(handler => {
+				handler(member, memberList, dimension, cell, idAttribute);
+			})
+		};
+		cellTable.forEach(cell => {
+			dimensionTree.tracePreOrder((value, dimensionTree)=>{
+				handleDimensionTree(dimensionTree, cell)
+			})
+		});
+	}
+
+	/**
+	 * Method allows to delete dimensionTree from cube,
+	 * the cells will be restored, and the members of the measurement are also deleted
+	 * */
+	static destroyDimensionTree(cellTable, removedCells, dimensionTree, cube) {
+		SnowflakeBuilder.travers(cellTable, dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube), SnowflakeBuilder.restoreCell]);
+	}
+
 }

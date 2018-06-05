@@ -1,7 +1,4 @@
 import Cell from './Cell.js'
-import {ENTITY_ID} from './const.js'
-import Cube from "./Cube.js";
-import InputCell from "./InputCell.js";
 
 export default class CellTable extends Array {
 	constructor(array) {
@@ -10,28 +7,37 @@ export default class CellTable extends Array {
 			Object.assign(this, array.map(item => new Cell(item)))
 		}
 	}
-	findById(id) {
-		return this.find(cell => {
-			return cell[ENTITY_ID] === id;
-		});
-	}
+	/**
+	 * @public
+	 * @param {Cell} cell
+	 * */
 	addCell(cell) {
 		this.push(cell)
 	}
+	/**
+	 * @public
+	 * @param {Cell[]|CellTable} cells
+	 * */
 	addCells(cells) {
 		cells.forEach(cell => {
 			this.addCell(cell)
 		})
 	}
+	/**
+	 * @public
+	 * @param {Cell} cell
+	 * */
 	removeCell(cell) {
 		const index = this.indexOf(cell);
 		this.splice(index, 1);
 	}
 	/**
 	 * @public
+	 * @param {Cell[]|CellTable} cells
 	 * */
-	createCell(options) {
-		const cell = new InputCell(options);
-		this.addCell(cell);
+	removeCells(cells) {
+		cells.forEach(cell => {
+			this.removeCell(cell)
+		})
 	}
 }

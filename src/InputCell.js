@@ -15,4 +15,7 @@ export default class InputCell extends Cell {
 		}
 		super(data, options)
 	}
+	static createCell(options) {
+		return new InputCell(options)
+	}
 }
