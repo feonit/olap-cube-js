@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.8.0
+- Added new interface `addDimensionHierarchy`, `removeDimensionHierarchy`
+
 *0.7.0*
 - Added new api setting: `templateForeignKey`
 

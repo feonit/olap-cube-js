@@ -1,5 +1,5 @@
 /*!
- * Version: "0.7.0"
+ * Version: "0.8.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -75,7 +75,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -106,13 +106,66 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _InputCell = __webpack_require__(5);
+var _const = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Element of dimension. Serving to determine the position and description of the data element
+ * */
+var Member = function () {
+	function Member(data) {
+		_classCallCheck(this, Member);
+
+		_extends(this, data);
+	}
+
+	_createClass(Member, null, [{
+		key: 'create',
+		value: function create(id, props, data) {
+			if (!(this === Member || Member.isPrototypeOf(this))) {
+				throw Error('this.constructor must be prototype of Member');
+			}
+			var memberData = {};
+			memberData[_const.ENTITY_ID] = id;
+
+			props.forEach(function (prop) {
+				// исключить идентификатор самой сущности
+				if (prop !== _const.ENTITY_ID) {
+					memberData[prop] = data[prop];
+				}
+			});
+			return new this(memberData);
+		}
+	}]);
+
+	return Member;
+}();
+
+exports.default = Member;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _InputCell = __webpack_require__(9);
 
 var _InputCell2 = _interopRequireDefault(_InputCell);
 
 var _const = __webpack_require__(0);
 
-var _Member = __webpack_require__(2);
+var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
@@ -120,7 +173,7 @@ var _DimensionTree = __webpack_require__(10);
 
 var _DimensionTree2 = _interopRequireDefault(_DimensionTree);
 
-var _FactTable = __webpack_require__(9);
+var _FactTable = __webpack_require__(8);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -130,7 +183,7 @@ var _SnowflakeBuilder = __webpack_require__(14);
 
 var _SnowflakeBuilder2 = _interopRequireDefault(_SnowflakeBuilder);
 
-var _console = __webpack_require__(7);
+var _console = __webpack_require__(6);
 
 var _console2 = _interopRequireDefault(_console);
 
@@ -168,11 +221,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * */
 var Cube = function () {
 	function Cube(cube) {
-		var _this = this;
-
 		_classCallCheck(this, Cube);
 
-		var dimensionHierarchies = cube.dimensionHierarchies,
+		var _cube$dimensionHierar = cube.dimensionHierarchies,
+		    dimensionHierarchies = _cube$dimensionHierar === undefined ? [] : _cube$dimensionHierar,
 		    _cube$cellTable = cube.cellTable,
 		    cellTable = _cube$cellTable === undefined ? [] : _cube$cellTable,
 		    _cube$settings = cube.settings,
@@ -180,10 +232,8 @@ var Cube = function () {
 
 
 		this.settings = _extends({}, settings);
-
-		this.dimensionHierarchies = dimensionHierarchies.map(function (dimensionHierarchy) {
-			return _DimensionTree2.default.createDimensionTree(dimensionHierarchy, _this.settings);
-		});
+		this.dimensionHierarchies = [];
+		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
 		this.cellTable = new _CellTable2.default(cellTable);
 
 		// const residuals = this.residuals();
@@ -216,7 +266,7 @@ var Cube = function () {
 				return new _Cell2.default(fact);
 			});
 			this.cellTable.addCells(cells);
-			var factTable = this.denormalize(this.getMeasure());
+			var factTable = this.getFacts();
 			_SnowflakeBuilder2.default.anotherBuild(factTable, cells, this.dimensionHierarchies, this.cellTable);
 		}
 		/**
@@ -310,7 +360,7 @@ var Cube = function () {
 	}, {
 		key: 'projection',
 		value: function projection(fixSpaceOptions) {
-			var _this2 = this;
+			var _this = this;
 
 			if (!fixSpaceOptions) {
 				return;
@@ -331,7 +381,7 @@ var Cube = function () {
 				// ищется его расширенная версия для каждого члена
 				var spacesForCells = fixSpace[dimension].map(function (member) {
 
-					var searchedInTree = _this2.findDimensionTreeByDimension(dimension);
+					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
 
 					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(dimension, member);
 
@@ -355,7 +405,7 @@ var Cube = function () {
 				var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
 					var members = space[dimension];
 
-					var _findDimensionTreeByD = _this2.findDimensionTreeByDimension(dimension).getTreeValue(),
+					var _findDimensionTreeByD = _this.findDimensionTreeByDimension(dimension).getTreeValue(),
 					    idAttribute = _findDimensionTreeByD.idAttribute;
 
 					var finded = members.find(function (member) {
@@ -521,12 +571,12 @@ var Cube = function () {
 	}, {
 		key: 'residuals',
 		value: function residuals() {
-			var _this3 = this;
+			var _this2 = this;
 
 			var tuples = this.cartesian();
 			var totalFacts = [];
 			tuples.forEach(function (tuple) {
-				var partFacts = _this3.getFactsBySet(tuple);
+				var partFacts = _this2.getFactsBySet(tuple);
 				if (partFacts.length > 1) {
 					totalFacts.push(tuple);
 				}
@@ -548,7 +598,7 @@ var Cube = function () {
 			var memberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 			var rollupCoordinatesData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-			var _this4 = this;
+			var _this3 = this;
 
 			var drillDownCoordinatesOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 			var measureData = arguments[4];
@@ -559,7 +609,7 @@ var Cube = function () {
 			var rollupCoordinates = {};
 			Object.keys(rollupCoordinatesData).forEach(function (dimension) {
 				var memberData = rollupCoordinatesData[dimension];
-				var memberList = _this4.getDimensionMembers(dimension);
+				var memberList = _this3.getDimensionMembers(dimension);
 				var id = memberData[_const.ENTITY_ID];
 				var find = memberList.find(function (member) {
 					return id === member[_const.ENTITY_ID];
@@ -645,22 +695,23 @@ var Cube = function () {
 	}, {
 		key: 'fill',
 		value: function fill(props) {
-			var _this5 = this;
+			var _this4 = this;
 
 			if (!this.residuals().length) {
 				var tuples = this.cartesian();
 				tuples.forEach(function (combination) {
-					var unique = _this5.getMeasureBySet(combination);
+					var unique = _this4.getMeasureBySet(combination);
 					if (!unique.length) {
 						var options = {};
 						Object.keys(combination).forEach(function (dimension) {
-							var _findDimensionTreeByD2 = _this5.findDimensionTreeByDimension(dimension).getTreeValue(),
+							var _findDimensionTreeByD2 = _this4.findDimensionTreeByDimension(dimension).getTreeValue(),
 							    idAttribute = _findDimensionTreeByD2.idAttribute;
 
 							options[idAttribute] = combination[dimension][_const.ENTITY_ID];
 						});
 						options = _extends({}, options, props);
-						_this5.cellTable.createCell(options);
+						var cell = _InputCell2.default.createCell(options);
+						_this4.cellTable.addCell(cell);
 					}
 				});
 			}
@@ -673,21 +724,58 @@ var Cube = function () {
 	}, {
 		key: 'unfilled',
 		value: function unfilled() {
-			var _this6 = this;
+			var _this5 = this;
 
 			var tuples = this.cartesian();
 			var unfilled = [];
 			tuples.forEach(function (tuple) {
-				var members = _this6.getFactsBySet(tuple);
+				var members = _this5.getFactsBySet(tuple);
 				if (members.length === 0) {
 					unfilled.push(tuple);
 				}
 			});
 			return unfilled;
 		}
+		/**
+   * @param {object} dimensionHierarchy
+   * */
+
+	}, {
+		key: '_addDimensionHierarchy',
+		value: function _addDimensionHierarchy(dimensionHierarchy) {
+			var dimensionTree = _DimensionTree2.default.createDimensionTree(dimensionHierarchy, this.settings);
+			this.dimensionHierarchies.push(dimensionTree);
+			return dimensionTree;
+		}
+		/**
+   * @public
+   * @param {DimensionTree} dimensionHierarchy
+   * */
+
+	}, {
+		key: 'addDimensionHierarchy',
+		value: function addDimensionHierarchy(dimensionHierarchy) {
+			var dimensionTree = this._addDimensionHierarchy(dimensionHierarchy);
+			_SnowflakeBuilder2.default.anotherBuildOne(dimensionTree, this.cellTable, this.cellTable, this.cellTable);
+		}
+		/**
+   * @public
+   * @param {DimensionTree} dimensionHierarchy
+   * */
+
+	}, {
+		key: 'removeDimensionHierarchy',
+		value: function removeDimensionHierarchy(dimensionHierarchy) {
+			// first remove members
+			_SnowflakeBuilder2.default.destroyDimensionTree(this.cellTable, this.cellTable, dimensionHierarchy, this);
+			// then target dimension hierarchy
+			this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
+		}
 	}], [{
 		key: 'create',
-		value: function create(facts, dimensionHierarchies) {
+		value: function create() {
+			var facts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+			var dimensionHierarchies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 			var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			if (!(Cube.isPrototypeOf(this) || Cube === this)) {
@@ -701,6 +789,7 @@ var Cube = function () {
 
 			// build 2: members
 			cube.addFacts(facts);
+
 			return cube;
 		}
 	}]);
@@ -709,59 +798,6 @@ var Cube = function () {
 }();
 
 exports.default = Cube;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _const = __webpack_require__(0);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * Element of dimension. Serving to determine the position and description of the data element
- * */
-var Member = function () {
-	function Member(data) {
-		_classCallCheck(this, Member);
-
-		_extends(this, data);
-	}
-
-	_createClass(Member, null, [{
-		key: 'create',
-		value: function create(id, props, data) {
-			if (!(this === Member || Member.isPrototypeOf(this))) {
-				throw Error('this.constructor must be prototype of Member');
-			}
-			var memberData = {};
-			memberData[_const.ENTITY_ID] = id;
-
-			props.forEach(function (prop) {
-				// исключить идентификатор самой сущности
-				if (prop !== _const.ENTITY_ID) {
-					memberData[prop] = data[prop];
-				}
-			});
-			return new this(memberData);
-		}
-	}]);
-
-	return Member;
-}();
-
-exports.default = Member;
 
 /***/ }),
 /* 3 */
@@ -778,7 +814,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _const = __webpack_require__(0);
 
-var _Fact2 = __webpack_require__(6);
+var _Fact2 = __webpack_require__(5);
 
 var _Fact3 = _interopRequireDefault(_Fact2);
 
@@ -1057,61 +1093,13 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _Cell2 = __webpack_require__(3);
-
-var _Cell3 = _interopRequireDefault(_Cell2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function uuidv4() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = Math.random() * 16 | 0;
-		var v = c == 'x' ? r : r & 0x3 | 0x8;
-		return v.toString(16);
-	});
-}
-
-var InputCell = function (_Cell) {
-	_inherits(InputCell, _Cell);
-
-	function InputCell(data, options) {
-		_classCallCheck(this, InputCell);
-
-		if (!data.id) {
-			data.id = uuidv4();
-		}
-		return _possibleConstructorReturn(this, (InputCell.__proto__ || Object.getPrototypeOf(InputCell)).call(this, data, options));
-	}
-
-	return InputCell;
-}(_Cell3.default);
-
-exports.default = InputCell;
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _const = __webpack_require__(0);
 
 var _errors = __webpack_require__(4);
 
-var _console = __webpack_require__(7);
+var _console = __webpack_require__(6);
 
 var _console2 = _interopRequireDefault(_console);
 
@@ -1154,7 +1142,7 @@ function Fact(data) {
 exports.default = Fact;
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1184,7 +1172,7 @@ var customConsole = {
 exports.default = customConsole;
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1200,7 +1188,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _const = __webpack_require__(0);
 
-var _Member = __webpack_require__(2);
+var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
@@ -1351,7 +1339,7 @@ var MemberList = function (_extendableBuiltin2) {
 exports.default = MemberList;
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1363,7 +1351,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _Fact = __webpack_require__(6);
+var _Fact = __webpack_require__(5);
 
 var _Fact2 = _interopRequireDefault(_Fact);
 
@@ -1422,6 +1410,63 @@ var FactTable = function (_extendableBuiltin2) {
 exports.default = FactTable;
 
 /***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Cell2 = __webpack_require__(3);
+
+var _Cell3 = _interopRequireDefault(_Cell2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function uuidv4() {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+		var r = Math.random() * 16 | 0;
+		var v = c == 'x' ? r : r & 0x3 | 0x8;
+		return v.toString(16);
+	});
+}
+
+var InputCell = function (_Cell) {
+	_inherits(InputCell, _Cell);
+
+	function InputCell(data, options) {
+		_classCallCheck(this, InputCell);
+
+		if (!data.id) {
+			data.id = uuidv4();
+		}
+		return _possibleConstructorReturn(this, (InputCell.__proto__ || Object.getPrototypeOf(InputCell)).call(this, data, options));
+	}
+
+	_createClass(InputCell, null, [{
+		key: 'createCell',
+		value: function createCell(options) {
+			return new InputCell(options);
+		}
+	}]);
+
+	return InputCell;
+}(_Cell3.default);
+
+exports.default = InputCell;
+
+/***/ }),
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1446,7 +1491,7 @@ var _Tree3 = _interopRequireDefault(_Tree2);
 
 var _errors = __webpack_require__(4);
 
-var _Cube = __webpack_require__(1);
+var _Cube = __webpack_require__(2);
 
 var _Cube2 = _interopRequireDefault(_Cube);
 
@@ -1788,7 +1833,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(8);
+var _MemberList = __webpack_require__(7);
 
 var _MemberList2 = _interopRequireDefault(_MemberList);
 
@@ -1884,7 +1929,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _Member2 = __webpack_require__(2);
+var _Member2 = __webpack_require__(1);
 
 var _Member3 = _interopRequireDefault(_Member2);
 
@@ -2127,21 +2172,21 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _MemberList = __webpack_require__(8);
+var _MemberList = __webpack_require__(7);
 
 var _MemberList2 = _interopRequireDefault(_MemberList);
 
-var _Member = __webpack_require__(2);
+var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
 var _const = __webpack_require__(0);
 
-var _Cube = __webpack_require__(1);
+var _Cube = __webpack_require__(2);
 
 var _Cube2 = _interopRequireDefault(_Cube);
 
-var _FactTable = __webpack_require__(9);
+var _FactTable = __webpack_require__(8);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -2168,10 +2213,15 @@ var SnowflakeBuilder = function () {
 
 			// for each dimension
 			dimensionsTrees.forEach(function (dimensionTree) {
-				// for each hierarchy and level of dimension
-				dimensionTree.tracePostOrder(function (dimensionTable, dimensionTree) {
-					SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable);
-				});
+				SnowflakeBuilder.anotherBuildOne(dimensionTree, cells, cellTable, factTable);
+			});
+		}
+	}, {
+		key: 'anotherBuildOne',
+		value: function anotherBuildOne(dimensionTree, cells, cellTable, factTable) {
+			// for each hierarchy and level of dimension
+			dimensionTree.tracePostOrder(function (dimensionTable, dimensionTree) {
+				SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable);
 			});
 		}
 	}, {
@@ -2362,59 +2412,93 @@ var SnowflakeBuilder = function () {
 	}, {
 		key: 'destroy',
 		value: function destroy(cellTable, removedCells, dimensionHierarchies, cube) {
+			var _this = this;
+
 			// first remove cells
-			removedCells.forEach(function (cell) {
-				cellTable.removeCell(cell);
-			});
+			cellTable.removeCells(removedCells);
 			// then remove members
-			var handleMember = function handleMember(member, memberList, dimension) {
-				var _cube$projection = cube.projection(_defineProperty({}, dimension, member)),
-				    cellTable = _cube$projection.cellTable;
-				// last cell was removed at the beginning of the algorithm,
-				// so if the member is no longer used, the projection will be empty
-
-
-				if (!cellTable.length) {
-					memberList.removeMember(member);
-				}
-			};
-			this.denormalize(removedCells, dimensionHierarchies, handleMember);
+			removedCells.forEach(function (fact) {
+				dimensionHierarchies.forEach(function (dimensionTree) {
+					SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.removeMembers.bind(_this, cube), SnowflakeBuilder.restoreCell]);
+				});
+			});
 		}
+
+		/**
+   * Method allows to generate fact tables from cells
+   * */
+
 	}, {
 		key: 'denormalize',
 		value: function denormalize(cellTable, dimensionHierarchies) {
-			var handleMember = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
-
 			var factTable = new _FactTable2.default();
 			cellTable.forEach(function (cell) {
 				factTable.push(_extends({}, cell));
 			});
+			factTable.forEach(function (fact) {
+				dimensionHierarchies.forEach(function (dimensionTree) {
+					SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
+				});
+			});
 
-			var handleDimensionTree = function handleDimensionTree(dimensionTree, fact) {
+			return factTable;
+		}
+	}, {
+		key: 'restoreCell',
+		value: function restoreCell(member, memberList, dimension, cell, idAttribute) {
+			var memberCopy = _extends({}, member);
+			delete memberCopy[_const.ENTITY_ID];
+			delete cell[idAttribute];
+			_extends(cell, memberCopy);
+		}
+	}, {
+		key: 'removeMembers',
+		value: function removeMembers(cube, member, memberList, dimension, cell, idAttribute) {
+			var _cube$projection = cube.projection(_defineProperty({}, dimension, member)),
+			    cellTable = _cube$projection.cellTable;
+			// last cell was removed at the beginning of the algorithm,
+			// so if the member is no longer used, the projection will be empty
+
+
+			if (!cellTable.length) {
+				memberList.removeMember(member);
+			}
+		}
+	}, {
+		key: 'travers',
+		value: function travers(cellTable, dimensionTree) {
+			var handlers = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
+
+			var handleDimensionTree = function handleDimensionTree(dimensionTree, cell) {
 				var _dimensionTree$getTre = dimensionTree.getTreeValue(),
 				    dimension = _dimensionTree$getTre.dimension,
 				    memberList = _dimensionTree$getTre.members,
 				    idAttribute = _dimensionTree$getTre.idAttribute;
 
-				var idValue = fact[idAttribute];
+				var idValue = cell[idAttribute];
 				var member = memberList.find(function (member) {
 					return member[_const.ENTITY_ID] === idValue;
 				});
-				handleMember(member, memberList, dimension);
-				var memberCopy = _extends({}, member);
-				delete memberCopy[_const.ENTITY_ID];
-				delete fact[idAttribute];
-				_extends(fact, memberCopy);
+				handlers.forEach(function (handler) {
+					handler(member, memberList, dimension, cell, idAttribute);
+				});
 			};
-			factTable.forEach(function (fact) {
-				dimensionHierarchies.forEach(function (dimensionTree) {
-					dimensionTree.tracePreOrder(function (value, dimensionTree) {
-						handleDimensionTree(dimensionTree, fact);
-					});
+			cellTable.forEach(function (cell) {
+				dimensionTree.tracePreOrder(function (value, dimensionTree) {
+					handleDimensionTree(dimensionTree, cell);
 				});
 			});
+		}
 
-			return factTable;
+		/**
+   * Method allows to delete dimensionTree from cube,
+   * the cells will be restored, and the members of the measurement are also deleted
+   * */
+
+	}, {
+		key: 'destroyDimensionTree',
+		value: function destroyDimensionTree(cellTable, removedCells, dimensionTree, cube) {
+			SnowflakeBuilder.travers(cellTable, dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube), SnowflakeBuilder.restoreCell]);
 		}
 	}]);
 
@@ -2441,16 +2525,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _Cell = __webpack_require__(3);
 
 var _Cell2 = _interopRequireDefault(_Cell);
-
-var _const = __webpack_require__(0);
-
-var _Cube = __webpack_require__(1);
-
-var _Cube2 = _interopRequireDefault(_Cube);
-
-var _InputCell = __webpack_require__(5);
-
-var _InputCell2 = _interopRequireDefault(_InputCell);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2500,19 +2574,22 @@ var CellTable = function (_extendableBuiltin2) {
 		}
 		return _this;
 	}
+	/**
+  * @public
+  * @param {Cell} cell
+  * */
+
 
 	_createClass(CellTable, [{
-		key: 'findById',
-		value: function findById(id) {
-			return this.find(function (cell) {
-				return cell[_const.ENTITY_ID] === id;
-			});
-		}
-	}, {
 		key: 'addCell',
 		value: function addCell(cell) {
 			this.push(cell);
 		}
+		/**
+   * @public
+   * @param {Cell[]|CellTable} cells
+   * */
+
 	}, {
 		key: 'addCells',
 		value: function addCells(cells) {
@@ -2522,6 +2599,11 @@ var CellTable = function (_extendableBuiltin2) {
 				_this2.addCell(cell);
 			});
 		}
+		/**
+   * @public
+   * @param {Cell} cell
+   * */
+
 	}, {
 		key: 'removeCell',
 		value: function removeCell(cell) {
@@ -2530,13 +2612,17 @@ var CellTable = function (_extendableBuiltin2) {
 		}
 		/**
    * @public
+   * @param {Cell[]|CellTable} cells
    * */
 
 	}, {
-		key: 'createCell',
-		value: function createCell(options) {
-			var cell = new _InputCell2.default(options);
-			this.addCell(cell);
+		key: 'removeCells',
+		value: function removeCells(cells) {
+			var _this3 = this;
+
+			cells.forEach(function (cell) {
+				_this3.removeCell(cell);
+			});
 		}
 	}]);
 
