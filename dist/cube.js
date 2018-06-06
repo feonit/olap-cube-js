@@ -1,5 +1,5 @@
 /*!
- * Version: "0.8.0"
+ * Version: "0.9.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -383,7 +383,7 @@ var Cube = function () {
 
 					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
 
-					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(dimension, member);
+					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
 
 					var _dimensionTreeProject = dimensionTreeProjection.getRoot().getTreeValue(),
 					    dimensionProjection = _dimensionTreeProject.dimension,
@@ -472,22 +472,22 @@ var Cube = function () {
 			if (searchedDimensionTree.isRoot()) {
 				return members;
 			} else {
-				var lastMembers = members;
+				var lastTracedMembers = members;
 				var end = false;
-				var lastDimension = rootDimension;
-				searchedDimensionTree.getRoot().tracePreOrder(function (dimensionTreeValue, dimensionTree) {
-					if (dimensionTree.isRoot()) {
+				var lastTracedDimensionTree = searchedDimensionTree;
+				searchedDimensionTree.getRoot().tracePreOrder(function (tracedDimensionTreeValue, tracedDimensionTree) {
+					if (tracedDimensionTree.isRoot()) {
 						return;
 					}
 					if (!end) {
-						lastMembers = searchedDimensionTree.rollUpDimensionMembers(lastDimension, lastMembers);
-						lastDimension = dimensionTreeValue.dimension;
+						lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
+						lastTracedDimensionTree = tracedDimensionTree;
 					}
-					if (dimensionTreeValue.dimension === dimension) {
+					if (tracedDimensionTreeValue.dimension === dimension) {
 						end = true;
 					}
 				});
-				return lastMembers;
+				return lastTracedMembers;
 			}
 		}
 		/**
@@ -663,7 +663,7 @@ var Cube = function () {
 		key: 'removeDimensionMember',
 		value: function removeDimensionMember(dimension, member) {
 			var dimensionTree = this.findDimensionTreeByDimension(dimension);
-			var endToBeRemoved = dimensionTree.removeDimensionMember(dimension, member);
+			var endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 			var cellTable = this.getMeasure();
 			var getRemoveMeasures = function getRemoveMeasures(dimension, members) {
 				var removedCells = [];
@@ -770,6 +770,82 @@ var Cube = function () {
 			_SnowflakeBuilder2.default.destroyDimensionTree(this.cellTable, this.cellTable, dimensionHierarchy, this);
 			// then target dimension hierarchy
 			this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
+		}
+		/**
+   * @public
+   * @param {string} currentDimension
+   * @param {object[]} members
+   * @param {string?} targetDimension
+   * */
+
+	}, {
+		key: 'rollUp',
+		value: function rollUp(currentDimension, members, targetDimension) {
+			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+			// first rollUp if no target
+			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
+			// if cant rollUp
+			if (!targetDimension && !targetDimensionTree) {
+				return members;
+			}
+			if (!currentDimensionTree.hasChild(targetDimensionTree)) {
+				return members;
+			}
+			var targetDimensionWasAchieved = false;
+			var lastTracedDimensionTree = currentDimensionTree;
+			var lastTracedMembers = members;
+			currentDimensionTree.tracePreOrder(function (treeValue, tracedDimensionTree) {
+				if (tracedDimensionTree === currentDimensionTree) {
+					return;
+				}
+				if (!targetDimensionWasAchieved) {
+					lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
+					if (targetDimensionTree === tracedDimensionTree) {
+						targetDimensionWasAchieved = true;
+					} else {
+						lastTracedDimensionTree = tracedDimensionTree;
+					}
+				}
+			});
+			return lastTracedMembers;
+		}
+		/**
+   * @public
+   * @param {string} currentDimension
+   * @param {object[]} members
+   * @param {string?} targetDimension
+   * */
+
+	}, {
+		key: 'drillDown',
+		value: function drillDown(currentDimension, members, targetDimension) {
+			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+			// first drillDown if no target
+			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
+			// if cant drillDown
+			if (!targetDimension && !targetDimensionTree) {
+				return members;
+			}
+			if (!currentDimensionTree.hasParent(targetDimensionTree)) {
+				return members;
+			}
+			var targetDimensionWasAchieved = false;
+			var lastTracedDimensionTree = currentDimensionTree;
+			var lastTracedMembers = members;
+			currentDimensionTree.traceUpOrder(function (tracedDimensionTree) {
+				if (tracedDimensionTree === currentDimensionTree) {
+					return;
+				}
+				if (!targetDimensionWasAchieved) {
+					lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+					if (targetDimensionTree === tracedDimensionTree) {
+						targetDimensionWasAchieved = true;
+					} else {
+						lastTracedDimensionTree = tracedDimensionTree;
+					}
+				}
+			});
+			return lastTracedMembers;
 		}
 	}], [{
 		key: 'create',
@@ -1604,14 +1680,13 @@ var DimensionTree = function (_Tree) {
 		}
 		/**
    * @public
-   * @param {string} dimension
    * @param {Member} member
    * @return {DimensionTree|undefined}
    * */
 
 	}, {
 		key: 'createProjectionOntoMember',
-		value: function createProjectionOntoMember(dimension, member) {
+		value: function createProjectionOntoMember(member) {
 			var _this2 = this;
 
 			// 1 create copy of hierarchy with empty members
@@ -1620,64 +1695,78 @@ var DimensionTree = function (_Tree) {
 				var dimensionTable = dimensionTree.getTreeValue();
 				dimensionTable.clearMemberList();
 			});
-			// 2 get dimensionTree by dimension
-			var searchedInTree = this.getDimensionTreeByDimension(dimension);
-			var lastMembers = void 0;
-			var lastDimension = void 0;
-			// 3 trace up
-			searchedInTree.traceUpOrder(function (tracedTree) {
+			var lastTracedMembers = void 0;
+			var lastTracedDimensionTree = void 0;
+			// 2 trace up
+			this.traceUpOrder(function (tracedTree) {
 				var _tracedTree$getTreeVa = tracedTree.getTreeValue(),
 				    tracedDimension = _tracedTree$getTreeVa.dimension;
 
-				// 4 get drill down of last members
+				// 3 get drill down of last members
 
 
-				var drillDownedMembers = tracedTree == searchedInTree ? [member] : _this2.drillDownDimensionMembers(lastDimension, lastMembers);
+				var drillDownedMembers = tracedTree == _this2 ? [member] : lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
 
-				// 5 set members
+				// 4 set members
 				newDimensionTreeByMember.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillDownedMembers);
 
-				// 6 save current dimension and drill downed members
-				lastDimension = tracedDimension;
-				lastMembers = drillDownedMembers;
+				// 5 save current dimension and drill downed members
+				lastTracedMembers = drillDownedMembers;
+				lastTracedDimensionTree = tracedTree;
 			});
 			return newDimensionTreeByMember;
 		}
 		/**
    * @public
-   * @param {string} dimension
    * @param {Member} member
    * */
 
 	}, {
-		key: 'removeDimensionMember',
-		value: function removeDimensionMember(dimension, member) {
+		key: 'removeProjectionOntoMember',
+		value: function removeProjectionOntoMember(member) {
+			// 1 get projection
+			var projectionDimensionTree = this.createProjectionOntoMember(member);
+			// 2 subtract projection
+			this.subtractDimensionTree(projectionDimensionTree);
+			// 3 return first level members of projection
+			var endToBeRemovedMember = {};
+
+			var _projectionDimensionT = projectionDimensionTree.getRoot().getTreeValue(),
+			    dimensionProjection = _projectionDimensionT.dimension,
+			    membersProjection = _projectionDimensionT.members;
+
+			endToBeRemovedMember[dimensionProjection] = membersProjection;
+
+			return endToBeRemovedMember;
+		}
+		/**
+   * @private
+   * @param {DimensionTree} dimensionTree
+   * */
+
+	}, {
+		key: 'subtractDimensionTree',
+		value: function subtractDimensionTree(dimensionTree) {
 			var _this3 = this;
-
-			// travers up
-			var removalInTree = this.getDimensionTreeByDimension(dimension);
-
-			var projectionDimensionTree = removalInTree.createProjectionOntoMember(dimension, member);
 
 			// remove intersection
 			var toBeRemovedSpace = {};
-			var endToBeRemovedMember = {};
 
-			projectionDimensionTree.tracePostOrder(function (dimensionTreeValue) {
+			dimensionTree.tracePostOrder(function (dimensionTreeValue) {
 				var dimension = dimensionTreeValue.dimension,
 				    members = dimensionTreeValue.members;
 
 				toBeRemovedSpace[dimension] = members;
 			});
 
-			var memberList = removalInTree.getTreeValue().members;
+			var memberList = this.getTreeValue().members;
 
 			// travers down
 			if (memberList.length === 1) {
-				removalInTree.tracePreOrder(function (downTree) {
-					var _downTree$getTreeValu = downTree.getTreeValue(),
-					    childMembers = _downTree$getTreeValu.members,
-					    childDimension = _downTree$getTreeValu.dimension;
+				this.tracePreOrder(function (tracedDimensionTree) {
+					var _tracedDimensionTree$ = tracedDimensionTree.getTreeValue(),
+					    childMembers = _tracedDimensionTree$.members,
+					    childDimension = _tracedDimensionTree$.dimension;
 
 					toBeRemovedSpace[childDimension] = childMembers;
 				});
@@ -1691,36 +1780,28 @@ var DimensionTree = function (_Tree) {
 					currentMemberList.removeMember(member);
 				});
 			});
-
-			var _projectionDimensionT = projectionDimensionTree.getRoot().getTreeValue(),
-			    dimensionProjection = _projectionDimensionT.dimension,
-			    membersProjection = _projectionDimensionT.members;
-
-			endToBeRemovedMember[dimensionProjection] = membersProjection;
-
-			return endToBeRemovedMember;
 		}
 		/**
    * @public
-   * @param {string} dimension
    * @param {Member[]} members
    * @return {Member[]}
    * */
 
 	}, {
 		key: 'drillDownDimensionMembers',
-		value: function drillDownDimensionMembers(dimension, members) {
-			var dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
-			if (dimensionTree.isRoot()) {
+		value: function drillDownDimensionMembers() {
+			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
+
+			if (this.isRoot()) {
 				return members;
 			}
-			var parentTree = dimensionTree.getParentTree();
+			var parentTree = this.getParentTree();
 
 			var _parentTree$getTreeVa = parentTree.getTreeValue(),
 			    parentMembers = _parentTree$getTreeVa.members;
 
-			var _dimensionTree$getTre = dimensionTree.getTreeValue(),
-			    idAttribute = _dimensionTree$getTre.idAttribute;
+			var _getTreeValue = this.getTreeValue(),
+			    idAttribute = _getTreeValue.idAttribute;
 
 			var drillDownMembers = [];
 			members.forEach(function (member) {
@@ -1736,19 +1817,20 @@ var DimensionTree = function (_Tree) {
 		}
 		/**
    * @public
-   * @param {string} dimension
+   * @this {DimensionTree}
    * @param {Member[]} members
    * @return {Member[]}
    * */
 
 	}, {
 		key: 'rollUpDimensionMembers',
-		value: function rollUpDimensionMembers(dimension, members) {
-			var dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
-			if (dimensionTree.isExternal()) {
+		value: function rollUpDimensionMembers() {
+			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
+
+			if (this.isExternal()) {
 				return members;
 			}
-			var childTree = dimensionTree.getChildTrees()[0]; // for one child always
+			var childTree = this.getChildTrees()[0]; // for one child always
 
 			var _childTree$getTreeVal = childTree.getTreeValue(),
 			    childMembers = _childTree$getTreeVal.members,
@@ -2150,6 +2232,40 @@ var Tree = function () {
 				}
 			})(this);
 		}
+		/**
+   * Check if some thee is present in childs of some level
+   * @param {Tree}
+   * @return {boolean}
+   * */
+
+	}, {
+		key: 'hasChild',
+		value: function hasChild(tree) {
+			var has = false;
+			this.tracePreOrder(function (tracedTreeValue, tracedTree) {
+				if (tracedTree === tree) {
+					has = true;
+				}
+			});
+			return has;
+		}
+		/**
+   * Check if some thee is present in parents of some level
+   * @param {Tree}
+   * @return {boolean}
+   * */
+
+	}, {
+		key: 'hasParent',
+		value: function hasParent(tree) {
+			var has = false;
+			this.traceUpOrder(function (tracedTree) {
+				if (tracedTree === tree) {
+					has = true;
+				}
+			});
+			return has;
+		}
 	}]);
 
 	return Tree;
@@ -2484,8 +2600,8 @@ var SnowflakeBuilder = function () {
 				});
 			};
 			cellTable.forEach(function (cell) {
-				dimensionTree.tracePreOrder(function (value, dimensionTree) {
-					handleDimensionTree(dimensionTree, cell);
+				dimensionTree.tracePreOrder(function (value, tracedDimensionTree) {
+					handleDimensionTree(tracedDimensionTree, cell);
 				});
 			});
 		}

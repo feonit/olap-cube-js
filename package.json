@@ -1,6 +1,6 @@
 {
   "name": "olap-cube-js",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "A package olap-cube-js for client OLAP cube",
   "main": "index.js",
   "devDependencies": {
@@ -53,12 +53,16 @@
   },
   "keywords": [
     "сube",
+    "сube.js",
     "olap",
     "hypercube",
     "dimension",
     "measure",
     "fact",
-    "table"
+    "table",
+    "cell",
+    "drilldown",
+    "rollup"
   ],
   "repository": {
     "type": "git",
