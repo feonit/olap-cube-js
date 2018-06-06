@@ -156,7 +156,7 @@ class Cube {
 
 				let searchedInTree = this.findDimensionTreeByDimension(dimension);
 
-				const dimensionTreeProjection = searchedInTree.createProjectionOntoMember(dimension, member);
+				const dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
 				const {
 					dimension: dimensionProjection,
 					members: membersProjection
@@ -237,22 +237,22 @@ class Cube {
 		if (searchedDimensionTree.isRoot()) {
 			return members
 		} else {
-			let lastMembers = members;
+			let lastTracedMembers = members;
 			let end = false;
-			let lastDimension = rootDimension;
-			searchedDimensionTree.getRoot().tracePreOrder((dimensionTreeValue, dimensionTree) => {
-				if (dimensionTree.isRoot()) {
+			let lastTracedDimensionTree = searchedDimensionTree;
+			searchedDimensionTree.getRoot().tracePreOrder((tracedDimensionTreeValue, tracedDimensionTree) => {
+				if (tracedDimensionTree.isRoot()) {
 					return;
 				}
 				if (!end) {
-					lastMembers = searchedDimensionTree.rollUpDimensionMembers(lastDimension, lastMembers);
-					lastDimension = dimensionTreeValue.dimension;
+					lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
+					lastTracedDimensionTree = tracedDimensionTree;
 				}
-				if (dimensionTreeValue.dimension === dimension) {
+				if (tracedDimensionTreeValue.dimension === dimension) {
 					end = true;
 				}
 			});
-			return lastMembers;
+			return lastTracedMembers;
 		}
 	}
 	/**
@@ -384,7 +384,7 @@ class Cube {
 	 * */
 	removeDimensionMember(dimension, member) {
 		const dimensionTree = this.findDimensionTreeByDimension(dimension);
-		const endToBeRemoved = dimensionTree.removeDimensionMember(dimension, member);
+		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 		const cellTable = this.getMeasure();
 		const getRemoveMeasures = (dimension, members) => {
 			const removedCells = [];
@@ -472,6 +472,76 @@ class Cube {
 		SnowflakeBuilder.destroyDimensionTree(this.cellTable, this.cellTable, dimensionHierarchy, this);
 		// then target dimension hierarchy
 		this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
+	}
+	/**
+	 * @public
+	 * @param {string} currentDimension
+	 * @param {object[]} members
+	 * @param {string?} targetDimension
+	 * */
+	rollUp(currentDimension, members, targetDimension) {
+		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+		// first rollUp if no target
+		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
+		// if cant rollUp
+		if (!targetDimension && !targetDimensionTree) {
+			return members;
+		}
+		if (!currentDimensionTree.hasChild(targetDimensionTree)) {
+			return members;
+		}
+		let targetDimensionWasAchieved = false;
+		let lastTracedDimensionTree = currentDimensionTree;
+		let lastTracedMembers = members;
+		currentDimensionTree.tracePreOrder((treeValue, tracedDimensionTree) => {
+			if (tracedDimensionTree === currentDimensionTree) {
+				return;
+			}
+			if (!targetDimensionWasAchieved) {
+				lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
+				if (targetDimensionTree === tracedDimensionTree) {
+					targetDimensionWasAchieved = true;
+				} else {
+					lastTracedDimensionTree = tracedDimensionTree;
+				}
+			}
+		});
+		return lastTracedMembers;
+	}
+	/**
+	 * @public
+	 * @param {string} currentDimension
+	 * @param {object[]} members
+	 * @param {string?} targetDimension
+	 * */
+	drillDown(currentDimension, members, targetDimension) {
+		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+		// first drillDown if no target
+		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
+		// if cant drillDown
+		if (!targetDimension && !targetDimensionTree) {
+			return members;
+		}
+		if (!currentDimensionTree.hasParent(targetDimensionTree)) {
+			return members;
+		}
+		let targetDimensionWasAchieved = false;
+		let lastTracedDimensionTree = currentDimensionTree;
+		let lastTracedMembers = members;
+		currentDimensionTree.traceUpOrder((tracedDimensionTree) => {
+			if (tracedDimensionTree === currentDimensionTree) {
+				return;
+			}
+			if (!targetDimensionWasAchieved) {
+				lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+				if (targetDimensionTree === tracedDimensionTree) {
+					targetDimensionWasAchieved = true;
+				} else {
+					lastTracedDimensionTree = tracedDimensionTree;
+				}
+			}
+		});
+		return lastTracedMembers;
 	}
 }
 

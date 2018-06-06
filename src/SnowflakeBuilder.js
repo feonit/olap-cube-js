@@ -245,8 +245,8 @@ export default class SnowflakeBuilder {
 			})
 		};
 		cellTable.forEach(cell => {
-			dimensionTree.tracePreOrder((value, dimensionTree)=>{
-				handleDimensionTree(dimensionTree, cell)
+			dimensionTree.tracePreOrder((value, tracedDimensionTree)=>{
+				handleDimensionTree(tracedDimensionTree, cell)
 			})
 		});
 	}

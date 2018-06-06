@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.9.0
+- Added a new api methods for `rollUp`, `drillDown`
+
 *0.8.0
 - Added new interface `addDimensionHierarchy`, `removeDimensionHierarchy`
 

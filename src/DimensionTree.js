@@ -99,68 +99,79 @@ export default class DimensionTree extends Tree {
 	}
 	/**
 	 * @public
-	 * @param {string} dimension
 	 * @param {Member} member
 	 * @return {DimensionTree|undefined}
 	 * */
-	createProjectionOntoMember(dimension, member) {
+	createProjectionOntoMember(member) {
 		// 1 create copy of hierarchy with empty members
 		const newDimensionTreeByMember = new DimensionTree(this.getRoot());
 		newDimensionTreeByMember.tracePostOrder((dimensionTreeValue, dimensionTree)=>{
 			const dimensionTable = dimensionTree.getTreeValue();
 			dimensionTable.clearMemberList();
 		});
-		// 2 get dimensionTree by dimension
-		const searchedInTree = this.getDimensionTreeByDimension(dimension);
-		let lastMembers;
-		let lastDimension;
-		// 3 trace up
-		searchedInTree.traceUpOrder(tracedTree => {
+		let lastTracedMembers;
+		let lastTracedDimensionTree;
+		// 2 trace up
+		this.traceUpOrder(tracedTree => {
 			const { dimension: tracedDimension } = tracedTree.getTreeValue();
 
-			// 4 get drill down of last members
-			const drillDownedMembers = tracedTree == searchedInTree
+			// 3 get drill down of last members
+			const drillDownedMembers = tracedTree == this
 				? [member]
-				: this.drillDownDimensionMembers(lastDimension, lastMembers);
+				: lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
 
-			// 5 set members
+			// 4 set members
 			newDimensionTreeByMember
 				.getDimensionTreeByDimension(tracedDimension)
 				.getTreeValue()
 				.setMemberList(drillDownedMembers);
 
-			// 6 save current dimension and drill downed members
-			lastDimension = tracedDimension;
-			lastMembers = drillDownedMembers;
+			// 5 save current dimension and drill downed members
+			lastTracedMembers = drillDownedMembers;
+			lastTracedDimensionTree = tracedTree;
 		});
 		return newDimensionTreeByMember;
 	}
 	/**
 	 * @public
-	 * @param {string} dimension
 	 * @param {Member} member
 	 * */
-	removeDimensionMember(dimension, member) {
-		// travers up
-		let removalInTree = this.getDimensionTreeByDimension(dimension);
-
-		const projectionDimensionTree = removalInTree.createProjectionOntoMember(dimension, member);
-
-		// remove intersection
-		const toBeRemovedSpace = {};
+	removeProjectionOntoMember(member) {
+		// 1 get projection
+		const projectionDimensionTree = this.createProjectionOntoMember(member);
+		// 2 subtract projection
+		this.subtractDimensionTree(projectionDimensionTree);
+		// 3 return first level members of projection
 		const endToBeRemovedMember = {};
 
-		projectionDimensionTree.tracePostOrder(dimensionTreeValue => {
+		const {
+			dimension: dimensionProjection,
+			members: membersProjection
+		} = projectionDimensionTree.getRoot().getTreeValue();
+
+		endToBeRemovedMember[dimensionProjection] = membersProjection;
+
+		return endToBeRemovedMember;
+	}
+	/**
+	 * @private
+	 * @param {DimensionTree} dimensionTree
+	 * */
+	subtractDimensionTree(dimensionTree) {
+		// remove intersection
+		const toBeRemovedSpace = {};
+
+		dimensionTree.tracePostOrder(dimensionTreeValue => {
 			const {dimension, members} = dimensionTreeValue;
 			toBeRemovedSpace[dimension] = members;
 		});
 
-		const memberList = removalInTree.getTreeValue().members;
+		const memberList = this.getTreeValue().members;
 
 		// travers down
 		if (memberList.length === 1) {
-			removalInTree.tracePreOrder(downTree => {
-				const {members: childMembers, dimension: childDimension} = downTree.getTreeValue();
+			this.tracePreOrder(tracedDimensionTree => {
+				const {members: childMembers, dimension: childDimension} = tracedDimensionTree.getTreeValue();
 				toBeRemovedSpace[childDimension] = childMembers;
 			})
 		}
@@ -173,30 +184,19 @@ export default class DimensionTree extends Tree {
 				currentMemberList.removeMember(member);
 			})
 		});
-
-		const {
-			dimension: dimensionProjection,
-			members: membersProjection
-		} = projectionDimensionTree.getRoot().getTreeValue();
-
-		endToBeRemovedMember[dimensionProjection] = membersProjection;
-
-		return endToBeRemovedMember;
 	}
 	/**
 	 * @public
-	 * @param {string} dimension
 	 * @param {Member[]} members
 	 * @return {Member[]}
 	 * */
-	drillDownDimensionMembers(dimension, members) {
-		const dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
-		if (dimensionTree.isRoot()) {
+	drillDownDimensionMembers(members = this.getTreeValue().members) {
+		if (this.isRoot()) {
 			return members;
 		}
-		const parentTree = dimensionTree.getParentTree();
+		const parentTree = this.getParentTree();
 		const { members: parentMembers } = parentTree.getTreeValue();
-		const { idAttribute } = dimensionTree.getTreeValue();
+		const { idAttribute } = this.getTreeValue();
 		const drillDownMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
@@ -211,16 +211,15 @@ export default class DimensionTree extends Tree {
 	}
 	/**
 	 * @public
-	 * @param {string} dimension
+	 * @this {DimensionTree}
 	 * @param {Member[]} members
 	 * @return {Member[]}
 	 * */
-	rollUpDimensionMembers(dimension, members) {
-		const dimensionTree = this.getRoot().getDimensionTreeByDimension(dimension);
-		if (dimensionTree.isExternal()) {
+	rollUpDimensionMembers(members = this.getTreeValue().members) {
+		if (this.isExternal()) {
 			return members;
 		}
-		const childTree = dimensionTree.getChildTrees()[0]; // for one child always
+		const childTree = this.getChildTrees()[0]; // for one child always
 		const { members: childMembers, idAttribute } = childTree.getTreeValue();
 		const rollUpMembers = [];
 		members.forEach(member => {

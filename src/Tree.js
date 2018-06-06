@@ -123,4 +123,32 @@ export default class Tree {
 			}
 		}(this));
 	}
+	/**
+	 * Check if some thee is present in childs of some level
+	 * @param {Tree}
+	 * @return {boolean}
+	 * */
+	hasChild(tree) {
+		let has = false;
+		this.tracePreOrder((tracedTreeValue, tracedTree) => {
+			if (tracedTree === tree) {
+				has = true;
+			}
+		});
+		return has;
+	}
+	/**
+	 * Check if some thee is present in parents of some level
+	 * @param {Tree}
+	 * @return {boolean}
+	 * */
+	hasParent(tree) {
+		let has = false;
+		this.traceUpOrder((tracedTree) => {
+			if (tracedTree === tree) {
+				has = true;
+			}
+		});
+		return has;
+	}
 }
