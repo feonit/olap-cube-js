@@ -36,3 +36,21 @@ export const recursiveObjectsNotHaveCommonLinks = (obj1, obj2)=>{
 export const isClone = (targetObj, cloneObj)=>{
 	recursiveObjectsNotHaveCommonLinks(targetObj, cloneObj)
 };
+
+export const cloneDeep = function dup(o) {
+	// "string", number, boolean
+	if (typeof(o) != 'object') {
+		return o;
+	}
+	// null
+	if (!o) {
+		return o; // null
+	}
+	var r = (o instanceof Array) ? [] : {};
+	for (var i in o) {
+		if (o.hasOwnProperty(i)) {
+			r[i] = dup(o[i]);
+		}
+	}
+	return r;
+};

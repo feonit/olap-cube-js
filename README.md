@@ -43,6 +43,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Removing dimension hierarchy](#removing-dimension-hierarchy)
   - [Filling empty cells](#filling-empty-cells)
   - [Settings](#settings)
+  - [Roll-up members](#roll-up-members)
+  - [Drill-down members](#drill-down-members)
 - [Versioning](#versioning)
 - [Todo](#todo)
 - [Demo][6]
@@ -455,6 +457,15 @@ You can pass some settings to cube via third argument, example
 Possible options:
 - `templateForeignKey` default value: `%s_id`, where %s will be replaced by dimension
 
+### Roll-up members
+```js
+const markMembers = cube.rollUp('product', productMembers, 'mark')
+```
+### Drill-down members
+```js
+const productMembers = cube.drillDown('mark', markMembers, 'product')
+```
+
 ## Versioning
 We use <a href="https://semver.org/">SemVer</a> for versioning.
 
@@ -462,7 +473,7 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Add a new interface for roll-up, drill-down, dice, slice methods
+- Add a new interface for dice, slice methods
 - Fix using forgotten otherProps (additional attributes of the members)
 - Add method delete empty cells(+ to example)
 - Add exclude set param
