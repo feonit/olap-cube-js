@@ -1,5 +1,5 @@
 /*!
- * Version: "0.9.0"
+ * Version: "0.10.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -375,6 +375,13 @@ var Cube = function () {
 				fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension]) ? fixSpaceOptions[dimension] : [fixSpaceOptions[dimension]];
 			});
 
+			var dimensionHierarchiesLength = this.dimensionHierarchies.length;
+			if (Object.keys(fixSpaceOptions).length > dimensionHierarchiesLength) {
+				throw 'set must have length: ' + dimensionHierarchiesLength;
+			}
+
+			var dimensionHierarchies = [];
+
 			// для каждого измерения
 			var totalSpaces = Object.keys(fixSpace).map(function (dimension) {
 
@@ -389,6 +396,7 @@ var Cube = function () {
 					    dimensionProjection = _dimensionTreeProject.dimension,
 					    membersProjection = _dimensionTreeProject.members;
 
+					dimensionHierarchies.push(dimensionTreeProjection);
 					return _defineProperty({}, dimensionProjection, membersProjection);
 				});
 
@@ -423,7 +431,7 @@ var Cube = function () {
 				});
 			});
 
-			return { cellTable: filteredCellTable };
+			return { cellTable: filteredCellTable, dimensionHierarchies: dimensionHierarchies };
 		}
 		/**
    * @private
@@ -846,6 +854,53 @@ var Cube = function () {
 				}
 			});
 			return lastTracedMembers;
+		}
+		/**
+   * @return {Cube}
+   * */
+
+	}, {
+		key: 'slice',
+		value: function slice(dimension, member) {
+			return this._createProjectionOfCube(_defineProperty({}, dimension, member));
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'dice',
+		value: function dice(fixSpaceOptions) {
+			return this._createProjectionOfCube(fixSpaceOptions);
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: '_createProjectionOfCube',
+		value: function _createProjectionOfCube(fixSpaceOptions) {
+			var _this6 = this;
+
+			// 1 make one projection on to member
+			var projection = this.projection(fixSpaceOptions);
+			var cellTable = projection.cellTable,
+			    dimensionHierarchies = projection.dimensionHierarchies;
+			// 2 create new list of dimensionHierarchies
+
+			var newDimensionHierarchies = [].concat(this.dimensionHierarchies);
+			// 3 replace original by projected dimensionHierarchy
+			dimensionHierarchies.forEach(function (projectionDimensionHierarchy) {
+				// find original dimensionHierarchy
+				var originalDimensionHierarchy = _this6.dimensionHierarchies.find(function (dimensionTree) {
+					return dimensionTree.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension;
+				});
+				// define index
+				var index = newDimensionHierarchies.indexOf(originalDimensionHierarchy);
+				// replace it
+				newDimensionHierarchies.splice(index, 1, projectionDimensionHierarchy);
+			});
+			return new Cube({ cellTable: cellTable, dimensionHierarchies: newDimensionHierarchies });
 		}
 	}], [{
 		key: 'create',
