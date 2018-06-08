@@ -45,6 +45,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Settings](#settings)
   - [Roll-up members](#roll-up-members)
   - [Drill-down members](#drill-down-members)
+  - [Slice](#slice)
+  - [Dice](#dice)
 - [Versioning](#versioning)
 - [Todo](#todo)
 - [Demo][6]
@@ -466,6 +468,19 @@ const markMembers = cube.rollUp('product', productMembers, 'mark')
 const productMembers = cube.drillDown('mark', markMembers, 'product')
 ```
 
+### Slice
+```js
+const member = cube.getDimensionMembers('mark')[0]
+const subCube = cube.slice(member)
+```
+
+### Dice
+```js
+const markMember = cube.getDimensionMembers('mark')[0]
+const regionMember = cube.getDimensionMembers('region')[0]
+const subCube = cube.slice({ mark: markMember, region: regionMember })
+```
+
 ## Versioning
 We use <a href="https://semver.org/">SemVer</a> for versioning.
 
@@ -473,12 +488,11 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Add a new interface for dice, slice methods
 - Fix using forgotten otherProps (additional attributes of the members)
 - Add method delete empty cells(+ to example)
 - Add exclude set param
 - Add options for "id" or genericId method
-- Add support for single keyProp in schema
+- Add support for single keyProp in schema and single dependency
 - Update method addMember without rollup options (then more than one member will be added)
 
 Code quality

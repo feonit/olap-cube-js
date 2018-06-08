@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.10.0
+- Added a new api methods for `slice`, `dice`
+
 *0.9.0
 - Added a new api methods for `rollUp`, `drillDown`
 

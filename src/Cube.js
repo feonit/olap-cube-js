@@ -148,6 +148,13 @@ class Cube {
 				: [fixSpaceOptions[dimension]];
 		});
 
+		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
+		if (Object.keys(fixSpaceOptions).length > dimensionHierarchiesLength) {
+			throw `set must have length: ${dimensionHierarchiesLength}`
+		}
+
+		const dimensionHierarchies = [];
+
 		// для каждого измерения
 		const totalSpaces = Object.keys(fixSpace).map(dimension => {
 
@@ -162,6 +169,7 @@ class Cube {
 					members: membersProjection
 				} = dimensionTreeProjection.getRoot().getTreeValue();
 
+				dimensionHierarchies.push(dimensionTreeProjection);
 				return { [dimensionProjection]: membersProjection };
 			});
 
@@ -193,7 +201,7 @@ class Cube {
 			});
 		});
 
-		return { cellTable: filteredCellTable };
+		return { cellTable: filteredCellTable, dimensionHierarchies };
 	}
 	/**
 	 * @private
@@ -543,6 +551,39 @@ class Cube {
 		});
 		return lastTracedMembers;
 	}
+	/**
+	 * @return {Cube}
+	 * */
+	slice(dimension, member) {
+		return this._createProjectionOfCube({ [dimension]: member })
+	}
+	/**
+	 *
+	 * */
+	dice(fixSpaceOptions) {
+		return this._createProjectionOfCube(fixSpaceOptions)
+	}
+	/**
+	 *
+	 * */
+	_createProjectionOfCube(fixSpaceOptions) {
+		// 1 make one projection on to member
+		const projection = this.projection(fixSpaceOptions);
+		const { cellTable, dimensionHierarchies } = projection;
+		// 2 create new list of dimensionHierarchies
+		const newDimensionHierarchies = [].concat(this.dimensionHierarchies);
+		// 3 replace original by projected dimensionHierarchy
+		dimensionHierarchies.forEach(projectionDimensionHierarchy => {
+			// find original dimensionHierarchy
+			const originalDimensionHierarchy = this.dimensionHierarchies.find(dimensionTree => {
+				return dimensionTree.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension;
+			});
+			// define index
+			const index = newDimensionHierarchies.indexOf(originalDimensionHierarchy);
+			// replace it
+			newDimensionHierarchies.splice(index, 1, projectionDimensionHierarchy);
+		});
+		return new Cube({ cellTable, dimensionHierarchies: newDimensionHierarchies })
+	}
 }
-
 export default Cube
