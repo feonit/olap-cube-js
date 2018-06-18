@@ -1,9 +1,7 @@
 import DimensionTable from './DimensionTable.js'
 import Tree from './Tree.js'
 import {DimensionException} from './errors.js'
-import Cube from './Cube.js'
-import {ENTITY_ID} from './const.js'
-import { DEFUALT_TEMPLATE_FOREIGN_KEY } from './const.js'
+import { DEFAULT_TEMPLATE_FOREIGN_KEY, ENTITY_ID } from './const.js'
 
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
@@ -47,7 +45,7 @@ export default class DimensionTree extends Tree {
 			}
 		});
 	}
-	static createDimensionTree(dimensionTreeData, { templateForeignKey = DEFUALT_TEMPLATE_FOREIGN_KEY } = {}) {
+	static createDimensionTree(dimensionTreeData, { templateForeignKey = DEFAULT_TEMPLATE_FOREIGN_KEY } = {}) {
 		// build 1: idAttributes
 		const buildIdAttributeDimensionTable = (dimensionTable) => {
 			if (!dimensionTable.idAttribute) {
@@ -105,7 +103,7 @@ export default class DimensionTree extends Tree {
 	createProjectionOntoMember(member) {
 		// 1 create copy of hierarchy with empty members
 		const newDimensionTreeByMember = new DimensionTree(this.getRoot());
-		newDimensionTreeByMember.tracePostOrder((dimensionTreeValue, dimensionTree)=>{
+		newDimensionTreeByMember.tracePostOrder((dimensionTreeValue, dimensionTree) => {
 			const dimensionTable = dimensionTree.getTreeValue();
 			dimensionTable.clearMemberList();
 		});

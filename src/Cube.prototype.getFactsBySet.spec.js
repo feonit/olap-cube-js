@@ -8,7 +8,7 @@ describe('method Cube.prototype.getFactsBySet', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getFactsBySet', ()=> {
+	it('should define getFactsBySet', () => {
 		expect(Cube.prototype.getFactsBySet).toBeDefined();
 	});
 

@@ -285,20 +285,24 @@ class Cube {
 			return dimensionTable.members;
 		});
 
-		const res = cartesian.apply(null, set);
-
 		const tupleTable = new TupleTable();
 
-		res.forEach(arr => {
-			const item = {};
-			dimensionsOrder.forEach((dimension, index) => {
-				item[dimension] = arr[index]
+		let res;
+		if (set.length) {
+			if (set.length > 1) {
+				res = cartesian.apply(null, set);
+			} else {
+				res = set[0].map(i => [i])
+			}
+			res.forEach(arr => {
+				const item = {};
+				dimensionsOrder.forEach((dimension, index) => {
+					item[dimension] = arr[index]
+				});
+				tupleTable.addTuple(item);
+				return item;
 			});
-
-			tupleTable.addTuple(item);
-
-			return item;
-		});
+		}
 
 		return tupleTable;
 	}
@@ -408,7 +412,7 @@ class Cube {
 			});
 			return removedCells;
 		};
-		Object.keys(endToBeRemoved).map(dimension =>{
+		Object.keys(endToBeRemoved).map(dimension => {
 			const removedMeasures = getRemoveMeasures(dimension, endToBeRemoved[dimension]);
 			removedMeasures.forEach(cell => {
 				cellTable.removeCell(cell);

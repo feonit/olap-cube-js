@@ -1,11 +1,11 @@
 import Cube from '../src/Cube.js'
-import {isEqual, jsonParseStringify, isEqualObjects} from '../spec/helpers/helpers.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('method Cube.prototype.removeDimensionMember', () => {
 
 	let cube;
 
-	beforeEach(()=>{
+	beforeEach(() => {
 		const factTable = [
 			{ id: 1, xxx: 0.49, xx: 0.5, x: 0, yy: 1.2, y: 0, z: 0, is: true },
 			{ id: 2, xxx: 1.18, xx: 1.2, x: 1, yy: 1.3, y: 1, z: 1, is: true },
@@ -61,7 +61,7 @@ describe('method Cube.prototype.removeDimensionMember', () => {
 
 	let debug;
 
-	it('should define removeDimensionMember', ()=> {
+	it('should define removeDimensionMember', () => {
 		expect(Cube.prototype.removeDimensionMember).toBeDefined();
 	});
 

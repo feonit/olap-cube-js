@@ -1,5 +1,8 @@
 ## Change Log
 
+*0.10.1
+- Fixed cartesian method
+
 *0.10.0
 - Added a new api methods for `slice`, `dice`
 

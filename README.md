@@ -47,6 +47,7 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Drill-down members](#drill-down-members)
   - [Slice](#slice)
   - [Dice](#dice)
+  - [Additional member props](#additional-member-props)
 - [Versioning](#versioning)
 - [Todo](#todo)
 - [Demo][6]
@@ -375,11 +376,11 @@ cube.removeFacts(facts)
 
 ### Added dimension hierarchy
 ```js
-const facts = [
+let facts = [
     { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
     { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 ];
-const cube = Cube.create(facts, [])
+let cube = Cube.create(facts, [])
 cube.addDimensionHierarchy({
     dimensionTable: {
         dimension: 'product',
@@ -461,24 +462,51 @@ Possible options:
 
 ### Roll-up members
 ```js
-const markMembers = cube.rollUp('product', productMembers, 'mark')
+let markMembers = cube.rollUp('product', productMembers, 'mark')
 ```
 ### Drill-down members
 ```js
-const productMembers = cube.drillDown('mark', markMembers, 'product')
+let productMembers = cube.drillDown('mark', markMembers, 'product')
 ```
 
 ### Slice
 ```js
-const member = cube.getDimensionMembers('mark')[0]
-const subCube = cube.slice(member)
+let member = cube.getDimensionMembers('mark')[0]
+let subCube = cube.slice(member)
 ```
 
 ### Dice
 ```js
-const markMember = cube.getDimensionMembers('mark')[0]
-const regionMember = cube.getDimensionMembers('region')[0]
-const subCube = cube.slice({ mark: markMember, region: regionMember })
+let markMember = cube.getDimensionMembers('mark')[0]
+let regionMember = cube.getDimensionMembers('region')[0]
+let subCube = cube.slice({ mark: markMember, region: regionMember })
+```
+
+### Additional member props
+It may be that the dimension member may content additional properties from the fact table that do not participate in creating own [surrogate key][8], for this use the property `otherProps`
+```js
+let facts = [{ id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein', countryBirth: 'Germany' }]
+let dimensionHierarchies = [
+   {
+       dimensionTable: {
+           dimension: 'user',
+           keyProps: ['nikname'],
+           otherProps: ['name', 'surname']
+       },
+       dimensionTable: {
+           dimension: 'country',
+           keyProps: ['countryBirth'],
+       }
+   }
+]
+let cube = Cube.create(facts, dimensionHierarchies)
+let members = cube.getDimensionMembers('user')
+```
+return:
+```js
+[
+    { id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein' }
+]
 ```
 
 ## Versioning
@@ -488,10 +516,9 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Fix using forgotten otherProps (additional attributes of the members)
 - Add method delete empty cells(+ to example)
 - Add exclude set param
-- Add options for "id" or genericId method
+- Add options for "id" or genericId method, for members, for fast
 - Add support for single keyProp in schema and single dependency
 - Update method addMember without rollup options (then more than one member will be added)
 

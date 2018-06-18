@@ -21,7 +21,7 @@ export default class SnowflakeBuilder {
 
 	static anotherBuildOne(dimensionTree, cells, cellTable, factTable) {
 		// for each hierarchy and level of dimension
-		dimensionTree.tracePostOrder((dimensionTable, dimensionTree) =>{
+		dimensionTree.tracePostOrder((dimensionTable, dimensionTree) => {
 			SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable)
 		});
 	}
@@ -48,9 +48,9 @@ export default class SnowflakeBuilder {
 		}
 
 		// только после того как список сформирован, удалаять данные из ячеек
-		const totalProps = [].concat(keyProps, otherProps);
-		cells.forEach(cell=>{
-			cell.deleteProps(totalProps);
+		cells.forEach(cell => {
+			cell.deleteProps(keyProps);
+			cell.deleteProps(otherProps);
 		});
 
 		members.forEach(member => {
@@ -140,8 +140,6 @@ export default class SnowflakeBuilder {
 		const cache = {};
 		const restoredCache = {};
 		const members = [];
-		// полный список свойств подлежащих стриранию из натуральной формы и записи в подсущности
-		const totalProps = [].concat(keyProps, otherProps);
 
 		// need restore cache
 		const existedCells = cellTable.filter(cell => {
@@ -176,7 +174,7 @@ export default class SnowflakeBuilder {
 		Object.keys(cache).forEach(key => {
 			const id = cache[key];
 			const entityPart = entitiesPart.find(entityPart => entityPart[idAttribute] === id);
-			const member = Member.create(id, totalProps, entityPart);
+			const member = Member.create(id, [].concat(keyProps).concat(otherProps), entityPart);
 			members.push(member);
 		});
 
@@ -245,7 +243,7 @@ export default class SnowflakeBuilder {
 			})
 		};
 		cellTable.forEach(cell => {
-			dimensionTree.tracePreOrder((value, tracedDimensionTree)=>{
+			dimensionTree.tracePreOrder((value, tracedDimensionTree) => {
 				handleDimensionTree(tracedDimensionTree, cell)
 			})
 		});

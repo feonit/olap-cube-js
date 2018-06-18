@@ -1,6 +1,6 @@
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
 import {createProductCube} from './data/products.js'
 import Cube from './Cube.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('method Cube.prototype.getDimensionMembers', () => {
 	let cube;
@@ -9,21 +9,21 @@ describe('method Cube.prototype.getDimensionMembers', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getDimensionMembers', ()=> {
+	it('should define getDimensionMembers', () => {
 		expect(Cube.prototype.getDimensionMembers).toBeDefined();
 	});
 
 	it('query should return list of members for all dimension in first level of hierarchy', () => {
-		expect(isEqual([
+		isEqualObjects([
 			{ id: 1, product: 'TV' },
 			{ id: 2, product: 'Phone' },
 			{ id: 3, product: 'Clock' }
-		], jsonParseStringify(cube.getDimensionMembers('product')))).toBe(true);
-		expect(isEqual([
+		], cube.getDimensionMembers('product'));
+		isEqualObjects([
 			{ id: 1, mark: 'SONY' },
 			{ id: 2, mark: 'APPLE' },
 			{ id: 3, mark: 'LG' }
-		], jsonParseStringify(cube.getDimensionMembers('mark')))).toBe(true);
+		], cube.getDimensionMembers('mark'));
 		expect(cube.getDimensionMembers('month').length).toBe(13);
 	});
 

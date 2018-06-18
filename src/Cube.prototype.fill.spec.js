@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.fill', function(){
+describe('method Cube.prototype.fill', function() {
 	let debug;
 
 	const factTable = [
@@ -21,7 +21,7 @@ describe('method Cube.prototype.fill', function(){
 		{ dimensionTable: { dimension: 'z', keyProps: ['z'] }}
 	];
 
-	it('should define fill', ()=> {
+	it('should define fill', () => {
 		expect(Cube.prototype.fill).toBeDefined();
 	});
 
@@ -45,13 +45,13 @@ describe('method Cube.prototype.fill', function(){
 			{ x: 1, y: 1, z: 1,is: false }
 		]);
 		const localFacts = cube.getFacts();
-		expect(isEqual(jsonParseStringify(localFacts), factTableExpectedAfter)).toBe(true);
+		debug = isEqualObjects(localFacts, factTableExpectedAfter);
 	});
 
-	describe('[should normalize for hierarchy of dimensions]', ()=>{
+	describe('[should normalize for hierarchy of dimensions]', () => {
 		let dimensionHierarchies;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 			dimensionHierarchies = [
 				{
 					dimensionTable: {
@@ -84,7 +84,7 @@ describe('method Cube.prototype.fill', function(){
 			];
 		});
 
-		it('should work level 1', ()=>{
+		it('should work level 1', () => {
 			const factTable = [
 				{ id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
 				{ id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
@@ -98,7 +98,7 @@ describe('method Cube.prototype.fill', function(){
 			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
 		});
 
-		it('should work level 3', ()=>{
+		it('should work level 3', () => {
 			const factTable = [
 				{ id: 1, humans: 10, city: 'Moscow', nationality: 'Russian', country: 'Russia', planet: 'Earth' },
 				{ id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
@@ -136,11 +136,11 @@ describe('method Cube.prototype.fill', function(){
 		const cube = Cube.create(factTable, dimensionHierarchies)
 		cube.fill({ xy: false });
 
-		expect(isEqual(jsonParseStringify(cube.denormalize()), [
+		debug = isEqualObjects(cube.denormalize(), [
 			{ id: 1, x: 0, y: 1, xy: true },
 			{ id: 2, x: 1, y: 0, xy: true },
 			{ x: 0, y: 0, xy: false },
 			{ x: 1, y: 1, xy: false }
-		])).toBe(true);
+		]);
 	})
 });

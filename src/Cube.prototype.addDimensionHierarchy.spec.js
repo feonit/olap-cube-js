@@ -3,7 +3,7 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('method addDimensionHierarchy must work', () => {
 
-	it('should define addDimensionHierarchy', ()=> {
+	it('should define addDimensionHierarchy', () => {
 		expect(Cube.prototype.addDimensionHierarchy).toBeDefined();
 	});
 

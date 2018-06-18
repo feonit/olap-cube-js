@@ -36,10 +36,10 @@ describe('methods slice and dice must work', () => {
 		];
 		cube = Cube.create(facts, dimensionHierarchies)
 	});
-	it('should define slice', ()=> {
+	it('should define slice', () => {
 		expect(Cube.prototype.slice).toBeDefined();
 	});
-	it('should define dice', ()=> {
+	it('should define dice', () => {
 		expect(Cube.prototype.dice).toBeDefined();
 	});
 	const yMember = { id: 1, y: 1 };
