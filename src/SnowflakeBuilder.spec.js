@@ -6,12 +6,12 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('class SnowflakeBuilder', () => {
 	let debug;
-	describe('common', ()=>{
+	describe('common', () => {
 		let dimensionHierarchies;
 		let cellTable;
 		let cells;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 			let factTable = [
 				{ id: 1, city: 'New York', company: 'AirLine', minAgePlane: '1 year', maxAgePlane: '5 year', planesCount: 1, price: '20$'},
 				{ id: 2, city: 'Paris', company: 'SkyLine', minAgePlane: '5 year', maxAgePlane: '10 year', planesCount: 1, price: '10$'},

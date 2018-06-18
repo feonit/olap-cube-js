@@ -1,14 +1,14 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.addFacts', ()=>{
+describe('method Cube.prototype.addFacts', () => {
 	let debug;
 
-	it('should define addFacts', ()=> {
+	it('should define addFacts', () => {
 		expect(Cube.prototype.addFacts).toBeDefined();
 	});
 
-	it('method should work, level 1', ()=>{
+	it('method should work, level 1', () => {
 		const dimensionHierarchies = [
 			{
 				dimensionTable: {
@@ -55,7 +55,7 @@ describe('method Cube.prototype.addFacts', ()=>{
 		debug = isEqualObjects(cube.dimensionHierarchies[1].dimensionTable.members, [{ id: 1, y: 0 }, { id: 2, y: 1 }, { id: 3, y: 3 }]);
 	});
 
-	it('method should work, level 2', ()=>{
+	it('method should work, level 2', () => {
 		const dimensionHierarchies = [
 			{
 				dimensionTable: {

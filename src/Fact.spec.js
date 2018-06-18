@@ -1,8 +1,9 @@
 import Fact from '../src/Fact.js'
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
 import {NotFoundFactId} from '../src/errors.js'
 
 describe('class Fact', () => {
+	let debug;
 	it('must assign properties with only simple values', () => {
 		class Data {
 			constructor() {
@@ -28,10 +29,7 @@ describe('class Fact', () => {
 		const data = new Data();
 
 		const fact = new Fact(data);
-		expect(isEqual(
-			{ id: 1, prop1: 'prop1', prop2: 100, prop4: null },
-			jsonParseStringify(fact)
-		)).toBe(true)
+		debug = isEqualObjects({ id: 1, prop1: 'prop1', prop2: 100, prop4: null }, fact);
 	});
 
 	it('should throw error if not found id param', () => {

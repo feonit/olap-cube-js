@@ -3,7 +3,7 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('method removeDimensionHierarchy must work', () => {
 
-	it('should define removeDimensionHierarchy', ()=> {
+	it('should define removeDimensionHierarchy', () => {
 		expect(Cube.prototype.removeDimensionHierarchy).toBeDefined();
 	});
 

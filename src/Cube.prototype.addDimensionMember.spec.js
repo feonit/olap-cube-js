@@ -1,5 +1,5 @@
 import Cube from '../src/Cube.js';
-import {isEqual, jsonParseStringify, isEqualObjects} from '../spec/helpers/helpers.js'
+import {isEqualObjects} from '../spec/helpers/helpers.js'
 import { NotCompletelySpaceException, CantAddMemberRollupException } from '../src/errors.js';
 
 describe('method Cube.prototype.addDimensionMember', () => {
@@ -9,7 +9,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		let cube;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 
 			const dimensionHierarchies = [
 				{
@@ -50,23 +50,23 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		});
 
-		it('should define addDimensionMember', ()=> {
+		it('should define addDimensionMember', () =>  {
 			expect(Cube.prototype.addDimensionMember).toBeDefined();
 		});
 
-		xit('should throw when defined not completely space for added member level 1', ()=>{
+		xit('should throw when defined not completely space for added member level 1', () => {
 			expect(() => {
 				cube.addDimensionMember('xxx', { xxx: 1 })
 			}).toThrow();
 		});
 
-		xit('should throw when defined not completely space for added member level 2', ()=>{
+		xit('should throw when defined not completely space for added member level 2', () => {
 			expect(() => {
 				cube.addDimensionMember('xx', { xx: 1 })
 			}).toThrow();
 		});
 
-		xit('should throw specified error when defined not completely space for added member', ()=>{
+		xit('should throw specified error when defined not completely space for added member', () => {
 			let err;
 			try {
 				cube.addDimensionMember('xxx', { xxx: 1 })
@@ -76,13 +76,13 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			expect(err instanceof NotCompletelySpaceException).toBe(true);
 		});
 
-		it('should throw when was try add member with not existed rollup member', ()=>{
+		it('should throw when was try add member with not existed rollup member', () => {
 			expect(() => {
 				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } })
 			}).toThrow();
 		});
 
-		it('should throw specified error when was try add member with not existed rollup member', ()=>{
+		it('should throw specified error when was try add member with not existed rollup member', () => {
 			let err;
 			try {
 				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1000 } })
@@ -98,7 +98,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		let cube;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 			const factTable = [
 				{id: 1, x: 0, y: 0, value: 10 },
 				{id: 2, x: 0, y: 1, value: 100 },
@@ -123,65 +123,53 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			cube = Cube.create(factTable, dimensionHierarchies);
 		});
 
-		it('target dimension must be changed', ()=>{
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
-					{ id: 1, x: 0 },
-					{ id: 2, x: 1 }
-				])
-			).toBe(true);
+		it('target dimension must be changed', () => {
+			debug = isEqualObjects(cube.getDimensionMembers('coordinateX'), [
+				{ id: 1, x: 0 },
+				{ id: 2, x: 1 }
+			]);
 
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateX')), [
-					{ id: 1, x: 0 },
-					{ id: 2, x: 1 },
-					{ id: 3, x: 2 }
-				])
-			).toBe(true);
+			debug = isEqualObjects(cube.getDimensionMembers('coordinateX'), [
+				{ id: 1, x: 0 },
+				{ id: 2, x: 1 },
+				{ id: 3, x: 2 }
+			])
 		});
 
-		it('other dimensions must be not changed', ()=>{
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
-					{ id: 1, y: 0 },
-					{ id: 2, y: 1 }
-				])
-			).toBe(true);
+		it('other dimensions must be not changed', () => {
+			debug = isEqualObjects(cube.getDimensionMembers('coordinateY'), [
+				{ id: 1, y: 0 },
+				{ id: 2, y: 1 }
+			]);
 
 			cube.addDimensionMember('coordinateX', { x: 2 });
 
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getDimensionMembers('coordinateY')), [
-					{ id: 1, y: 0 },
-					{ id: 2, y: 1 }
-				])
-			).toBe(true);
+			debug = isEqualObjects(cube.getDimensionMembers('coordinateY'), [
+				{ id: 1, y: 0 },
+				{ id: 2, y: 1 }
+			])
 		});
 
-		it('fact table must be changed', ()=>{
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getFacts()), [
-					{ id: 1, x: 0, y: 0, value: 10 },
-					{ id: 2, x: 0, y: 1, value: 100 },
-					{ id: 3, x: 1, y: 0, value: 1000 },
-					{ id: 4, x: 1, y: 1, value: 10000 },
-				])
-			).toBe(true);
+		it('fact table must be changed', () => {
+			debug = isEqualObjects(cube.getFacts(), [
+				{ id: 1, x: 0, y: 0, value: 10 },
+				{ id: 2, x: 0, y: 1, value: 100 },
+				{ id: 3, x: 1, y: 0, value: 1000 },
+				{ id: 4, x: 1, y: 1, value: 10000 },
+			]);
 
 			cube.addDimensionMember('coordinateX', { x: 2 }, {}, {}, { value: null });
 
-			expect(
-				debug = isEqual(jsonParseStringify(cube.getFacts()), [
-					{ id: 1, x: 0, y: 0, value: 10 },
-					{ id: 2, x: 0, y: 1, value: 100 },
-					{ id: 3, x: 1, y: 0, value: 1000 },
-					{ id: 4, x: 1, y: 1, value: 10000 },
-					{ x: 2, y: 0, value: null },
-					{ x: 2, y: 1, value: null },
-				])
-			).toBe(true);
+			debug = isEqualObjects(cube.getFacts(), [
+				{ id: 1, x: 0, y: 0, value: 10 },
+				{ id: 2, x: 0, y: 1, value: 100 },
+				{ id: 3, x: 1, y: 0, value: 1000 },
+				{ id: 4, x: 1, y: 1, value: 10000 },
+				{ x: 2, y: 0, value: null },
+				{ x: 2, y: 1, value: null },
+			])
 		});
 
 	});
@@ -191,7 +179,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 		let debug;
 		let factTable;
 
-		beforeEach(()=>{
+		beforeEach(() => {
 			const dimensionHierarchies = [
 				{
 					dimensionTable: {
@@ -292,7 +280,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			]));
 		});
 
-		it ('level 1', ()=>{
+		it ('level 1', () => {
 			const factTableBefore = cube.getFacts();
 			cube.addDimensionMember('day', { day: 4 }, { month: { id: 1 } }, {}, { money: null });
 
@@ -314,7 +302,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			]));
 		});
 
-		it ('level 2', ()=>{
+		it ('level 2', () => {
 			const factTableBefore = cube.getFacts();
 			cube.addDimensionMember('month', { month: 'april' }, { year: { id: 1 } }, { day: { day: null } }, { money: null });
 
@@ -339,7 +327,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 		});
 
-		it ('level 3', ()=>{
+		it ('level 3', () => {
 			const factTableBefore = cube.getFacts();
 			cube.addDimensionMember('year', { year: '2019' }, {}, { day: { day: null }, month: { month: null } }, { money: null });
 

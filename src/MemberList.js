@@ -48,15 +48,8 @@ export default class MemberList extends Array {
 	/**
 	 * Fabric method
 	 * */
-	createMember(keys, props, type, id = this.reduceId()){
-		let MemberConstructor;
-		switch (type) {
-			case 'input':
-				MemberConstructor = InputMember; break;
-			default:
-				MemberConstructor = Member
-		}
-		const member = MemberConstructor.create(id, keys, props);
+	createMember(keys, props, id = this.reduceId()) {
+		const member = InputMember.create(id, keys, props);
 		this.addMember(member);
 		return member;
 	}

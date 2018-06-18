@@ -51,19 +51,19 @@ describe('class DimensionTree', function() {
 		dimensionTreeData = cloneDeep(exportedDimensionTreeData);
 	});
 
-	xit(('should create dimensionTree', ()=>{
-		expect(()=>{
+	xit(('should create dimensionTree', () => {
+		expect(() => {
 			const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		}).not.toThrow();
 	}));
 
-	xit('should create copy', ()=>{
+	xit('should create copy', () => {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		const dimensionTreeCopy = DimensionTree.createDimensionTree(dimensionTree);
 		recursiveObjectsNotHaveCommonLinks(dimensionTree, dimensionTreeCopy)
 	});
 
-	describe('throws when trying to create bad DimensionTree with duplicate names for dimension', ()=> {
+	describe('throws when trying to create bad DimensionTree with duplicate names for dimension', () => {
 		const dimensionTreeData = {
 			dimensionTable: {
 				dimension: 'currency',

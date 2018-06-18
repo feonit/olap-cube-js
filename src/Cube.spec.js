@@ -96,8 +96,8 @@ describe('class Cube', function() {
 			// if Cube.js not esm module
 			try {
 				Function.prototype.apply.apply(Cube, arguments)
-			} catch (error){
-				if (error instanceof TypeError){
+			} catch (error) {
+				if (error instanceof TypeError) {
 					const cube = Cube.create(factTable, dimensionHierarchies);
 					Object.assign(this, cube)
 				}
@@ -121,7 +121,7 @@ describe('class Cube', function() {
 	it('should throw when execute create static method without context of Cube constructor of its interface', () => {
 		class CustomCube extends Cube {}
 		const createCube = CustomCube.create;
-		expect(()=>{
+		expect(() => {
 			createCube(factTable, dimensionHierarchies)
 		}).toThrow()
 	});
@@ -165,5 +165,40 @@ describe('class Cube', function() {
 			cube.cellTable[0],
 			{ id: 1, xId: 1 }
 		)
-	})
+	});
+
+	describe('otherProps must work', () => {
+		let cube;
+		let facts;
+		beforeEach(() => {
+			facts = [
+				{ id: 1, name: 'Leonid', nickname: 'Feonit', country: 'Russia' },
+			];
+			const dimensionHierarchies = [
+				{
+					dimensionTable: {
+						dimension: 'user',
+						keyProps: ['nickname'],
+						otherProps: ['name']
+					}
+				}
+			];
+			cube = Cube.create(facts, dimensionHierarchies);
+		});
+		it('additional properties of dimension must be present in returned fact table', () => {
+			debug = isEqualObjects(cube.getFacts(), facts);
+		});
+		it('additional properties of dimension must be present in new facts of table', () => {
+			const user = { name: 'Sasha', nickname: 'Monkey', wrongProp: 'some' };
+			const measureData = { country: 'Paris' };
+			cube.addDimensionMember('user', user, void 0, void 0, measureData);
+			const newCell = cube.getMeasure()[1];
+			const newCellExpected = { user_id: 2, country: 'Paris' };
+			newCellExpected.id = newCell.id; // auto generated uuid
+			debug = isEqualObjects(cube.getMeasure()[1], newCellExpected);
+			const newUserMember = cube.getDimensionMembers('user')[1];
+			const newUserMemberExpected = { id: 2, name: 'Sasha', nickname: 'Monkey' };
+			debug = isEqualObjects(newUserMember, newUserMemberExpected);
+		});
+	});
 });

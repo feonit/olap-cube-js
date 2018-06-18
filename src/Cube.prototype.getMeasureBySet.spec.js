@@ -9,7 +9,7 @@ describe('method Cube.prototype.getMeasureBySet', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getMeasureBySet', ()=> {
+	it('should define getMeasureBySet', () => {
 		expect(Cube.prototype.getMeasureBySet).toBeDefined();
 	});
 

@@ -1,10 +1,10 @@
 import Cube from '../src/Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('readme', ()=>{
+describe('readme', () => {
 	let debug;
 
-	it('should pass readme example', ()=>{
+	it('should pass readme example', () => {
 		// This is an array of data from server
 		let facts = [
 			{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },

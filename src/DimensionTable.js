@@ -12,7 +12,7 @@ export default class DimensionTable {
 		/** List of key names properties of the table belonging to the current dimension */
 		this.keyProps = keyProps.map(keyProp=>keyProp);
 		/** List of additional names properties of the table belonging to the current dimension */
-		this.otherProps = otherProps.map(otherProp=>otherProp);
+		this.otherProps = [].concat(otherProps);
 		/** member list */
 		this.members = new MemberList(members);
 	}
@@ -35,7 +35,7 @@ export default class DimensionTable {
 	 * @param {object?} props
 	 * */
 	createMember(props = {}, linkProps) {
-		const { keyProps, members } = this;
-		return members.createMember(keyProps.concat(linkProps), props);
+		const { keyProps, otherProps, members } = this;
+		return members.createMember(keyProps.concat(linkProps).concat(otherProps), props);
 	}
 }

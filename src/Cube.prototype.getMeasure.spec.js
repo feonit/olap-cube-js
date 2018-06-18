@@ -8,7 +8,7 @@ describe('method Cube.prototype.getMeasure', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getMeasure', ()=> {
+	it('should define getMeasure', () => {
 		expect(Cube.prototype.getMeasure).toBeDefined();
 	});
 

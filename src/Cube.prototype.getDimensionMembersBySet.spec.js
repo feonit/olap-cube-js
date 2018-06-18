@@ -1,4 +1,3 @@
-import {isEqual, jsonParseStringify} from '../spec/helpers/helpers.js'
 import {createProductCube} from './data/products.js'
 import Cube from './Cube.js'
 
@@ -10,7 +9,7 @@ describe('method Cube.prototype.getDimensionMembersBySet', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getDimensionMembersBySet', ()=> {
+	it('should define getDimensionMembersBySet', () => {
 		expect(Cube.prototype.getDimensionMembersBySet).toBeDefined();
 	});
 

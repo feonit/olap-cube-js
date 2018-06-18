@@ -10,7 +10,7 @@ describe('method Cube.prototype.getFacts', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getFacts', ()=> {
+	it('should define getFacts', () => {
 		expect(Cube.prototype.getFacts).toBeDefined();
 	});
 
