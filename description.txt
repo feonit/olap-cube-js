@@ -1,5 +1,3 @@
-мера - measure (числовое значение, мера бизнеса), исходные данные, на основе которых вычисляются summary
-ячейка пустая/полная (агрегатные данные зависящие от параметров осей гиперкуба)
 summary - для описания значений данных в ячейках
 
 иерархия - выявленные стойкие взаимосвязи между многоуровневыми объединениями измерений и мер
@@ -47,3 +45,38 @@ ref для createMember
 в addDimensionMember параметры дефолные сделать {} если даже null
 тесты на кортеж добавить
 описать id у InputMember в доке
+
+как бы сделать Pivot повороты
+
+тудушки разобрать
+
+getFacts => createFacts?
+может cellTable и вовсе нету никакой
+dependency => level
+
+http://www.olapcube.com/mdxhelp/KeyConcepts.htm
+each cell is an intersection of all the dimensions of the cube
+ tuples can uniquely identify every cell in the cube
+
+ Custom Member Options может быть параметром к таблицам измерений, чтобы не прокидывать каждый раз их в функциях
+ по аналогии Cell Properties
+
+ в settings отправить uuidv4
+
+ заменить метод fill на
+ cube.createEmptyCells(cellData, genericIdFn = uuid) и тут подумать над методом isEmptyCell
+ cube.addEmptyCells(emptyCells)
+
+ тогда fill() заменится на cube.addEmptyCells(cube.createEmptyCells()), что гибче, но можно и оставить fillEmptyCells
+
+ getEmptyCells нужен для удаления нужных ячеек через метод removeCells
+
+ тогда removeEmptyCells выглядит как cube.removeCells(cube.getEmptyCells())
+
+ разобраться где Table а где List
+
+ когда fill метод переименую, добавить спецификации методам
+
+ Deprecated methods `getFacts` and `getFactsBySet`, use `getCells` and `getCellsBySet` instead или все же не стоит?
+
+ подумать об инверсии уровней в обратном порядке, инверсия должна быть совместима с multiple hierarchies

@@ -1,4 +1,4 @@
-import InputCell from './InputCell.js'
+import EmptyCell from './EmptyCell.js'
 import {ENTITY_ID} from './const.js'
 import Member from './Member.js'
 import DimensionTree from './DimensionTree.js'
@@ -13,6 +13,7 @@ import CellTable from './CellTable.js'
 import TupleTable from './TupleTable.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
+import EmptyCellTable from './EmptyCellTable.js'
 
 /**
  * It a means to retrieve data
@@ -81,14 +82,21 @@ class Cube {
 		const removedCells = facts.map(fact => {
 			return cellTable.find(cell => cell[ENTITY_ID] === fact[ENTITY_ID])
 		});
-		SnowflakeBuilder.destroy(cellTable, removedCells, this.dimensionHierarchies, this);
+		this.removeCells(removedCells);
+	}
+	/**
+	 * @public
+	 * */
+	removeCells(cells) {
+		SnowflakeBuilder.destroy(this.cellTable, cells, this.dimensionHierarchies, this);
 	}
 	/**
 	 * @public
 	 * @return {FactTable} returns members
+	 * @deprecated
 	 * */
 	getFacts() {
-		return this.denormalize(this.getMeasure());
+		return this.denormalize(this.getCells());
 	}
 	/**
 	 * @public
@@ -102,20 +110,21 @@ class Cube {
 	 * @public
 	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @return {FactTable} returns members
+	 * @deprecated
 	 * */
 	getFactsBySet(fixSpaceOptions) {
-		return this.denormalize(this.getMeasureBySet(fixSpaceOptions));
+		return this.denormalize(this.getCellsBySet(fixSpaceOptions));
 	}
 	/**
 	 * @public
 	 * */
-	getMeasure() {
+	getCells() {
 		return this.cellTable;
 	}
 	/**
 	 * @public
 	 * */
-	getMeasureBySet(fixSpaceOptions) {
+	getCellsBySet(fixSpaceOptions) {
 		let { cellTable } = this.projection(fixSpaceOptions);
 		return cellTable;
 	}
@@ -136,7 +145,7 @@ class Cube {
 		if (!fixSpaceOptions) {
 			return;
 		}
-		let cellTable = this.getMeasure();
+		let cellTable = this.getCells();
 		if (Object.keys(fixSpaceOptions).length === 0) {
 			return {cellTable};
 		}
@@ -310,11 +319,11 @@ class Cube {
 	 * @private
 	 * Get facts from cube
 	 * */
-	denormalize(cells = this.getMeasure(), forSave = true) {
+	denormalize(cells = this.getCells(), forSave = true) {
 		const data = SnowflakeBuilder.denormalize(cells, this.dimensionHierarchies);
 		if (forSave) {
 			data.forEach((data, index) => {
-				if (cells[index] instanceof InputCell) {
+				if (cells[index] instanceof EmptyCell) {
 					delete data[ENTITY_ID];
 				}
 			})
@@ -342,9 +351,9 @@ class Cube {
 	 * @param {object?} memberOptions - properties for the created member
 	 * @param {object?} rollupCoordinatesData
 	 * @param {object?} drillDownCoordinatesOptions
-	 * @param {object?} measureData
+	 * @param {object?} cellData
 	 * */
-	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, measureData) {
+	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
 		if (typeof dimension !== 'string') {
 			throw TypeError(`parameter dimension expects as string: ${dimension}`)
 		}
@@ -387,7 +396,7 @@ class Cube {
 				saveIdAttribute = parentIdAttribute;
 			}
 		});
-		this.fill(measureData);
+		this.fill(cellData);
 	}
 	/**
 	 * @public
@@ -397,7 +406,7 @@ class Cube {
 	removeDimensionMember(dimension, member) {
 		const dimensionTree = this.findDimensionTreeByDimension(dimension);
 		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
-		const cellTable = this.getMeasure();
+		const cellTable = this.getCells();
 		const getRemoveMeasures = (dimension, members) => {
 			const removedCells = [];
 			const idAttribute = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue().idAttribute;
@@ -426,20 +435,8 @@ class Cube {
 	 * */
 	fill(props) {
 		if (!this.residuals().length) {
-			const tuples = this.cartesian();
-			tuples.forEach(combination => {
-				const unique = this.getMeasureBySet(combination);
-				if (!unique.length) {
-					let options = {};
-					Object.keys(combination).forEach(dimension => {
-						const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
-						options[idAttribute] = combination[dimension][ENTITY_ID]
-					});
-					options = {...options, ...props};
-					const cell = InputCell.createCell(options);
-					this.cellTable.addCell(cell);
-				}
-			});
+			const emptyCells = this.createEmptyCells(props);
+			this.addEmptyCells(emptyCells);
 		}
 	}
 	/**
@@ -588,6 +585,43 @@ class Cube {
 			newDimensionHierarchies.splice(index, 1, projectionDimensionHierarchy);
 		});
 		return new Cube({ cellTable, dimensionHierarchies: newDimensionHierarchies })
+	}
+	/**
+	 * @public
+	 * @return {EmptyCell[]}
+	 * */
+	createEmptyCells(props) {
+		const emptyCells = [];
+		const tuples = this.cartesian();
+		tuples.forEach(combination => {
+			const unique = this.getCellsBySet(combination);
+			if (!unique.length) {
+				let options = {};
+				Object.keys(combination).forEach(dimension => {
+					const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
+					options[idAttribute] = combination[dimension][ENTITY_ID]
+				});
+				options = {...options, ...props};
+				const cell = EmptyCell.createEmptyCell(options);
+				emptyCells.push(cell);
+			}
+		});
+		return emptyCells;
+	}
+	/**
+	 * @public
+	 * @return {EmptyCell[]}
+	 * */
+	getEmptyCells() {
+		return this.cellTable.filter(cell => EmptyCell.isEmptyCell(cell))
+	}
+	/**
+	 * @public
+	 * @throw {TypeError}
+	 * */
+	addEmptyCells(emptyCells) {
+		EmptyCellTable.validateInstance(emptyCells);
+		this.cellTable.addCells(emptyCells);
 	}
 }
 export default Cube

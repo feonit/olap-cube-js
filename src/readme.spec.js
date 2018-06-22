@@ -106,33 +106,74 @@ describe('readme', () => {
 			cube.getDimensionMembersBySet('regions', { categories: { id: 1 } })
 		);
 
-		debug = isEqualObjects(
-			[
-				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
-			],
-			cube.getFactsBySet({ regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } })
-		);
+		{
+			let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } };
+			debug = isEqualObjects(
+				[
+					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
+				],
+				cube.getCellsBySet(set)
+			);
+			debug = isEqualObjects(
+				[
+					{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
+				],
+				cube.getFactsBySet(set)
+			);
+		}
 
-		debug = isEqualObjects(
-			[
-				{ id: 3, region: 'West', year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
-				{ id: 4, region: 'West', year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
-			],
-			cube.getFactsBySet({ regions: { id: 3 } })
-		);
+		{
+			let subSet = { regions: { id: 3 } };
+			debug = isEqualObjects(
+				[
+					{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+					{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+				],
+				cube.getCellsBySet(subSet)
+			);
+			debug = isEqualObjects(
+				[
+					{ id: 3, region: 'West', year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+					{ id: 4, region: 'West', year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
+				],
+				cube.getFactsBySet(subSet)
+			);
+		}
 
-		debug = isEqualObjects(
-			facts,
-			cube.getFactsBySet({})
-		);
+		{
+			let emptySet = {};
+			debug = isEqualObjects(
+				[
+					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+					{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+					{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+					{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+				],
+				cube.getCellsBySet(emptySet)
+			);
+			debug = isEqualObjects(
+				facts,
+				cube.getFactsBySet(emptySet)
+			);
+		}
 
-		debug = isEqualObjects(
-			[
-				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-				{ id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
-			],
-			cube.getFactsBySet({ date: [{ id: 1 }, { id: 2 }] })
-		);
+		{
+			let set = { date: [{ id: 1 }, { id: 2 }] };
+			debug = isEqualObjects(
+				[
+					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+					{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+				],
+				cube.getCellsBySet(set)
+			);
+			debug = isEqualObjects(
+				[
+					{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+					{ id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+				],
+				cube.getFactsBySet(set)
+			);
+		}
 
 		{
 			const facts = [

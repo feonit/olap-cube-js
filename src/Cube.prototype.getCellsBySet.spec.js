@@ -1,7 +1,7 @@
 import {createProductCube} from './data/products.js'
 import Cube from './Cube.js'
 
-describe('method Cube.prototype.getMeasureBySet', () => {
+describe('method Cube.prototype.getCellsBySet', () => {
 	let cube;
 	let debug;
 
@@ -9,11 +9,11 @@ describe('method Cube.prototype.getMeasureBySet', () => {
 		cube = createProductCube();
 	});
 
-	it('should define getMeasureBySet', () => {
-		expect(Cube.prototype.getMeasureBySet).toBeDefined();
+	it('should define getCellsBySet', () => {
+		expect(Cube.prototype.getCellsBySet).toBeDefined();
 	});
 
 	it('query should return list of members for dimension with space option including one dimension', () => {
-		expect(debug = cube.getMeasureBySet({ mark: { id: 1 } }).length).toBe(3);
+		expect(debug = cube.getCellsBySet({ mark: { id: 1 } }).length).toBe(3);
 	});
 });

@@ -1,10 +1,11 @@
 import Cell from './Cell.js'
+import EmptyCell from './EmptyCell.js'
 
 export default class CellTable extends Array {
 	constructor(array) {
 		super();
 		if (Array.isArray(array)) {
-			Object.assign(this, array.map(item => new Cell(item)))
+			Object.assign(this, array.map(item => EmptyCell.isEmptyCell(item) ? new EmptyCell(item) : new Cell(item)))
 		}
 	}
 	/**

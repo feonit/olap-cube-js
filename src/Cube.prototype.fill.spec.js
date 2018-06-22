@@ -25,7 +25,7 @@ describe('method Cube.prototype.fill', function() {
 		expect(Cube.prototype.fill).toBeDefined();
 	});
 
-	it('should normalize count of measure for non-normalized data', () => {
+	it('should normalize count of cells for non-normalized data', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
 		expect(debug = cube.cartesian().length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(5);
@@ -34,7 +34,7 @@ describe('method Cube.prototype.fill', function() {
 		expect(debug = cube.getFacts().length).toBe(8);
 	});
 
-	it('should normalize count of measure for non-normalized data with default props', () => {
+	it('should normalize count of cells for non-normalized data with default props', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
 
 		cube.fill({ is: false });
