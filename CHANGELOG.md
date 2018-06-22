@@ -1,22 +1,27 @@
 ## Change Log
 
+*0.11.0
+- Deprecated method `fill`, use `fillEmptyCells` instead in future versions
+- Deprecated prop name `dependency`, use `level` in feature
+- Added new API methods `removeCells`, `createEmptyCells`, `getEmptyCells`, `addEmptyCells`, `getCells`, `getCellsBySet`
+
 *0.10.1
 - Fixed cartesian method
 
 *0.10.0
-- Added a new api methods for `slice`, `dice`
+- Added a new API methods for `slice`, `dice`
 
 *0.9.0
-- Added a new api methods for `rollUp`, `drillDown`
+- Added a new API methods for `rollUp`, `drillDown`
 
 *0.8.0
-- Added new interface `addDimensionHierarchy`, `removeDimensionHierarchy`
+- Added new methods `addDimensionHierarchy`, `removeDimensionHierarchy`
 
 *0.7.0*
-- Added new api setting: `templateForeignKey`
+- Added new API setting: `templateForeignKey`
 
 *0.6.0*
-- Added new api methods: `addFacts`, `removeFacts`
+- Added new API methods: `addFacts`, `removeFacts`
 
 *0.5.1*
 - Added ESLint
@@ -41,7 +46,7 @@
 - Removed `query` method, other improvements
 
 *0.2.0* 
-- Added new api methods `getFacts, getFactsBySet, getDimensionMembers, getDimensionMembersBySet`
+- Added new API methods `getFacts, getFactsBySet, getDimensionMembers, getDimensionMembersBySet`
 
 *0.1.1* 
 - Fixed bugs, deprecated `query` method

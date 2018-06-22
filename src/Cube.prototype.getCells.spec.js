@@ -1,18 +1,18 @@
 import {createProductCube} from './data/products.js'
 import Cube from './Cube.js'
 
-describe('method Cube.prototype.getMeasure', () => {
+describe('method Cube.prototype.getCells', () => {
 	let cube;
 
 	beforeEach(() => {
 		cube = createProductCube();
 	});
 
-	it('should define getMeasure', () => {
-		expect(Cube.prototype.getMeasure).toBeDefined();
+	it('should define getCells', () => {
+		expect(Cube.prototype.getCells).toBeDefined();
 	});
 
 	it('query should return list of members for dimension of cells', () => {
-		expect(cube.getMeasure().length).toBe(15);
+		expect(cube.getCells().length).toBe(15);
 	});
 });

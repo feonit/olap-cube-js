@@ -32,8 +32,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Structure](#structure)
   - [Sets](#sets)
 - [API](#api)
-  - [Access to facts of the fact table](#access-to-facts-of-the-fact-table)
-  - [Access to members of the dimensions tables](#access-to-members-of-the-dimensions-tables)
+  - [Access to measures of the cells](#access-to-measures-of-the-cells)
+  - [Access to members of the dimensions](#access-to-members-of-the-dimensions)
   - [Editing dimension members](#editing-dimension-members)
   - [Adding dimension members](#adding-dimension-members)
   - [Removing dimension members](#removing-dimension-members)
@@ -42,6 +42,7 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Added dimension hierarchy](#added-dimension-hierarchy)
   - [Removing dimension hierarchy](#removing-dimension-hierarchy)
   - [Filling empty cells](#filling-empty-cells)
+  - [Delete empty cells](#delete-empty-cells)
   - [Settings](#settings)
   - [Roll-up members](#roll-up-members)
   - [Drill-down members](#drill-down-members)
@@ -226,12 +227,28 @@ Now using different types of sets, you can access the elements of the cube
 
 ## API
 
-### Access to facts of the fact table
+### Access to measures
+Access to measures is possible through access to cube cells
 
 ##### Set <br/>
-Define the set with maximum cardinality. For this fixate all dimensions of the first level of the hierarchy:
+Define the set with maximum cardinality. For this fixate all dimensions of the first level of the hierarchy.
+
+Example:
 ```js
 let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } }
+```
+execute:
+```js
+cube.getCellsBySet(set)
+```
+return:
+```js
+[
+    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
+]
+```
+execute:
+```js
 cube.getFactsBySet(set)
 ```
 return:
@@ -245,6 +262,20 @@ return:
 Fixate some of the dimensions:
 ```js
 let subSet = { regions: { id: 3 } }
+```
+execute:
+```js
+cube.getCellsBySet(subSet)
+```
+return:
+```js
+[
+    { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+    { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+]
+```
+execute:
+```js
 cube.getFactsBySet(subSet)
 ```
 return:
@@ -258,6 +289,24 @@ return:
 This way you can take all the facts from the cube back:
 ```js
 let emptySet = {}
+```
+execute:
+```js
+cube.getCellsBySet(emptySet)
+// or little shorter
+cube.getCells()
+```
+return:
+```js
+[
+    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+    { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+    { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+    { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+]
+```
+execute:
+```js
 cube.getFactsBySet(emptySet)
 // or little shorter
 cube.getFacts()
@@ -275,6 +324,20 @@ return:
 Fixate a plurality of dimension values:
 ```js
 let multiSet = { regions: [ { id: 1 }, { id: 2 } ] }
+```
+execute:
+```js
+cube.getCellsBySet(multiSet)
+```
+return:
+```js
+[
+    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+    { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+]
+```
+execute:
+```js
 cube.getFactsBySet(multiSet)
 ```
 return:
@@ -284,7 +347,7 @@ return:
     { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
 ]
 ```
-### Access to members of the dimensions tables
+### Access to members of the dimensions
 ##### EmptySet <br/>
 Simple call return all members of the dimension:
 ```js
@@ -453,6 +516,15 @@ factsFilled will be:
 ]
 ```
 
+### Remove empty cells
+You can remove all or some of the empty cells. At the same time, some of the dimension members can be removed too if no more cells found correspond to the dimension member
+```js
+cube.removeCell(cube.getEmptyCells())
+// or
+cube.removeCell(cube.getEmptyCells().filter(cell => !value))
+
+```
+
 ### Settings
 You can pass some settings to cube via third argument, example
 `Cube.create(facts, dimensionHierarchies, settings)`
@@ -516,17 +588,14 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Add method delete empty cells(+ to example)
-- Add exclude set param
 - Add options for "id" or genericId method, for members, for fast
-- Add support for single keyProp in schema and single dependency
+- Add support for single keyProp in schema and single dependency (rename `dependency` to `level`)
 - Update method addMember without rollup options (then more than one member will be added)
 
 Code quality
 - Update code with JsDoc
 - Add amd/umd/common/ES6 builds
 - Security protection for the "id" and "<dimension>_id" property in members
-- Add empty cells
 - Add validation for all public methods
 - Remove responsibility for "id" prop at facts
 

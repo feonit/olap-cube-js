@@ -65,7 +65,7 @@ describe('method Cube.prototype.removeDimensionMember', () => {
 		expect(Cube.prototype.removeDimensionMember).toBeDefined();
 	});
 
-	it('it should remove member and change measure length', () => {
+	it('it should remove member and change length of cells/facts', () => {
 		expect(debug = cube.getFacts().length).toBe(4);
 		expect(debug = cube.getDimensionMembers('z').length).toBe(2);
 
