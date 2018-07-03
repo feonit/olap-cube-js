@@ -32,13 +32,13 @@ describe('class Fact', () => {
 		debug = isEqualObjects({ id: 1, prop1: 'prop1', prop2: 100, prop4: null }, fact);
 	});
 
-	it('should throw error if not found id param', () => {
+	xit('should throw error if not found id param', () => {
 		expect(() => {
 			new Fact({name: 'me'})
 		}).toThrow();
 	});
 
-	it('should throw special error if not found id param', () => {
+	xit('should throw special error if not found id param', () => {
 		let err;
 		try {
 			new Fact({ region: 'North' })

@@ -1,5 +1,4 @@
-import {ENTITY_ID} from './const.js'
-import {NotFoundFactId, handleError} from './errors.js'
+import {handleError} from './errors.js'
 import console from './console.js'
 
 const isSimple = (value) => {
@@ -23,9 +22,6 @@ export default class Fact {
 				} else {
 					console.warn(`[Fact] value of prop "${key}" has an unspecified value: ${data[key]}`)
 				}
-			}
-			if (!(ENTITY_ID in this)) {
-				throw new NotFoundFactId()
 			}
 		} catch (error) {
 			handleError(error);

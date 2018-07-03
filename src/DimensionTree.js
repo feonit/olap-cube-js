@@ -1,8 +1,7 @@
 import DimensionTable from './DimensionTable.js'
+import Settings from './Settings.js'
 import Tree from './Tree.js'
 import {DimensionException} from './errors.js'
-import { DEFAULT_TEMPLATE_FOREIGN_KEY, ENTITY_ID } from './const.js'
-
 /**
  * It defines the relationship of generalization and specialization (roll-up/drill-down)
  * @throws {DimensionException}
@@ -45,11 +44,11 @@ export default class DimensionTree extends Tree {
 			}
 		});
 	}
-	static createDimensionTree(dimensionTreeData, { templateForeignKey = DEFAULT_TEMPLATE_FOREIGN_KEY } = {}) {
-		// build 1: idAttributes
+	static createDimensionTree(dimensionTreeData, { templateForeignKey } = new Settings()) {
+		// build 1: foreignKeys
 		const buildIdAttributeDimensionTable = (dimensionTable) => {
-			if (!dimensionTable.idAttribute) {
-				dimensionTable.idAttribute = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey)
+			if (!dimensionTable.foreignKey) {
+				dimensionTable.foreignKey = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey)
 			}
 		};
 		const dimensionTree = new DimensionTree(dimensionTreeData);
@@ -177,9 +176,9 @@ export default class DimensionTree extends Tree {
 		// remove removal space
 		Object.keys(toBeRemovedSpace).forEach(dimension => {
 			const currentDimensionTree = this.getDimensionTreeByDimension(dimension);
-			const currentMemberList = currentDimensionTree.getTreeValue().members;
+			const dimensionTable = currentDimensionTree.getTreeValue();
 			toBeRemovedSpace[dimension].forEach(member => {
-				currentMemberList.removeMember(member);
+				dimensionTable.removeMember(member);
 			})
 		});
 	}
@@ -193,12 +192,12 @@ export default class DimensionTree extends Tree {
 			return members;
 		}
 		const parentTree = this.getParentTree();
-		const { members: parentMembers } = parentTree.getTreeValue();
-		const { idAttribute } = this.getTreeValue();
+		const { members: parentMembers, primaryKey } = parentTree.getTreeValue();
+		const { foreignKey } = this.getTreeValue();
 		const drillDownMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
-				if (parentMember[idAttribute] === member[ENTITY_ID]) {
+				if (parentMember[foreignKey] === member[primaryKey]) {
 					if (drillDownMembers.indexOf(parentMember) === -1) {
 						drillDownMembers.push(parentMember)
 					}
@@ -218,11 +217,12 @@ export default class DimensionTree extends Tree {
 			return members;
 		}
 		const childTree = this.getChildTrees()[0]; // for one child always
-		const { members: childMembers, idAttribute } = childTree.getTreeValue();
+		const dimensionTable = childTree.getTreeValue();
+		const { members: childMembers, foreignKey } = dimensionTable;
 		const rollUpMembers = [];
 		members.forEach(member => {
 			childMembers.forEach(childMember => {
-				if (member[idAttribute] === childMember[ENTITY_ID]) {
+				if (member[foreignKey] === dimensionTable.getMemberId(childMember)) {
 					if (rollUpMembers.indexOf(childMember) === -1) {
 						rollUpMembers.push(childMember)
 					}
@@ -233,17 +233,17 @@ export default class DimensionTree extends Tree {
 	}
 	/**
 	 * @public
-	 * @param {object?} props
+	 * @param {object?} memberData
 	 * */
-	createMember(props = {}) {
+	createMember(memberData = {}) {
 		const dimensionTable = this.getTreeValue();
 		const childIdAttributes = this.getChildTrees().map(dimensionTree =>
-			dimensionTree.getTreeValue().idAttribute
+			dimensionTree.getTreeValue().foreignKey
 		);
 		const linkProps = [];
-		childIdAttributes.forEach(idAttribute => {
-			linkProps.push(idAttribute)
+		childIdAttributes.forEach(foreignKey => {
+			linkProps.push(foreignKey)
 		});
-		return dimensionTable.createMember(props, linkProps)
+		return dimensionTable.createMember(memberData, linkProps)
 	}
 }

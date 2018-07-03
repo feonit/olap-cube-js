@@ -73,10 +73,14 @@ each cell is an intersection of all the dimensions of the cube
 
  тогда removeEmptyCells выглядит как cube.removeCells(cube.getEmptyCells())
 
- разобраться где Table а где List
-
  когда fill метод переименую, добавить спецификации методам
 
  Deprecated methods `getFacts` and `getFactsBySet`, use `getCells` and `getCellsBySet` instead или все же не стоит?
 
  подумать об инверсии уровней в обратном порядке, инверсия должна быть совместима с multiple hierarchies
+
+ разобраться с residuals
+
+порядок аргументов изменить с facts, dimensionHierarchies на обратный
+
+удалить extends Error and Reflect

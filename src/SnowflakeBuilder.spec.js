@@ -1,6 +1,5 @@
 import SnowflakeBuilder from '../src/SnowflakeBuilder.js'
 import DimensionTree from '../src/DimensionTree.js'
-import CellTable from '../src/CellTable.js'
 import Cell from '../src/Cell.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
@@ -50,8 +49,7 @@ describe('class SnowflakeBuilder', () => {
 			];
 
 			cells = factTable.map(fact => new Cell(fact));
-			cellTable = new CellTable([]);
-			cellTable.addCells(cells);
+			cellTable = cells;
 			dimensionHierarchies = dimensionHierarchiesData.map(dimensionTreeData => DimensionTree.createDimensionTree(dimensionTreeData));
 			SnowflakeBuilder.anotherBuild(factTable, cells, dimensionHierarchies, cellTable);
 		});

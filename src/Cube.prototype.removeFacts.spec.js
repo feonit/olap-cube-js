@@ -29,7 +29,7 @@ describe('method removeFacts must work', () => {
 		cube.removeFacts([
 			{ id: 1, x: 100 }
 		]);
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 2, x_id: 2 },
 			{ id: 3, x_id: 3 },
 		]);
@@ -75,7 +75,7 @@ describe('method removeFacts must work', () => {
 			{ id: 1, x: 100, xx: 101 }
 		]);
 		// just check
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 2, x_id: 2 },
 			{ id: 3, x_id: 3 },
 		]);
@@ -112,7 +112,7 @@ describe('method removeFacts must work', () => {
 		cube.removeFacts([
 			{ id: 1, x: 100 }
 		]);
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 2, x_id: 1 },
 			{ id: 3, x_id: 2 },
 		]);

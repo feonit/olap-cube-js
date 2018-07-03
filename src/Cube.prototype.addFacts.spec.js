@@ -26,7 +26,7 @@ describe('method Cube.prototype.addFacts', () => {
 
 		const cube = new Cube({dimensionHierarchies});
 
-		debug = isEqualObjects(cube.cellTable, []);
+		debug = isEqualObjects(cube.getCells(), []);
 		debug = isEqualObjects(cube.dimensionHierarchies[0].dimensionTable.members, []);
 		debug = isEqualObjects(cube.dimensionHierarchies[1].dimensionTable.members, []);
 
@@ -35,7 +35,7 @@ describe('method Cube.prototype.addFacts', () => {
 			{ id: 2, x: 1, y: 1 }
 		]);
 
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 1, x_id: 1, y_id: 1 },
 			{ id: 2, x_id: 2, y_id: 2 }
 		]);
@@ -46,7 +46,7 @@ describe('method Cube.prototype.addFacts', () => {
 			{ id: 3, x: 3, y: 3 }
 		]);
 
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 1, x_id: 1, y_id: 1 },
 			{ id: 2, x_id: 2, y_id: 2 },
 			{ id: 3, x_id: 3, y_id: 3 }
@@ -94,7 +94,7 @@ describe('method Cube.prototype.addFacts', () => {
 			{ id: 3, x: 3, y: 3, yy: 2.8 }
 		]);
 
-		debug = isEqualObjects(cube.cellTable, [
+		debug = isEqualObjects(cube.getCells(), [
 			{ id: 1, x_id: 1, y_id: 1 },
 			{ id: 2, x_id: 2, y_id: 2 },
 			{ id: 3, x_id: 3, y_id: 3 }
