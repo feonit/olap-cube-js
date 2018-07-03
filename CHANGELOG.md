@@ -1,24 +1,24 @@
 ## Change Log
-*0.12.0
+*0.12.0*
 - Added new settings for members of dimensions tables `foreignKey` and `primaryKey`
 - Deprecated `Cube.create(facts)`, use `Cube.create({ facts: [] })` instead as first argument
 - Added new settings for facts of fact table `primaryKey`
 
-*0.11.0
+*0.11.0*
 - Deprecated method `fill`, use `fillEmptyCells` instead in future versions
 - Deprecated prop name `dependency`, use `level` in feature
 - Added new API methods `removeCells`, `createEmptyCells`, `getEmptyCells`, `addEmptyCells`, `getCells`, `getCellsBySet`
 
-*0.10.1
+*0.10.1*
 - Fixed cartesian method
 
-*0.10.0
+*0.10.0*
 - Added a new API methods for `slice`, `dice`
 
-*0.9.0
+*0.9.0*
 - Added a new API methods for `rollUp`, `drillDown`
 
-*0.8.0
+*0.8.0*
 - Added new methods `addDimensionHierarchy`, `removeDimensionHierarchy`
 
 *0.7.0*
