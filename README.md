@@ -49,6 +49,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Slice](#slice)
   - [Dice](#dice)
   - [Additional member props](#additional-member-props)
+  - [Custom members](#custom-members)
+  - [Custom facts](#custom-facts)
 - [Versioning](#versioning)
 - [Todo](#todo)
 - [Demo][6]
@@ -521,7 +523,7 @@ You can remove all or some of the empty cells. At the same time, some of the dim
 ```js
 cube.removeCell(cube.getEmptyCells())
 // or
-cube.removeCell(cube.getEmptyCells().filter(cell => !value))
+cube.removeCell(cube.getEmptyCells().filter(({ value }) => !value))
 
 ```
 
@@ -581,6 +583,76 @@ return:
 ]
 ```
 
+### Custom members
+```js
+let facts = [{ id: 1, nikname: 'Monkey', group: 'Administrators' }];
+let dimensionHierarchies = [
+    {
+        dimensionTable: {
+            dimension: 'user',
+            keyProps: ['nikname'],
+            foreignKey: 'USER_ID'
+        },
+        dependency: [
+            {
+                dimensionTable: {
+                    dimension: 'group',
+                    keyProps: ['group'],
+                    primaryKey: 'ID',
+                    foreignKey: 'GROUP_ID'
+                }
+            }
+        ]
+    }
+];
+let cube = Cube.create(facts, dimensionHierarchies);
+```
+execute:
+```js
+let userMember = cube.getDimensionMembers('user')[0] 
+```
+return:
+```js
+{ id: 1, nikname: 'Monkey', GROUP_ID: 1 }
+```
+execute:
+```js
+let groupMember = cube.getDimensionMembers('group')[0];
+```
+return:
+```js
+{ ID: 1, group: 'Administrators' }
+```
+execute:
+```js
+let cell = cube.getCells()[0];
+```
+return:
+```js
+{ id: 1, USER_ID: 1 }
+```
+
+### Custom facts
+Like custom members, some times need make custom facts
+```js
+let factTable = {
+    facts: [
+        { saleId: 1, saleCount: 1 }
+    ],
+    primaryKey: 'saleId'
+};
+let dimensionHierarchies = [
+    {
+        dimensionTable: {
+            dimension: 'saleCount',
+            keyProps: ['saleCount']
+        }
+    }
+];
+let cube = Cube.create(factTable, dimensionHierarchies)
+
+```
+
 ## Versioning
 We use <a href="https://semver.org/">SemVer</a> for versioning.
 
@@ -588,16 +660,17 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Add options for "id" or genericId method, for members, for fast
-- Add support for single keyProp in schema and single dependency (rename `dependency` to `level`)
+- Add default prop values for members 
+- Change `dependency` to `level`
+- Add support for single keyProp in schema and single dependency
 - Update method addMember without rollup options (then more than one member will be added)
 
 Code quality
 - Update code with JsDoc
 - Add amd/umd/common/ES6 builds
-- Security protection for the "id" and "<dimension>_id" property in members
+- Security protection for the key values
 - Add validation for all public methods
-- Remove responsibility for "id" prop at facts
+- Remove responsibility for "id" prop at facts (residuals)
 
 Perhaps
 - Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)

@@ -3,7 +3,6 @@ import {CreateInstanceException} from '../src/errors.js'
 import {recursiveObjectsNotHaveCommonLinks} from '../spec/helpers/helpers.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-
 describe('class Cube', function() {
 	let debug;
 
@@ -92,7 +91,7 @@ describe('class Cube', function() {
 	];
 
 	it('inheritance of cube must work ES5', () => {
-		function CustomCube(factTable, dimensionHierarchies){
+		function CustomCube(factTable, dimensionHierarchies) {
 			// if Cube.js not esm module
 			try {
 				Function.prototype.apply.apply(Cube, arguments)
@@ -140,65 +139,5 @@ describe('class Cube', function() {
 
 	it('should define cartesian', () => {
 		expect(Cube.prototype.cartesian).toBeDefined();
-	});
-
-	it('setting for templateForeignKey must work', () => {
-		const factTable = [
-			{ id: 1, x: 0 },
-		];
-
-		const dimensionHierarchies = [
-			{
-				dimensionTable: {
-					dimension: 'x',
-					keyProps: ['x']
-				}
-			}
-		];
-
-		const options = {
-			templateForeignKey: '%sId'
-		};
-		const cube = Cube.create(factTable, dimensionHierarchies, options);
-
-		isEqualObjects(
-			cube.cellTable[0],
-			{ id: 1, xId: 1 }
-		)
-	});
-
-	describe('otherProps must work', () => {
-		let cube;
-		let facts;
-		beforeEach(() => {
-			facts = [
-				{ id: 1, name: 'Leonid', nickname: 'Feonit', country: 'Russia' },
-			];
-			const dimensionHierarchies = [
-				{
-					dimensionTable: {
-						dimension: 'user',
-						keyProps: ['nickname'],
-						otherProps: ['name']
-					}
-				}
-			];
-			cube = Cube.create(facts, dimensionHierarchies);
-		});
-		it('additional properties of dimension must be present in returned fact table', () => {
-			debug = isEqualObjects(cube.getFacts(), facts);
-		});
-		it('additional properties of dimension must be present in new facts of table', () => {
-			const user = { name: 'Sasha', nickname: 'Monkey', wrongProp: 'some' };
-			const cellData = { country: 'Paris' };
-			cube.addDimensionMember('user', user, void 0, void 0, cellData);
-			const newCell = cube.getCells()[1];
-			const newCellExpected = { user_id: 2, country: 'Paris' };
-			newCellExpected.id = newCell.id; // auto generated uuid
-			debug = isEqualObjects(cube.getCells()[1], newCellExpected);
-			const newUserMember = cube.getDimensionMembers('user')[1];
-			const newUserMemberExpected = { id: 2, name: 'Sasha', nickname: 'Monkey' };
-			debug = isEqualObjects(newUserMember, newUserMemberExpected);
-		});
 	});
 });

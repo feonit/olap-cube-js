@@ -1,4 +1,8 @@
 ## Change Log
+*0.12.0
+- Added new settings for members of dimensions tables `foreignKey` and `primaryKey`
+- Deprecated `Cube.create(facts)`, use `Cube.create({ facts: [] })` instead as first argument
+- Added new settings for facts of fact table `primaryKey`
 
 *0.11.0
 - Deprecated method `fill`, use `fillEmptyCells` instead in future versions

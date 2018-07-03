@@ -1,5 +1,4 @@
 import EmptyCell from './EmptyCell.js'
-import {ENTITY_ID} from './const.js'
 import Member from './Member.js'
 import DimensionTree from './DimensionTree.js'
 import FactTable from './FactTable.js'
@@ -9,11 +8,18 @@ import {
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
 import console from './console.js'
-import CellTable from './CellTable.js'
 import TupleTable from './TupleTable.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
-import EmptyCellTable from './EmptyCellTable.js'
+import Settings from './Settings.js'
+import { DEFAULT_FACT_ID_PROP } from './const.js'
+
+class CellTable {
+	constructor({ cells, primaryKey }) {
+		this.cells = cells.map(item => EmptyCell.isEmptyCell(item) ? new EmptyCell(item) : new Cell(item));
+		this.primaryKey = primaryKey;
+	}
+}
 
 /**
  * It a means to retrieve data
@@ -25,36 +31,46 @@ import EmptyCellTable from './EmptyCellTable.js'
  * */
 class Cube {
 	constructor(cube) {
-		const { dimensionHierarchies = [], cellTable = [], settings = {} } = cube;
-
-		this.settings = { ...settings };
+		let { dimensionHierarchies = [], cellTable = {}, settings = {} } = cube;
+		if (Array.isArray(cellTable)) {
+			cellTable = { cells: cellTable };
+			console.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table')
+		}
+		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP } = cellTable;
+		this.settings = new Settings(settings);
 		this.dimensionHierarchies = [];
 		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
-		this.cellTable = new CellTable(cellTable);
+		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey });
 
 		// const residuals = this.residuals();
 		// const count = residuals.length;
-		// if (count > 0){
+		// if (count > 0) {
 		// 	console.warn('Fact table has residuals', residuals)
 		// }
 	}
 	/**
 	 * @public
 	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
+	 * @param {object} factTable
 	 * @param {object} dimensionHierarchies
-	 * @param {object[]} facts
 	 * @param {object} options
 	 * @param {string} options.templateForeignKey
 	 * @return {Cube}
 	 * */
-	static create(facts = [], dimensionHierarchies = [], options = {}) {
+	static create(factTable, dimensionHierarchies = [], options = {}) {
+		if (Array.isArray(factTable)) {
+			factTable = { facts: factTable };
+			console.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table')
+		}
+		const { facts = [], primaryKey } = factTable;
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
 
 		const cube = new this({
+			cellTable: { primaryKey },
 			dimensionHierarchies: dimensionHierarchies,
-			settings: options
+			settings: { ...options }
 		});
 
 		// build 2: members
@@ -67,20 +83,21 @@ class Cube {
 	 * @param {Object[]} facts
 	 * */
 	addFacts(facts) {
-		const newFactTable = new FactTable(facts);
-		const cells = newFactTable.map(fact => new Cell(fact));
-		this.cellTable.addCells(cells);
+		const newFactTable = new FactTable({facts, primaryKey: this.cellTable.primaryKey});
+		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
+		[].push.apply(this.getCells(), cells);
 		const factTable = this.getFacts();
-		SnowflakeBuilder.anotherBuild(factTable, cells, this.dimensionHierarchies, this.cellTable);
+		SnowflakeBuilder.anotherBuild(factTable, cells, this.dimensionHierarchies, this.getCells(), this.cellTable.primaryKey);
 	}
 	/**
 	 * @public
 	 * @param {Object[]} facts
 	 * */
 	removeFacts(facts) {
-		const cellTable = this.cellTable;
+		const cellTable = this.getCells();
+		const primaryKey = this.cellTable.primaryKey;
 		const removedCells = facts.map(fact => {
-			return cellTable.find(cell => cell[ENTITY_ID] === fact[ENTITY_ID])
+			return cellTable.find(cell => cell[primaryKey] === fact[primaryKey])
 		});
 		this.removeCells(removedCells);
 	}
@@ -88,7 +105,7 @@ class Cube {
 	 * @public
 	 * */
 	removeCells(cells) {
-		SnowflakeBuilder.destroy(this.cellTable, cells, this.dimensionHierarchies, this);
+		SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
 	}
 	/**
 	 * @public
@@ -119,7 +136,7 @@ class Cube {
 	 * @public
 	 * */
 	getCells() {
-		return this.cellTable;
+		return this.cellTable.cells;
 	}
 	/**
 	 * @public
@@ -155,6 +172,16 @@ class Cube {
 			fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension])
 				? fixSpaceOptions[dimension]
 				: [fixSpaceOptions[dimension]];
+
+			// todo замена на оригинальные члены измерений
+			// fixSpaceOptions[dimension].forEach((memberData, index) => {
+			// 	const members = this.getDimensionMembers(dimension);
+			// 	let member = members.find(member => members.getMemberId(member) === memberData[DEFAULT_MEMBER_ID_PROP]);
+			// 	fixSpaceOptions[dimension][index] = member;
+			// 	if (!memberData) {
+			// 		console.warn(`not founded member by id ${members.getMemberId(member)}`)
+			// 	}
+			// })
 		});
 
 		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
@@ -194,9 +221,9 @@ class Cube {
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
 				const members = space[dimension];
-				const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
+				const { foreignKey, primaryKey } = this.findDimensionTreeByDimension(dimension).getTreeValue();
 				const finded = members.find(member => {
-					return member[ENTITY_ID] === cell[idAttribute]
+					return member[primaryKey] === cell[foreignKey]
 				});
 				return !finded;
 			});
@@ -231,19 +258,20 @@ class Cube {
 	 * */
 	getDimensionMembersFromCells(dimension, cells) {
 		const searchedDimensionTree = this.findDimensionTreeByDimension(dimension);
+		const dimensionTable = searchedDimensionTree.getRoot().getTreeValue();
 
 		const {
 			members: rootMembers,
 			dimension: rootDimension,
-			idAttribute: rootIdAttribute
-		} = searchedDimensionTree.getRoot().getTreeValue();
+			foreignKey: rootIdAttribute
+		} = dimensionTable;
 
 		const members = [];
 
 		// todo смахивает на mapFilter
 		cells.forEach(cell => {
 			rootMembers.forEach(rootMember => {
-				if (cell[rootIdAttribute] === rootMember[ENTITY_ID]) {
+				if (cell[rootIdAttribute] === dimensionTable.getMemberId(rootMember)) {
 					if (members.indexOf(rootMember) === -1) {
 						members.push(rootMember)
 					}
@@ -324,7 +352,7 @@ class Cube {
 		if (forSave) {
 			data.forEach((data, index) => {
 				if (cells[index] instanceof EmptyCell) {
-					delete data[ENTITY_ID];
+					delete data[this.cellTable.primaryKey];
 				}
 			})
 		}
@@ -348,12 +376,12 @@ class Cube {
 	/**
 	 * @public
 	 * @param {string} dimension - dimension in which the member is created
-	 * @param {object?} memberOptions - properties for the created member
+	 * @param {object?} memberData - properties for the created member
 	 * @param {object?} rollupCoordinatesData
 	 * @param {object?} drillDownCoordinatesOptions
 	 * @param {object?} cellData
 	 * */
-	addDimensionMember(dimension, memberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
+	addDimensionMember(dimension, memberData = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
 		if (typeof dimension !== 'string') {
 			throw TypeError(`parameter dimension expects as string: ${dimension}`)
 		}
@@ -361,9 +389,11 @@ class Cube {
 		Object.keys(rollupCoordinatesData).forEach(dimension => {
 			const memberData = rollupCoordinatesData[dimension];
 			const memberList = this.getDimensionMembers(dimension);
-			const id = memberData[ENTITY_ID];
+			const dimensionTable = this.findDimensionTreeByDimension(dimension).getTreeValue();
+			const { primaryKey } = dimensionTable;
+			const id = memberData[primaryKey];
 			const find = memberList.find(member => {
-				return id === member[ENTITY_ID]
+				return id === dimensionTable.getMemberId(member)
 			});
 			if (!find) {
 				throw new CantAddMemberRollupException(dimension, id)
@@ -375,22 +405,22 @@ class Cube {
 		const childDimensionTrees = dimensionTree.getChildTrees();
 		childDimensionTrees.forEach(childDimensionTree => {
 			const dimensionTable = childDimensionTree.getTreeValue();
-			const { dimension, idAttribute } = dimensionTable;
+			const { dimension, foreignKey, primaryKey } = dimensionTable;
 			const member = rollupCoordinatesData[dimension];
 			if (!member) {
 				throw new CantAddMemberRollupException(dimension)
 			} else {
-				memberOptions[idAttribute] = member[ENTITY_ID];
+				memberData[foreignKey] = member[primaryKey];
 			}
 		});
 		const dimensionTable = dimensionTree.getTreeValue();
-		const { idAttribute } = dimensionTable;
-		let saveMember = dimensionTree.createMember(memberOptions);
-		let saveIdAttribute = idAttribute;
+		const { foreignKey, members } = dimensionTable;
+		let saveMember = dimensionTree.createMember(memberData);
+		let saveIdAttribute = foreignKey;
 		dimensionTree.traceUpOrder(tracedDimensionTree => {
 			if (dimensionTree !== tracedDimensionTree) {
-				const { dimension: parentDimension, idAttribute: parentIdAttribute } = tracedDimensionTree.getTreeValue();
-				const drillDownCoordinatesData = { [ saveIdAttribute]: saveMember[ENTITY_ID] };
+				const { dimension: parentDimension, foreignKey: parentIdAttribute } = tracedDimensionTree.getTreeValue();
+				const drillDownCoordinatesData = { [ saveIdAttribute]: dimensionTable.getMemberId(saveMember) };
 				Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
 				saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
 				saveIdAttribute = parentIdAttribute;
@@ -409,12 +439,13 @@ class Cube {
 		const cellTable = this.getCells();
 		const getRemoveMeasures = (dimension, members) => {
 			const removedCells = [];
-			const idAttribute = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue().idAttribute;
+			const dimensionTable = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue();
+			const foreignKey = dimensionTable.foreignKey;
 
 			// todo mapFilter похоже
 			cellTable.forEach(cell => {
 				members.forEach(member => {
-					if (cell[idAttribute] == member[ENTITY_ID]) {
+					if (cell[foreignKey] == dimensionTable.getMemberId(member)) {
 						removedCells.push(cell)
 					}
 				})
@@ -424,7 +455,10 @@ class Cube {
 		Object.keys(endToBeRemoved).map(dimension => {
 			const removedMeasures = getRemoveMeasures(dimension, endToBeRemoved[dimension]);
 			removedMeasures.forEach(cell => {
-				cellTable.removeCell(cell);
+				const index = cellTable.indexOf(cell);
+				if (index !== -1) {
+					cellTable.splice(index, 1);
+				}
 			})
 		})
 	}
@@ -470,7 +504,7 @@ class Cube {
 	 * */
 	addDimensionHierarchy(dimensionHierarchy) {
 		const dimensionTree = this._addDimensionHierarchy(dimensionHierarchy);
-		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.cellTable, this.cellTable, this.cellTable);
+		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
 	}
 	/**
 	 * @public
@@ -478,7 +512,7 @@ class Cube {
 	 * */
 	removeDimensionHierarchy(dimensionHierarchy) {
 		// first remove members
-		SnowflakeBuilder.destroyDimensionTree(this.cellTable, this.cellTable, dimensionHierarchy, this);
+		SnowflakeBuilder.destroyDimensionTree(this.getCells(), this.getCells(), dimensionHierarchy, this);
 		// then target dimension hierarchy
 		this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
 	}
@@ -598,8 +632,9 @@ class Cube {
 			if (!unique.length) {
 				let options = {};
 				Object.keys(combination).forEach(dimension => {
-					const { idAttribute } = this.findDimensionTreeByDimension(dimension).getTreeValue();
-					options[idAttribute] = combination[dimension][ENTITY_ID]
+					const dimensionTable = this.findDimensionTreeByDimension(dimension).getTreeValue();
+					const { foreignKey } = dimensionTable;
+					options[foreignKey] = dimensionTable.getMemberId(combination[dimension])
 				});
 				options = {...options, ...props};
 				const cell = EmptyCell.createEmptyCell(options);
@@ -613,15 +648,26 @@ class Cube {
 	 * @return {EmptyCell[]}
 	 * */
 	getEmptyCells() {
-		return this.cellTable.filter(cell => EmptyCell.isEmptyCell(cell))
+		return this.getCells().filter(cell => EmptyCell.isEmptyCell(cell))
 	}
 	/**
 	 * @public
 	 * @throw {TypeError}
 	 * */
 	addEmptyCells(emptyCells) {
-		EmptyCellTable.validateInstance(emptyCells);
-		this.cellTable.addCells(emptyCells);
+		Cube.validateInstance(emptyCells);
+		[].push.apply(this.getCells(), emptyCells);
+	}
+	/**
+	 * @param {EmptyCell[]} emptyCells
+	 * @throw {TypeError}
+	 * */
+	static validateInstance(emptyCells) {
+		emptyCells.forEach(emptyCell => {
+			if (!(emptyCell instanceof EmptyCell)) {
+				throw new TypeError('some item in list of argument is not instances of EmptyCell')
+			}
+		});
 	}
 }
 export default Cube

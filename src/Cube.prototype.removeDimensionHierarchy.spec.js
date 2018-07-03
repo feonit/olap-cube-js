@@ -36,9 +36,9 @@ describe('method removeDimensionHierarchy must work', () => {
 	});
 
 	it('cellTable must be changed', () => {
-		debug = isEqualObjects(cube.cellTable, cells);
+		debug = isEqualObjects(cube.getCells(), cells);
 		removeDimensionHierarchy();
-		debug = isEqualObjects(cube.cellTable, facts);
+		debug = isEqualObjects(cube.getCells(), facts);
 	});
 
 	it('getDimensionMembers must return members', () => {

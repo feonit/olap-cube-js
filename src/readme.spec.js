@@ -196,12 +196,42 @@ describe('readme', () => {
 				]
 			});
 			debug = isEqualObjects(
-				cube.cellTable,
+				cube.getCells(),
 				[
 					{ id: 1, product_id: 1, country: 'China', count: 2 },
 					{ id: 1, product_id: 2, country: 'Niderland', count: 3 }
 				]
 			)
 		}
+	})
+
+	it('Custom members', () => {
+		let facts = [{ id: 1, nikname: 'Monkey', group: 'Administrators' }];
+		let dimensionHierarchies = [
+			{
+				dimensionTable: {
+					dimension: 'user',
+					keyProps: ['nikname'],
+					foreignKey: 'USER_ID'
+				},
+				dependency: [
+					{
+						dimensionTable: {
+							dimension: 'group',
+							keyProps: ['group'],
+							primaryKey: 'ID',
+							foreignKey: 'GROUP_ID'
+						}
+					}
+				]
+			}
+		];
+		let cube = Cube.create(facts, dimensionHierarchies);
+		let userMember = cube.getDimensionMembers('user')[0];
+		let groupMember = cube.getDimensionMembers('group')[0];
+		let cell = cube.getCells()[0];
+		debug = isEqualObjects(userMember, { id: 1, nikname: 'Monkey', GROUP_ID: 1 });
+		debug = isEqualObjects(groupMember, { ID: 1, group: 'Administrators' });
+		debug = isEqualObjects(cell, { id: 1, USER_ID: 1 });
 	})
 });
