@@ -15,9 +15,10 @@ import Settings from './Settings.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
 
 class CellTable {
-	constructor({ cells, primaryKey }) {
+	constructor({ cells, primaryKey, defaultFactOptions = {} }) {
 		this.cells = cells.map(item => EmptyCell.isEmptyCell(item) ? new EmptyCell(item) : new Cell(item));
 		this.primaryKey = primaryKey;
+		this.defaultFactOptions = defaultFactOptions;
 	}
 }
 
@@ -36,11 +37,11 @@ class Cube {
 			cellTable = { cells: cellTable };
 			console.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table')
 		}
-		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP } = cellTable;
+		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
 		this.settings = new Settings(settings);
 		this.dimensionHierarchies = [];
 		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
-		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey });
+		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
 
 		// const residuals = this.residuals();
 		// const count = residuals.length;
@@ -62,13 +63,13 @@ class Cube {
 			factTable = { facts: factTable };
 			console.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table')
 		}
-		const { facts = [], primaryKey } = factTable;
+		const { facts = [], primaryKey, defaultFactOptions = {} } = factTable;
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
 
 		const cube = new this({
-			cellTable: { primaryKey },
+			cellTable: { primaryKey, defaultFactOptions },
 			dimensionHierarchies: dimensionHierarchies,
 			settings: { ...options }
 		});
@@ -376,12 +377,13 @@ class Cube {
 	/**
 	 * @public
 	 * @param {string} dimension - dimension in which the member is created
-	 * @param {object?} memberData - properties for the created member
+	 * @param {object?} customMemberOptions - properties for the created member
 	 * @param {object?} rollupCoordinatesData
 	 * @param {object?} drillDownCoordinatesOptions
 	 * @param {object?} cellData
 	 * */
-	addDimensionMember(dimension, memberData = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
+	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
+		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
 		if (typeof dimension !== 'string') {
 			throw TypeError(`parameter dimension expects as string: ${dimension}`)
 		}
@@ -403,6 +405,9 @@ class Cube {
 		});
 		const dimensionTree = this.findDimensionTreeByDimension(dimension);
 		const childDimensionTrees = dimensionTree.getChildTrees();
+		const dimensionTable = dimensionTree.getTreeValue();
+		const { foreignKey } = dimensionTable;
+		const foreignKeysMemberData = {};
 		childDimensionTrees.forEach(childDimensionTree => {
 			const dimensionTable = childDimensionTree.getTreeValue();
 			const { dimension, foreignKey, primaryKey } = dimensionTable;
@@ -410,12 +415,13 @@ class Cube {
 			if (!member) {
 				throw new CantAddMemberRollupException(dimension)
 			} else {
-				memberData[foreignKey] = member[primaryKey];
+				foreignKeysMemberData[foreignKey] = member[primaryKey];
 			}
 		});
-		const dimensionTable = dimensionTree.getTreeValue();
-		const { foreignKey, members } = dimensionTable;
-		let saveMember = dimensionTree.createMember(memberData);
+		// todo проверить, что customMemberOptions не содержит внешних ключей
+		const memberOptions = Object.assign({}, customMemberOptions, foreignKeysMemberData);
+
+		let saveMember = dimensionTree.createMember(memberOptions);
 		let saveIdAttribute = foreignKey;
 		dimensionTree.traceUpOrder(tracedDimensionTree => {
 			if (dimensionTree !== tracedDimensionTree) {
@@ -465,11 +471,12 @@ class Cube {
 	/**
 	 * @public
 	 * Filling method for full size of cube
-	 * @param {object?} props - properties for empty cells
+	 * @param {object?} customCellOptions - properties for empty cells
 	 * */
-	fill(props) {
+	fill(customCellOptions = {}) {
+		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
 		if (!this.residuals().length) {
-			const emptyCells = this.createEmptyCells(props);
+			const emptyCells = this.createEmptyCells(cellOptions);
 			this.addEmptyCells(emptyCells);
 		}
 	}
@@ -624,20 +631,21 @@ class Cube {
 	 * @public
 	 * @return {EmptyCell[]}
 	 * */
-	createEmptyCells(props) {
+	createEmptyCells(cellOptions) {
 		const emptyCells = [];
 		const tuples = this.cartesian();
 		tuples.forEach(combination => {
 			const unique = this.getCellsBySet(combination);
 			if (!unique.length) {
-				let options = {};
+				let foreignKeysCellData = {};
 				Object.keys(combination).forEach(dimension => {
 					const dimensionTable = this.findDimensionTreeByDimension(dimension).getTreeValue();
 					const { foreignKey } = dimensionTable;
-					options[foreignKey] = dimensionTable.getMemberId(combination[dimension])
+					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension])
 				});
-				options = {...options, ...props};
-				const cell = EmptyCell.createEmptyCell(options);
+				const cellData = {...foreignKeysCellData, ...cellOptions};
+				// todo нужна правеврка на то, что все свойства присутствуют
+				const cell = EmptyCell.createEmptyCell(cellData);
 				emptyCells.push(cell);
 			}
 		});

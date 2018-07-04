@@ -233,9 +233,9 @@ export default class DimensionTree extends Tree {
 	}
 	/**
 	 * @public
-	 * @param {object?} memberData
+	 * @param {object?} memberOptions
 	 * */
-	createMember(memberData = {}) {
+	createMember(memberOptions = {}) {
 		const dimensionTable = this.getTreeValue();
 		const childIdAttributes = this.getChildTrees().map(dimensionTree =>
 			dimensionTree.getTreeValue().foreignKey
@@ -244,6 +244,6 @@ export default class DimensionTree extends Tree {
 		childIdAttributes.forEach(foreignKey => {
 			linkProps.push(foreignKey)
 		});
-		return dimensionTable.createMember(memberData, linkProps)
+		return dimensionTable.createMember(memberOptions, linkProps)
 	}
 }

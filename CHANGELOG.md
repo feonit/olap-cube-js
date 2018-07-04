@@ -1,4 +1,8 @@
 ## Change Log
+*0.13.0*
+- Added new settings for members: `defaultMemberOptions`
+- Added new settings for facts: `defaultFactOptions`
+
 *0.12.0*
 - Added new settings for members of dimensions tables `foreignKey` and `primaryKey`
 - Deprecated `Cube.create(facts)`, use `Cube.create({ facts: [] })` instead as first argument

@@ -34,6 +34,9 @@ http://www.vertabelo.com/blog/technical-articles/data-warehouse-modeling-the-sno
 cells это агрегированные данные
 snowflaking процесс нормализации таблиц измерений
 
+
+=====================================================================================================================
+
 - Change place of logo image to special branch
 
 обновление таблицы фактов, вместо удаления/добавления
@@ -42,9 +45,7 @@ snowflaking процесс нормализации таблиц измерен�
 попробовать выделить разные наборы данных и прогонять их через все тесты
 удалить из addDimensionMember fill метод + проверить и написать тест что fill выполняется там как нужно
 ref для createMember
-в addDimensionMember параметры дефолные сделать {} если даже null
 тесты на кортеж добавить
-описать id у InputMember в доке
 
 как бы сделать Pivot повороты
 
@@ -52,7 +53,6 @@ ref для createMember
 
 getFacts => createFacts?
 может cellTable и вовсе нету никакой
-dependency => level
 
 http://www.olapcube.com/mdxhelp/KeyConcepts.htm
 each cell is an intersection of all the dimensions of the cube
@@ -61,26 +61,40 @@ each cell is an intersection of all the dimensions of the cube
  Custom Member Options может быть параметром к таблицам измерений, чтобы не прокидывать каждый раз их в функциях
  по аналогии Cell Properties
 
- в settings отправить uuidv4
-
- заменить метод fill на
- cube.createEmptyCells(cellData, genericIdFn = uuid) и тут подумать над методом isEmptyCell
- cube.addEmptyCells(emptyCells)
-
- тогда fill() заменится на cube.addEmptyCells(cube.createEmptyCells()), что гибче, но можно и оставить fillEmptyCells
-
- getEmptyCells нужен для удаления нужных ячеек через метод removeCells
-
- тогда removeEmptyCells выглядит как cube.removeCells(cube.getEmptyCells())
-
- когда fill метод переименую, добавить спецификации методам
-
- Deprecated methods `getFacts` and `getFactsBySet`, use `getCells` and `getCellsBySet` instead или все же не стоит?
-
- подумать об инверсии уровней в обратном порядке, инверсия должна быть совместима с multiple hierarchies
-
- разобраться с residuals
-
-порядок аргументов изменить с facts, dimensionHierarchies на обратный
+удовлетворить программное требование: в случае возникновения ошибок, состояние не должно быть сломано
 
 удалить extends Error and Reflect
+
+дефолтные опциональные данные для ячеек
+
+!!! deprecated
+1)
+addDimensionMember нужно аргументы переставить местами
+
+2)
+заменить метод fill на
+cube.createEmptyCells(cellData, genericIdFn = uuid) и тут подумать над методом isEmptyCell
+cube.addEmptyCells(emptyCells)
+тогда fill() заменится на cube.addEmptyCells(cube.createEmptyCells()), что гибче, но можно и оставить fillEmptyCells
+getEmptyCells нужен для удаления нужных ячеек через метод removeCells
+тогда removeEmptyCells выглядит как cube.removeCells(cube.getEmptyCells())
+когда fill метод переименую, добавить спецификации методам
+Deprecated methods `getFacts` and `getFactsBySet`, use `getCells` and `getCellsBySet` instead или все же не стоит?
+
+3)
+Settings удалить, так как есть более тонкая настройка
+в settings отправить uuidv4
+
+4)
+подумать об инверсии уровней в обратном порядке, инверсия должна быть совместима с multiple hierarchies
+
+5)
+ разобраться с residuals
+
+6)
+порядок аргументов изменить с facts, dimensionHierarchies на обратный
+
+7)
+dependency => level
+
+8) addDimensionMember => addMember?

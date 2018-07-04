@@ -5,14 +5,14 @@ import {NotFoundFactId} from './errors.js'
 /**
  *
  * */
-export default class FactTable extends Array {
-	constructor({ facts = [], primaryKey = DEFAULT_FACT_ID_PROP } = {}) {
-		super();
+export default class FactTable {
+	constructor({ facts = [], primaryKey = DEFAULT_FACT_ID_PROP } = {}, defaultFactOptions = {}) {
 		this.primaryKey = primaryKey;
 		this.facts = facts.map(factData => {
 			FactTable.validateFactData(factData, primaryKey);
 			return new Fact(factData)
 		});
+		this.defaultFactOptions = defaultFactOptions;
 	}
 	getFacts() {
 		return this.facts;

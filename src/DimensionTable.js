@@ -3,9 +3,12 @@ import {DEFAULT_MEMBER_ID_PROP} from './const.js'
 import InputMember from './InputMember.js'
 
 export default class DimensionTable {
-	constructor({ dimension, foreignKey, primaryKey = DEFAULT_MEMBER_ID_PROP, keyProps, otherProps = [], members = []}) {
+	constructor({ dimension, foreignKey, primaryKey = DEFAULT_MEMBER_ID_PROP, keyProps, otherProps = [], members = [], defaultMemberOptions = {}}) {
 		if (!dimension || !keyProps) {
-			throw Error("Bad definition DimensionTable, params 'dimension' and 'keyProps' is required");
+			throw Error('Bad definition DimensionTable, params \"dimension\" and \"keyProps\" is required');
+		}
+		if (Object.keys(defaultMemberOptions).indexOf(primaryKey) !== -1) {
+			throw Error('Bad definition DimensionTable, \"defaultMemberOptions\" must not contain a \"primaryKey\" property');
 		}
 		/** Name of the dimension */
 		this.dimension = dimension;
@@ -19,6 +22,8 @@ export default class DimensionTable {
 		this.otherProps = [].concat(otherProps);
 		/** member list */
 		this.members = members.map(member => new Member(member, this.primaryKey));
+		/** member default property options */
+		this.defaultMemberOptions = {...defaultMemberOptions};
 	}
 	/**
 	 *
@@ -47,10 +52,12 @@ export default class DimensionTable {
 	}
 	/**
 	 * @public
-	 * @param {object} memberData
+	 * @param {object} memberOptions
 	 * @param {[]} linkProps
 	 * */
-	createMember(memberData = {}, linkProps) {
+	createMember(memberOptions = {}, linkProps) {
+		// todo тут нужна проверка на то, что все данные для члена измерения присутствуют
+		const memberData = {...this.defaultMemberOptions, ...memberOptions};
 		const { keyProps, otherProps, members, primaryKey } = this;
 		const keys = keyProps.concat(linkProps).concat(otherProps);
 		const id = DimensionTable.reduceId(members, primaryKey);
