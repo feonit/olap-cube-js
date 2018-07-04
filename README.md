@@ -7,7 +7,7 @@
 [![Build Status](https://travis-ci.org/feonit/olap-cube-js.svg?branch=master)](https://travis-ci.org/feonit/olap-cube-js)
 [![codecov](https://codecov.io/gh/feonit/olap-cube-js/branch/master/graph/badge.svg)](https://codecov.io/gh/feonit/olap-cube-js)
 [![Version](https://img.shields.io/npm/v/olap-cube-js.svg)](https://www.npmjs.com/package/olap-cube-js)
-
+![npm](https://img.shields.io/npm/dt/olap-cube-js.svg)
 
 
 [1]: https://en.wikipedia.org/wiki/Snowflake_schema
