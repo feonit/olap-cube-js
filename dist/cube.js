@@ -1,5 +1,5 @@
 /*!
- * Version: "0.12.0"
+ * Version: "0.13.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -545,41 +545,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _extendableBuiltin(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
 /**
  *
  * */
-var FactTable = function (_extendableBuiltin2) {
-	_inherits(FactTable, _extendableBuiltin2);
-
+var FactTable = function () {
 	function FactTable() {
 		var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
 		    _ref$facts = _ref.facts,
@@ -587,16 +556,16 @@ var FactTable = function (_extendableBuiltin2) {
 		    _ref$primaryKey = _ref.primaryKey,
 		    primaryKey = _ref$primaryKey === undefined ? _const.DEFAULT_FACT_ID_PROP : _ref$primaryKey;
 
+		var defaultFactOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
 		_classCallCheck(this, FactTable);
 
-		var _this = _possibleConstructorReturn(this, (FactTable.__proto__ || Object.getPrototypeOf(FactTable)).call(this));
-
-		_this.primaryKey = primaryKey;
-		_this.facts = facts.map(function (factData) {
+		this.primaryKey = primaryKey;
+		this.facts = facts.map(function (factData) {
 			FactTable.validateFactData(factData, primaryKey);
 			return new _Fact2.default(factData);
 		});
-		return _this;
+		this.defaultFactOptions = defaultFactOptions;
 	}
 
 	_createClass(FactTable, [{
@@ -623,7 +592,7 @@ var FactTable = function (_extendableBuiltin2) {
 	}]);
 
 	return FactTable;
-}(_extendableBuiltin(Array));
+}();
 
 exports.default = FactTable;
 
@@ -696,7 +665,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var CellTable = function CellTable(_ref) {
 	var cells = _ref.cells,
-	    primaryKey = _ref.primaryKey;
+	    primaryKey = _ref.primaryKey,
+	    _ref$defaultFactOptio = _ref.defaultFactOptions,
+	    defaultFactOptions = _ref$defaultFactOptio === undefined ? {} : _ref$defaultFactOptio;
 
 	_classCallCheck(this, CellTable);
 
@@ -704,6 +675,7 @@ var CellTable = function CellTable(_ref) {
 		return _EmptyCell2.default.isEmptyCell(item) ? new _EmptyCell2.default(item) : new _Cell2.default(item);
 	});
 	this.primaryKey = primaryKey;
+	this.defaultFactOptions = defaultFactOptions;
 };
 
 /**
@@ -735,12 +707,14 @@ var Cube = function () {
 		    _cellTable$cells = _cellTable.cells,
 		    cells = _cellTable$cells === undefined ? [] : _cellTable$cells,
 		    _cellTable$primaryKey = _cellTable.primaryKey,
-		    primaryKey = _cellTable$primaryKey === undefined ? _const.DEFAULT_FACT_ID_PROP : _cellTable$primaryKey;
+		    primaryKey = _cellTable$primaryKey === undefined ? _const.DEFAULT_FACT_ID_PROP : _cellTable$primaryKey,
+		    _cellTable$defaultFac = _cellTable.defaultFactOptions,
+		    defaultFactOptions = _cellTable$defaultFac === undefined ? {} : _cellTable$defaultFac;
 
 		this.settings = new _Settings2.default(settings);
 		this.dimensionHierarchies = [];
 		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
-		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey });
+		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey, defaultFactOptions: _extends({}, defaultFactOptions) });
 
 		// const residuals = this.residuals();
 		// const count = residuals.length;
@@ -1132,7 +1106,7 @@ var Cube = function () {
 		/**
    * @public
    * @param {string} dimension - dimension in which the member is created
-   * @param {object?} memberData - properties for the created member
+   * @param {object?} customMemberOptions - properties for the created member
    * @param {object?} rollupCoordinatesData
    * @param {object?} drillDownCoordinatesOptions
    * @param {object?} cellData
@@ -1141,7 +1115,7 @@ var Cube = function () {
 	}, {
 		key: 'addDimensionMember',
 		value: function addDimensionMember(dimension) {
-			var memberData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+			var customMemberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 			var rollupCoordinatesData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			var _this4 = this;
@@ -1149,6 +1123,7 @@ var Cube = function () {
 			var drillDownCoordinatesOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 			var cellData = arguments[4];
 
+			// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
 			if (typeof dimension !== 'string') {
 				throw TypeError('parameter dimension expects as string: ' + dimension);
 			}
@@ -1171,6 +1146,10 @@ var Cube = function () {
 			});
 			var dimensionTree = this.findDimensionTreeByDimension(dimension);
 			var childDimensionTrees = dimensionTree.getChildTrees();
+			var dimensionTable = dimensionTree.getTreeValue();
+			var foreignKey = dimensionTable.foreignKey;
+
+			var foreignKeysMemberData = {};
 			childDimensionTrees.forEach(function (childDimensionTree) {
 				var dimensionTable = childDimensionTree.getTreeValue();
 				var dimension = dimensionTable.dimension,
@@ -1181,14 +1160,13 @@ var Cube = function () {
 				if (!member) {
 					throw new _errors.CantAddMemberRollupException(dimension);
 				} else {
-					memberData[foreignKey] = member[primaryKey];
+					foreignKeysMemberData[foreignKey] = member[primaryKey];
 				}
 			});
-			var dimensionTable = dimensionTree.getTreeValue();
-			var foreignKey = dimensionTable.foreignKey,
-			    members = dimensionTable.members;
+			// todo проверить, что customMemberOptions не содержит внешних ключей
+			var memberOptions = _extends({}, customMemberOptions, foreignKeysMemberData);
 
-			var saveMember = dimensionTree.createMember(memberData);
+			var saveMember = dimensionTree.createMember(memberOptions);
 			var saveIdAttribute = foreignKey;
 			dimensionTree.traceUpOrder(function (tracedDimensionTree) {
 				if (dimensionTree !== tracedDimensionTree) {
@@ -1244,14 +1222,17 @@ var Cube = function () {
 		/**
    * @public
    * Filling method for full size of cube
-   * @param {object?} props - properties for empty cells
+   * @param {object?} customCellOptions - properties for empty cells
    * */
 
 	}, {
 		key: 'fill',
-		value: function fill(props) {
+		value: function fill() {
+			var customCellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			var cellOptions = _extends({}, this.cellTable.defaultFactOptions, customCellOptions);
 			if (!this.residuals().length) {
-				var emptyCells = this.createEmptyCells(props);
+				var emptyCells = this.createEmptyCells(cellOptions);
 				this.addEmptyCells(emptyCells);
 			}
 		}
@@ -1440,7 +1421,7 @@ var Cube = function () {
 
 	}, {
 		key: 'createEmptyCells',
-		value: function createEmptyCells(props) {
+		value: function createEmptyCells(cellOptions) {
 			var _this7 = this;
 
 			var emptyCells = [];
@@ -1448,15 +1429,16 @@ var Cube = function () {
 			tuples.forEach(function (combination) {
 				var unique = _this7.getCellsBySet(combination);
 				if (!unique.length) {
-					var options = {};
+					var foreignKeysCellData = {};
 					Object.keys(combination).forEach(function (dimension) {
 						var dimensionTable = _this7.findDimensionTreeByDimension(dimension).getTreeValue();
 						var foreignKey = dimensionTable.foreignKey;
 
-						options[foreignKey] = dimensionTable.getMemberId(combination[dimension]);
+						foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension]);
 					});
-					options = _extends({}, options, props);
-					var cell = _EmptyCell2.default.createEmptyCell(options);
+					var cellData = _extends({}, foreignKeysCellData, cellOptions);
+					// todo нужна правеврка на то, что все свойства присутствуют
+					var cell = _EmptyCell2.default.createEmptyCell(cellData);
 					emptyCells.push(cell);
 				}
 			});
@@ -1503,14 +1485,16 @@ var Cube = function () {
 			var _factTable = factTable,
 			    _factTable$facts = _factTable.facts,
 			    facts = _factTable$facts === undefined ? [] : _factTable$facts,
-			    primaryKey = _factTable.primaryKey;
+			    primaryKey = _factTable.primaryKey,
+			    _factTable$defaultFac = _factTable.defaultFactOptions,
+			    defaultFactOptions = _factTable$defaultFac === undefined ? {} : _factTable$defaultFac;
 
 			if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 				throw new _errors.CreateInstanceException();
 			}
 
 			var cube = new this({
-				cellTable: { primaryKey: primaryKey },
+				cellTable: { primaryKey: primaryKey, defaultFactOptions: defaultFactOptions },
 				dimensionHierarchies: dimensionHierarchies,
 				settings: _extends({}, options)
 			});
@@ -1922,13 +1906,13 @@ var DimensionTree = function (_Tree) {
 		}
 		/**
    * @public
-   * @param {object?} memberData
+   * @param {object?} memberOptions
    * */
 
 	}, {
 		key: 'createMember',
 		value: function createMember() {
-			var memberData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
 			var dimensionTable = this.getTreeValue();
 			var childIdAttributes = this.getChildTrees().map(function (dimensionTree) {
@@ -1938,7 +1922,7 @@ var DimensionTree = function (_Tree) {
 			childIdAttributes.forEach(function (foreignKey) {
 				linkProps.push(foreignKey);
 			});
-			return dimensionTable.createMember(memberData, linkProps);
+			return dimensionTable.createMember(memberOptions, linkProps);
 		}
 	}], [{
 		key: 'createDimensionTree',
@@ -1984,6 +1968,8 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _Member = __webpack_require__(1);
@@ -2012,12 +1998,17 @@ var DimensionTable = function () {
 		    _ref$otherProps = _ref.otherProps,
 		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
 		    _ref$members = _ref.members,
-		    members = _ref$members === undefined ? [] : _ref$members;
+		    members = _ref$members === undefined ? [] : _ref$members,
+		    _ref$defaultMemberOpt = _ref.defaultMemberOptions,
+		    defaultMemberOptions = _ref$defaultMemberOpt === undefined ? {} : _ref$defaultMemberOpt;
 
 		_classCallCheck(this, DimensionTable);
 
 		if (!dimension || !keyProps) {
-			throw Error("Bad definition DimensionTable, params 'dimension' and 'keyProps' is required");
+			throw Error('Bad definition DimensionTable, params \"dimension\" and \"keyProps\" is required');
+		}
+		if (Object.keys(defaultMemberOptions).indexOf(primaryKey) !== -1) {
+			throw Error('Bad definition DimensionTable, \"defaultMemberOptions\" must not contain a \"primaryKey\" property');
 		}
 		/** Name of the dimension */
 		this.dimension = dimension;
@@ -2033,6 +2024,8 @@ var DimensionTable = function () {
 		this.members = members.map(function (member) {
 			return new _Member2.default(member, _this.primaryKey);
 		});
+		/** member default property options */
+		this.defaultMemberOptions = _extends({}, defaultMemberOptions);
 	}
 	/**
   *
@@ -2073,15 +2066,18 @@ var DimensionTable = function () {
 		}
 		/**
    * @public
-   * @param {object} memberData
+   * @param {object} memberOptions
    * @param {[]} linkProps
    * */
 
 	}, {
 		key: 'createMember',
 		value: function createMember() {
-			var memberData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 			var linkProps = arguments[1];
+
+			// todo тут нужна проверка на то, что все данные для члена измерения присутствуют
+			var memberData = _extends({}, this.defaultMemberOptions, memberOptions);
 			var keyProps = this.keyProps,
 			    otherProps = this.otherProps,
 			    members = this.members,
