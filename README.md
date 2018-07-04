@@ -632,6 +632,22 @@ return:
 { id: 1, USER_ID: 1 }
 ```
 
+### Default Member Options
+```js
+let dimensionHierarchies = [
+    {
+        dimensionTable: {
+            dimension: 'user',
+            keyProps: ['nikname'],
+            defaultMemberOptions: {
+                nikname: 'anonymous'
+            }
+        }
+    }
+];
+let cube = Cube.create([], dimensionHierarchies)
+cube.addDimensionMember('user')
+```
 ### Custom facts
 Like custom members, some times need make custom facts
 ```js
@@ -650,7 +666,36 @@ let dimensionHierarchies = [
     }
 ];
 let cube = Cube.create(factTable, dimensionHierarchies)
+```
 
+### Default Fact Options
+```js
+let factTable = {
+    facts: [
+        { id: 1, x: 1, y: 1, isOpen: true },
+        { id: 1, x: 2, y: 2, isOpen: true },
+    ],
+    defaultFactOptions: {
+        isOpen: false
+    }
+};
+let dimensionHierarchies = [
+    {
+        dimensionTable: {
+            dimension: 'x',
+            keyProps: ['x']
+        }
+    },
+    {
+        dimensionTable: {
+            dimension: 'y',
+            keyProps: ['y']
+        }
+    }
+];
+let cube = Cube.create(factTable, dimensionHierarchies)
+cube.fill();
+cube.addDimensionMember('x', { x: 3 })
 ```
 
 ## Versioning
@@ -660,7 +705,6 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Add default prop values for members 
 - Change `dependency` to `level`
 - Add support for single keyProp in schema and single dependency
 - Update method addMember without rollup options (then more than one member will be added)
