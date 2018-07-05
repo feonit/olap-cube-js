@@ -32,7 +32,7 @@ describe('readme', () => {
 					dimension: 'products',
 					keyProps: ['product'],
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'categories',
@@ -186,7 +186,7 @@ describe('readme', () => {
 					dimension: 'product',
 					keyProps: ['product']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'mark',
@@ -214,7 +214,7 @@ describe('readme', () => {
 					keyProps: ['nikname'],
 					foreignKey: 'USER_ID'
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'group',

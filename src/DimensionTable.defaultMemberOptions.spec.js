@@ -63,7 +63,7 @@ describe('test defaultMemberOptions', () => {
 							latitude: 0
 						}
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'region',
@@ -150,7 +150,7 @@ describe('test defaultMemberOptions', () => {
 						latitude: '30'
 					}
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'region',

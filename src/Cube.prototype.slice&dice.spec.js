@@ -18,7 +18,7 @@ describe('methods slice and dice must work', () => {
 					dimension: 'xx',
 					keyProps: ['xx'],
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'x',

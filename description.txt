@@ -67,6 +67,8 @@ each cell is an intersection of all the dimensions of the cube
 
 дефолтные опциональные данные для ячеек
 
+починить example
+
 !!! deprecated
 1)
 addDimensionMember нужно аргументы переставить местами

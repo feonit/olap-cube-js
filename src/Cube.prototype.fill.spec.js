@@ -58,13 +58,13 @@ describe('method Cube.prototype.fill', function() {
 						dimension: 'city',
 						keyProps: ['city'],
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'country',
 								keyProps: ['country'],
 							},
-							dependency: [
+							level: [
 								{
 									dimensionTable: {
 										dimension: 'planet',

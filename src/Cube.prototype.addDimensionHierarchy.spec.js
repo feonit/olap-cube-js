@@ -65,7 +65,7 @@ describe('method addDimensionHierarchy must work', () => {
 						dimension: 'x',
 						keyProps: ['x']
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'xx',

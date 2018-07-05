@@ -37,7 +37,7 @@ describe('class SnowflakeBuilder', () => {
 						dimension: 'prices',
 						keyProps: ['price'],
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'cities',
@@ -84,7 +84,7 @@ describe('class SnowflakeBuilder', () => {
 							{ id: 4, price: '25$', cities_id: 3 },
 						]
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'cities',
@@ -110,7 +110,7 @@ describe('class SnowflakeBuilder', () => {
 			debug = isEqualObjects(dimensionHierarchies[0].dimensionTable.members, expectedDimensionHierarchies[0].dimensionTable.members);
 			debug = isEqualObjects(dimensionHierarchies[1].dimensionTable.members, expectedDimensionHierarchies[1].dimensionTable.members);
 			debug = isEqualObjects(dimensionHierarchies[2].dimensionTable.members, expectedDimensionHierarchies[2].dimensionTable.members);
-			debug = isEqualObjects(dimensionHierarchies[2].dependency[0].dimensionTable.members, expectedDimensionHierarchies[2].dependency[0].dimensionTable.members);
+			debug = isEqualObjects(dimensionHierarchies[2].level[0].dimensionTable.members, expectedDimensionHierarchies[2].level[0].dimensionTable.members);
 			debug = isEqualObjects(cellTable, expectedMeasure)
 		});
 	});

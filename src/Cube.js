@@ -158,16 +158,10 @@ class Cube {
 	}
 	/**
 	 * @private
+	 * @param {object} fixSpaceOptions
 	 * */
 	projection(fixSpaceOptions) {
-		if (!fixSpaceOptions) {
-			return;
-		}
-		let cellTable = this.getCells();
-		if (Object.keys(fixSpaceOptions).length === 0) {
-			return {cellTable};
-		}
-
+		const cellTable = this.getCells();
 		const fixSpace = {};
 		Object.keys(fixSpaceOptions).forEach(dimension => {
 			fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension])
