@@ -426,7 +426,7 @@ class Cube {
 				saveIdAttribute = parentIdAttribute;
 			}
 		});
-		this.fill(cellData);
+		this.fillEmptyCells(cellData);
 	}
 	/**
 	 * @public
@@ -467,7 +467,7 @@ class Cube {
 	 * Filling method for full size of cube
 	 * @param {object?} customCellOptions - properties for empty cells
 	 * */
-	fill(customCellOptions = {}) {
+	fillEmptyCells(customCellOptions = {}) {
 		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
 		if (!this.residuals().length) {
 			const emptyCells = this.createEmptyCells(cellOptions);

@@ -3,7 +3,7 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('test defaultFactOptions', () => {
 	let debug;
-	it('method fill must use data from defaultFactOptions as default', () => {
+	it('method fillEmptyCells must use data from defaultFactOptions as default', () => {
 		let factTable = {
 			defaultFactOptions: {
 				isOpen: false
@@ -28,7 +28,7 @@ describe('test defaultFactOptions', () => {
 			}
 		];
 		let cube = Cube.create(factTable, dimensionHierarchies);
-		cube.fill();
+		cube.fillEmptyCells();
 		debug = isEqualObjects(cube.getFacts(), [
 			{ id: 1, x: 1, y: 1, isOpen: true },
 			{ id: 2, x: 2, y: 2, isOpen: true },

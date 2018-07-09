@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.fill', function() {
+describe('method Cube.prototype.fillEmptyCells', function() {
 	let debug;
 
 	const factTable = [
@@ -21,15 +21,15 @@ describe('method Cube.prototype.fill', function() {
 		{ dimensionTable: { dimension: 'z', keyProps: ['z'] }}
 	];
 
-	it('should define fill', () => {
-		expect(Cube.prototype.fill).toBeDefined();
+	it('should define fillEmptyCells', () => {
+		expect(Cube.prototype.fillEmptyCells).toBeDefined();
 	});
 
 	it('should normalize count of cells for non-normalized data', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
 		expect(debug = cube.cartesian().length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(5);
-		cube.fill({ is: false });
+		cube.fillEmptyCells({ is: false });
 		expect(debug = cube.cartesian().length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(8);
 	});
@@ -37,7 +37,7 @@ describe('method Cube.prototype.fill', function() {
 	it('should normalize count of cells for non-normalized data with default props', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
 
-		cube.fill({ is: false });
+		cube.fillEmptyCells({ is: false });
 
 		const factTableExpectedAfter = factTable.concat([
 			{ x: 1, y: 0, z: 1,is: false },
@@ -93,7 +93,7 @@ describe('method Cube.prototype.fill', function() {
 			const cube = Cube.create(factTable, dimensionHierarchies);
 			expect(debug = cube.cartesian().length).toBe(4);
 			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(2);
-			cube.fill({ humans: 0 });
+			cube.fillEmptyCells({ humans: 0 });
 			expect(debug = cube.cartesian().length).toBe(4);
 			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
 		});
@@ -108,7 +108,7 @@ describe('method Cube.prototype.fill', function() {
 			const cube = Cube.create(factTable, dimensionHierarchies);
 			expect(debug = cube.cartesian().length).toBe(6);
 			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(3);
-			cube.fill({ humans: 0 });
+			cube.fillEmptyCells({ humans: 0 });
 			expect(debug = cube.cartesian().length).toBe(6);
 			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
 		})
@@ -134,7 +134,7 @@ describe('method Cube.prototype.fill', function() {
 			{ id: 2, x: 1, y: 0, xy: true }
 		];
 		const cube = Cube.create(factTable, dimensionHierarchies)
-		cube.fill({ xy: false });
+		cube.fillEmptyCells({ xy: false });
 
 		debug = isEqualObjects(cube.denormalize(), [
 			{ id: 1, x: 0, y: 1, xy: true },

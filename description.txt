@@ -63,7 +63,7 @@ each cell is an intersection of all the dimensions of the cube
 
 удовлетворить программное требование: в случае возникновения ошибок, состояние не должно быть сломано
 
-удалить extends Error and Reflect
+удалить extends Error and Reflect, custom errors
 
 дефолтные опциональные данные для ячеек
 

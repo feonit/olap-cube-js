@@ -502,7 +502,7 @@ let cube = Cube.create(facts, dimensionHierarchies)
 Execute filling:
 ```js
 let defaultMeasures = { value: 0 }; // properties for empty cells
-cube.fill(defaultMeasures);
+cube.fillEmptyCells(defaultMeasures);
 ```
 
 Now get the facts back:
@@ -696,7 +696,7 @@ let dimensionHierarchies = [
     }
 ];
 let cube = Cube.create(factTable, dimensionHierarchies)
-cube.fill();
+cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })
 ```
 

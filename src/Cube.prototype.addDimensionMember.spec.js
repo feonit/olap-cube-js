@@ -228,7 +228,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 			cube = Cube.create(factTable, dimensionHierarchies);
 			// todo need fill before add, because actually getFacts method invoke fill method inside, need some to do with this
-			cube.fill();
+			cube.fillEmptyCells();
 		});
 
 		const year = [
