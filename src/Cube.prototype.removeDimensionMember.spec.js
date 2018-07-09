@@ -24,13 +24,13 @@ describe('method Cube.prototype.removeDimensionMember', () => {
 					dimension: 'xxx',
 					keyProps: ['xxx'],
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'xx',
 							keyProps: ['xx'],
 						},
-						dependency: [
+						level: [
 							{
 								dimensionTable: {
 									dimension: 'x',
@@ -46,7 +46,7 @@ describe('method Cube.prototype.removeDimensionMember', () => {
 					dimension: 'yy',
 					keyProps: ['yy']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'y',

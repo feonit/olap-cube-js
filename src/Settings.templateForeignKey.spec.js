@@ -14,7 +14,7 @@ describe('test property templateForeignKey', () => {
 					dimension: 'x',
 					keyProps: ['x']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'xx',

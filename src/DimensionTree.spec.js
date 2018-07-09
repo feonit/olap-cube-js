@@ -13,7 +13,7 @@ export const exportedDimensionTreeData = {
 			{ id: 2, xxx: 0.871, xx_id: 2 },
 		]
 	},
-	dependency: [
+	level: [
 		{
 			dimensionTable: {
 				dimension: 'xx',
@@ -24,7 +24,7 @@ export const exportedDimensionTreeData = {
 					{ id: 2, xx: 0.87, x_id: 2 }
 				]
 			},
-			dependency: [
+			level: [
 				{
 					dimensionTable: {
 						dimension: 'x',
@@ -35,7 +35,7 @@ export const exportedDimensionTreeData = {
 							{ id: 2, x: 0.9 }
 						]
 					},
-					dependency: []
+					level: []
 				}
 			]
 		}
@@ -69,7 +69,7 @@ describe('class DimensionTree', function() {
 				dimension: 'currency',
 				keyProps: ['local'],
 			},
-			dependency: [
+			level: [
 				{
 					dimensionTable: {
 						dimension: 'currency',
@@ -104,8 +104,8 @@ describe('class DimensionTree', function() {
 	it('drillDownDimensionMembers and rollUpDimensionMembers methods must work', () => {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		const membersLevel_1 = dimensionTree.getTreeValue().members;
-		const membersLevel_2 = dimensionTree.dependency[0].getTreeValue().members;
-		const membersLevel_3 = dimensionTree.dependency[0].dependency[0].getTreeValue().members;
+		const membersLevel_2 = dimensionTree.level[0].getTreeValue().members;
+		const membersLevel_3 = dimensionTree.level[0].level[0].getTreeValue().members;
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('x').drillDownDimensionMembers(membersLevel_3), membersLevel_2);
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('xx').drillDownDimensionMembers(membersLevel_2), membersLevel_1);
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('xxx').drillDownDimensionMembers(membersLevel_2), membersLevel_2);
@@ -126,7 +126,7 @@ describe('class DimensionTree', function() {
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('x').rollUpDimensionMembers([memberLevel_3]), [memberLevel_3]);
 		const secondMemberLevel_1 = dimensionTree.getTreeValue().members[1];
 		const thirdMemberLevel_1 = dimensionTree.getTreeValue().members[2];
-		const secondMemberLevel_2 = dimensionTree.dependency[0].getTreeValue().members[1];
+		const secondMemberLevel_2 = dimensionTree.level[0].getTreeValue().members[1];
 		debug = isEqualObjects(secondMemberLevel_1, { id: 2, xxx: 0.868, xx_id: 2 });
 		debug = isEqualObjects(thirdMemberLevel_1, { id: 2, xxx: 0.871, xx_id: 2 });
 		debug = isEqualObjects(secondMemberLevel_2, { id: 2, xx: 0.87, x_id: 2 });

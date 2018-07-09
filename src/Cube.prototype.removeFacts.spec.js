@@ -50,7 +50,7 @@ describe('method removeFacts must work', () => {
 						{ id: 3, x: 300, xx_id: 3 }
 					]
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'xx',
@@ -85,7 +85,7 @@ describe('method removeFacts must work', () => {
 			{ id: 3, x: 300, xx_id: 3 }
 		]);
 		// level 2 removed too
-		debug = isEqualObjects(cube.dimensionHierarchies[0].dependency[0].dimensionTable.members, [
+		debug = isEqualObjects(cube.dimensionHierarchies[0].level[0].dimensionTable.members, [
 			{ id: 2, xx: 201 },
 			{ id: 3, xx: 301 }
 		]);

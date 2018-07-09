@@ -115,7 +115,7 @@ let dimensionHierarchies = [
             dimension: 'products',
             keyProps: ['product'],
         },
-        dependency: [
+        level: [
             {
                 dimensionTable: {
                     dimension: 'categories',
@@ -146,7 +146,7 @@ let structure = {
                 ],
                 otherProps: []
             },
-            dependency: []
+            level: []
         },
         {
             dimensionTable: {
@@ -159,7 +159,7 @@ let structure = {
                 ],
                 otherProps: []
             },
-            dependency: []
+            level: []
         },
         {
             dimensionTable: {
@@ -173,7 +173,7 @@ let structure = {
                 ],
                 otherProps: []
             },
-            dependency: [
+            level: [
                 {
                     dimensionTable: {
                         dimension: 'categories',
@@ -184,7 +184,7 @@ let structure = {
                         ],
                         otherProps: []
                     },
-                    dependency: []
+                    level: []
                 }
             ]
         }
@@ -453,7 +453,7 @@ cube.addDimensionHierarchy({
         dimension: 'product',
         keyProps: ['product']
     },
-    dependency: [
+    level: [
         {
             dimensionTable: {
                 dimension: 'mark',
@@ -595,7 +595,7 @@ let dimensionHierarchies = [
             keyProps: ['nikname'],
             foreignKey: 'USER_ID'
         },
-        dependency: [
+        level: [
             {
                 dimensionTable: {
                     dimension: 'group',
@@ -707,8 +707,7 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 In future versions:
 
 API
-- Change `dependency` to `level`
-- Add support for single keyProp in schema and single dependency
+- Add support for single keyProp in schema and single level
 - Update method addMember without rollup options (then more than one member will be added)
 
 Code quality

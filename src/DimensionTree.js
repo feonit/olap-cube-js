@@ -10,7 +10,7 @@ export default class DimensionTree extends Tree {
 	constructor(dimensionTree) {
 		super();
 
-		const {dimensionTable, dependency = [], parentNode = null} = dimensionTree;
+		const {dimensionTable, level = [], parentNode = null} = dimensionTree;
 
 		Object.defineProperties(this, {
 			dimensionTable: {
@@ -31,12 +31,12 @@ export default class DimensionTree extends Tree {
 				enumerable: false,
 				editable: false
 			},
-			dependency: {
+			level: {
 				/**
 				 * @property {DimensionTree[]}
-				 * @name DimensionTree#dependency
+				 * @name DimensionTree#level
 				 * */
-				value: dependency.map(dimensionTreeData => {
+				value: level.map(dimensionTreeData => {
 					return new DimensionTree({ ...dimensionTreeData, parentNode: this })
 				}),
 				enumerable: true,
@@ -81,7 +81,7 @@ export default class DimensionTree extends Tree {
 	 * @return {DimensionTree[]}
 	 * */
 	getChildTrees() {
-		return this.dependency;
+		return this.level;
 	}
 	/**
 	 * @public

@@ -17,13 +17,13 @@ describe('method Cube.prototype.addDimensionMember', () => {
 						dimension: 'xxx',
 						keyProps: ['xxx'],
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'xx',
 								keyProps: ['xx'],
 							},
-							dependency: [
+							level: [
 								{
 									dimensionTable: {
 										dimension: 'x',
@@ -174,7 +174,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 
 	});
 
-	describe('should add member to cube data with dependency columns', () => {
+	describe('should add member to cube data with level columns', () => {
 		let cube;
 		let debug;
 		let factTable;
@@ -186,7 +186,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 						dimension: 'product',
 						keyProps: ['product'],
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'category',
@@ -200,13 +200,13 @@ describe('method Cube.prototype.addDimensionMember', () => {
 						dimension: 'day',
 						keyProps: ['day'],
 					},
-					dependency: [
+					level: [
 						{
 							dimensionTable: {
 								dimension: 'month',
 								keyProps: ['month'],
 							},
-							dependency: [
+							level: [
 								{
 									dimensionTable: {
 										dimension: 'year',

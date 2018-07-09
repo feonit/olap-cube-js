@@ -16,7 +16,7 @@ describe('test primaryKey', () => {
 					dimension: 'direction',
 					keyProps: ['direction']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'date',

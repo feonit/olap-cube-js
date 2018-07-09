@@ -22,13 +22,13 @@ angular.module('demo').constant('dimensionHierarchies', [
 			dimension: 'month',
 			keyProps: ['month']
 		},
-		dependency: [
+		level: [
 			{
 				dimensionTable: {
 					dimension: 'qr',
 					keyProps: ['qr']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'year',

@@ -68,7 +68,7 @@ describe('method Cube.prototype.addFacts', () => {
 					dimension: 'y',
 					keyProps: ['y']
 				},
-				dependency: [
+				level: [
 					{
 						dimensionTable: {
 							dimension: 'yy',
@@ -81,14 +81,14 @@ describe('method Cube.prototype.addFacts', () => {
 
 		const cube = new Cube({dimensionHierarchies});
 
-		debug = isEqualObjects(cube.dimensionHierarchies[1].dependency[0].dimensionTable.members, []);
+		debug = isEqualObjects(cube.dimensionHierarchies[1].level[0].dimensionTable.members, []);
 
 		cube.addFacts([
 			{ id: 1, x: 0, y: 0, yy: 0.1 },
 			{ id: 2, x: 1, y: 1, yy: 0.9 }
 		]);
 
-		debug = isEqualObjects(cube.dimensionHierarchies[1].dependency[0].dimensionTable.members, [{ id: 1, yy: 0.1 }, { id: 2, yy: 0.9 }]);
+		debug = isEqualObjects(cube.dimensionHierarchies[1].level[0].dimensionTable.members, [{ id: 1, yy: 0.1 }, { id: 2, yy: 0.9 }]);
 
 		cube.addFacts([
 			{ id: 3, x: 3, y: 3, yy: 2.8 }
@@ -103,6 +103,6 @@ describe('method Cube.prototype.addFacts', () => {
 		// first level
 		debug = isEqualObjects(cube.dimensionHierarchies[1].dimensionTable.members, [{ id: 1, y: 0, yy_id: 1 }, { id: 2, y: 1, yy_id: 2 }, { id: 3, y: 3, yy_id: 3 }]);
 		// second level
-		debug = isEqualObjects(cube.dimensionHierarchies[1].dependency[0].dimensionTable.members, [{ id: 1, yy: 0.1 }, { id: 2, yy: 0.9 }, { id: 3, yy: 2.8 }]);
+		debug = isEqualObjects(cube.dimensionHierarchies[1].level[0].dimensionTable.members, [{ id: 1, yy: 0.1 }, { id: 2, yy: 0.9 }, { id: 3, yy: 2.8 }]);
 	})
 });

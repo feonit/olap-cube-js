@@ -62,7 +62,9 @@
     "table",
     "cell",
     "drilldown",
-    "rollup"
+    "rollup",
+    "slice",
+    "dice"
   ],
   "repository": {
     "type": "git",
