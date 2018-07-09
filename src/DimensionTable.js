@@ -21,7 +21,13 @@ export default class DimensionTable {
 		/** List of additional names properties of the table belonging to the current dimension */
 		this.otherProps = [].concat(otherProps);
 		/** member list */
-		this.members = members.map(member => new Member(member, this.primaryKey));
+		this.members = members.map(memberData => {
+			if (memberData instanceof Member && memberData.hasOwnProperty(this.primaryKey)) {
+				return memberData;
+			} else {
+				return new Member(memberData, this.primaryKey)
+			}
+		});
 		/** member default property options */
 		this.defaultMemberOptions = {...defaultMemberOptions};
 	}

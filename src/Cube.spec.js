@@ -52,23 +52,23 @@ describe('class Cube', function() {
 				}
 			];
 			cube = Cube.create(factTable, dimensionHierarchies);
-			cubeCopy = new Cube(cube);
 		});
 
 		it('the ability to create a copy cube must work', () => {
-			let debug;
-
-			recursiveObjectsNotHaveCommonLinks(cube, cubeCopy)
-			expect(debug = cube !== cubeCopy).toBe(true);
-			expect(debug = cube.getDimensionMembers('x') !== cubeCopy.getDimensionMembers('x')).toBe(true);
-			expect(debug = cube.getDimensionMembers('x')[0] !== cubeCopy.getDimensionMembers('x')[0]).toBe(true);
-			expect(debug = cube.getDimensionMembers('y') !== cubeCopy.getDimensionMembers('y')).toBe(true);
-			expect(debug = cube.getDimensionMembers('y')[0] !== cubeCopy.getDimensionMembers('y')[0]).toBe(true);
-			expect(debug = cube.getFacts() !== cubeCopy.getFacts()).toBe(true);
-			expect(debug = cube.getFacts()[0] !== cubeCopy.getFacts()[0]).toBe(true);
-			expect(debug = cube.dimensionHierarchies !== cubeCopy.dimensionHierarchies).toBe(true);
+			let cubeData = JSON.parse(JSON.stringify(cube));
+			cubeCopy = new Cube(cubeData);
+			debug = isEqualObjects(cube, cubeCopy)
 		});
-
+		it('the ability co create new target cube with shared links with source cube', () => {
+			let sharedLinksCube = new Cube(cube);
+			expect(debug = sharedLinksCube.getCells() !== cube.getCells()).toBe(true);
+			expect(debug = sharedLinksCube.dimensionHierarchies !== cube.dimensionHierarchies).toBe(true);
+			expect(debug = sharedLinksCube.getCells()[0] === cube.getCells()[0]).toBe(true);
+			expect(debug = sharedLinksCube.getDimensionMembers('x') === cube.getDimensionMembers('x')).toBe(true);
+			expect(debug = sharedLinksCube.getDimensionMembers('x')[0] === cube.getDimensionMembers('x')[0]).toBe(true);
+			expect(debug = sharedLinksCube.getDimensionMembers('y') === cube.getDimensionMembers('y')).toBe(true);
+			expect(debug = sharedLinksCube.getDimensionMembers('y')[0] === cube.getDimensionMembers('y')[0]).toBe(true);
+		})
 	});
 
 	const factTable = [

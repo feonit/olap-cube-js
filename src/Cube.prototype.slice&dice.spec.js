@@ -46,21 +46,20 @@ describe('methods slice and dice must work', () => {
 	const xMember = { id: 1, x: 1 };
 	it('slice must return instance of Cube', () => {
 		const subCube = cube.slice('y', yMember);
-		expect(subCube instanceof Cube).toBe(true)
+		expect(debug = subCube instanceof Cube).toBe(true)
 	});
 	it('dice must return instance of Cube', () => {
 		const subCube = cube.dice({ y: yMember, x: xMember });
-		expect(subCube instanceof Cube).toBe(true)
+		expect(debug = subCube instanceof Cube).toBe(true)
 	});
 	it('slice target dimensionTable must contain one member as passed in arguments', () => {
 		const subCube = cube.slice('y', yMember);
-		expect(subCube instanceof Cube).toBe(true);
-		isEqualObjects(subCube.getDimensionMembers('y'), [yMember])
+		debug = isEqualObjects(subCube.getDimensionMembers('y'), [yMember]);
+		expect(debug = subCube.getDimensionMembers('y')[0] === cube.getDimensionMembers('y')[0]).toBe(true)
 	});
 	it('dice target dimensionTable must contain all members as passed in arguments', () => {
 		const subCube = cube.dice({ y: yMember, x: xMember });
-		expect(subCube instanceof Cube).toBe(true);
-		isEqualObjects(subCube.getDimensionMembers('y'), [yMember]);
-		isEqualObjects(subCube.getDimensionMembers('x'), [xMember]);
+		expect(debug = subCube.getDimensionMembers('y')[0] === subCube.getDimensionMembers('y')[0]);
+		expect(debug = subCube.getDimensionMembers('x')[0] === subCube.getDimensionMembers('x')[0]);
 	});
 });

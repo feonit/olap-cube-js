@@ -16,7 +16,13 @@ import { DEFAULT_FACT_ID_PROP } from './const.js'
 
 class CellTable {
 	constructor({ cells, primaryKey, defaultFactOptions = {} }) {
-		this.cells = cells.map(item => EmptyCell.isEmptyCell(item) ? new EmptyCell(item) : new Cell(item));
+		this.cells = cells.map(cellData => {
+			if (cellData instanceof Cell) {
+				return cellData
+			} else {
+				return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData)
+			}
+		});
 		this.primaryKey = primaryKey;
 		this.defaultFactOptions = defaultFactOptions;
 	}
@@ -39,8 +45,7 @@ class Cube {
 		}
 		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
 		this.settings = new Settings(settings);
-		this.dimensionHierarchies = [];
-		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
+		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => dimensionHierarchy instanceof DimensionTree ? dimensionHierarchy : DimensionTree.createDimensionTree(dimensionHierarchy, this.settings));
 		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
 
 		// const residuals = this.residuals();
@@ -169,18 +174,23 @@ class Cube {
 				: [fixSpaceOptions[dimension]];
 
 			// todo замена на оригинальные члены измерений
-			// fixSpaceOptions[dimension].forEach((memberData, index) => {
-			// 	const members = this.getDimensionMembers(dimension);
-			// 	let member = members.find(member => members.getMemberId(member) === memberData[DEFAULT_MEMBER_ID_PROP]);
-			// 	fixSpaceOptions[dimension][index] = member;
-			// 	if (!memberData) {
-			// 		console.warn(`not founded member by id ${members.getMemberId(member)}`)
-			// 	}
-			// })
+			const dimensionTree = this.findDimensionTreeByDimension(dimension);
+			if (!dimensionTree) {
+				return;
+			}
+			const dimensionTable = dimensionTree.getTreeValue();
+			fixSpace[dimension].forEach((memberData, index) => {
+				const members = this.getDimensionMembers(dimension);
+				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
+				fixSpace[dimension][index] = member;
+				if (!memberData) {
+					console.warn(`not founded member by id ${dimensionTable.getMemberId(member)}`)
+				}
+			})
 		});
 
 		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
-		if (Object.keys(fixSpaceOptions).length > dimensionHierarchiesLength) {
+		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
 			throw `set must have length: ${dimensionHierarchiesLength}`
 		}
 
