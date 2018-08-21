@@ -27,8 +27,8 @@ This solution is a means for extracting and replenishing data, which together wi
 
 ## Table of Contents
 - [Features](#features)
-- [Getting Started](#start)
-- [How Cube is work?](#work)
+- [Getting Started](#getting-started)
+- [How Cube is work?](#how-cube-is-work)
   - [Structure](#structure)
   - [Sets](#sets)
 - [API](#api)
@@ -230,7 +230,7 @@ Now using different types of sets, you can access the elements of the cube
 
 ## API
 
-### Access to measures
+### Access to measures of the cells
 Access to measures is possible through access to cube cells
 
 ##### Set <br/>
@@ -547,7 +547,7 @@ let subCube = cube.slice(member)
 ```js
 let markMember = cube.getDimensionMembers('mark')[0]
 let regionMember = cube.getDimensionMembers('region')[0]
-let subCube = cube.slice({ mark: markMember, region: regionMember })
+let subCube = cube.dice({ mark: markMember, region: regionMember })
 ```
 
 ### Additional member props

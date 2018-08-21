@@ -4,7 +4,7 @@
 - Removed `templateForeignKey` property from Settings since there is a more fine tuning for custom `foreignKey` and settings own
 - Deprecated
 	method `getCellsBySet` use `this.dice(set).getCells()`, 
-	method `getFactsBySet` use `this.dice(set).denormalize().getCells()`
+	method `getFactsBySet` use `this.dice(set).denormalize().getCells()`,
 	method `getDimensionMembersBySet` use `this.dice(set).getDimensionMembers(dimension)`
 	
 - Braking changes
