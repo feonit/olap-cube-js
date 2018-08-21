@@ -1,5 +1,5 @@
 /*!
- * Version: "0.13.0"
+ * Version: "0.14.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -75,7 +75,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 8);
+/******/ 	return __webpack_require__(__webpack_require__.s = 9);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -504,24 +504,526 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _const = __webpack_require__(2);
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _DimensionTable = __webpack_require__(7);
+
+var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
+
+var _Tree2 = __webpack_require__(12);
+
+var _Tree3 = _interopRequireDefault(_Tree2);
+
+var _errors = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Settings = function Settings() {
-	var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-	    _ref$templateForeignK = _ref.templateForeignKey,
-	    templateForeignKey = _ref$templateForeignK === undefined ? _const.DEFAULT_TEMPLATE_FOREIGN_KEY : _ref$templateForeignK;
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	_classCallCheck(this, Settings);
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	this.templateForeignKey = templateForeignKey;
-};
+/**
+ * It defines the relationship of generalization and specialization (roll-up/drill-down)
+ * @throws {DimensionException}
+ * */
+var DimensionTree = function (_Tree) {
+	_inherits(DimensionTree, _Tree);
 
-exports.default = Settings;
+	function DimensionTree(dimensionTree) {
+		_classCallCheck(this, DimensionTree);
+
+		var _this = _possibleConstructorReturn(this, (DimensionTree.__proto__ || Object.getPrototypeOf(DimensionTree)).call(this));
+
+		var dimensionTable = dimensionTree.dimensionTable,
+		    _dimensionTree$level = dimensionTree.level,
+		    level = _dimensionTree$level === undefined ? [] : _dimensionTree$level,
+		    _dimensionTree$parent = dimensionTree.parentNode,
+		    parentNode = _dimensionTree$parent === undefined ? null : _dimensionTree$parent;
+
+
+		Object.defineProperties(_this, {
+			dimensionTable: {
+				/**
+     * @property
+     * @name DimensionTree#dimensionTable
+     * */
+				value: _DimensionTable2.default.createDimensionTable(dimensionTable),
+				editable: false,
+				enumerable: true
+			},
+			parentNode: {
+				/**
+     * @property {DimensionTree|null}
+     * @name DimensionTree#parentNode
+     * */
+				value: parentNode,
+				enumerable: false,
+				editable: false
+			},
+			level: {
+				/**
+     * @property {DimensionTree[]}
+     * @name DimensionTree#level
+     * */
+				value: level.map(function (dimensionTreeData) {
+					return new DimensionTree(_extends({}, dimensionTreeData, { parentNode: _this }));
+				}),
+				enumerable: true,
+				editable: false
+			}
+		});
+		return _this;
+	}
+
+	_createClass(DimensionTree, [{
+		key: 'getTreeValue',
+
+		/**
+   * @public
+   * @return {DimensionTable}
+   * */
+		value: function getTreeValue() {
+			return this.dimensionTable;
+		}
+		/**
+   * @public
+   * @return {DimensionTree|null}
+   * */
+
+	}, {
+		key: 'getParentTree',
+		value: function getParentTree() {
+			return this.parentNode;
+		}
+		/**
+   * @public
+   * @return {DimensionTree[]}
+   * */
+
+	}, {
+		key: 'getChildTrees',
+		value: function getChildTrees() {
+			return this.level;
+		}
+		/**
+   * @public
+   * @param {string} dimension
+   * @return {DimensionTree|undefined}
+   * */
+
+	}, {
+		key: 'getDimensionTreeByDimension',
+		value: function getDimensionTreeByDimension(dimension) {
+			return this.getRoot().searchTreeByTreeValue(function (dimensionTree) {
+				var dimensionTreeValue = dimensionTree.getTreeValue();
+				return dimensionTreeValue.dimension === dimension;
+			});
+		}
+		/**
+   * @public
+   * @param {Member} member
+   * @return {DimensionTree|undefined}
+   * */
+
+	}, {
+		key: 'createProjectionOntoMember',
+		value: function createProjectionOntoMember(member) {
+			var _this2 = this;
+
+			// 1 create copy of hierarchy with empty members
+			var newDimensionTreeByMember = new DimensionTree(this.getRoot());
+			newDimensionTreeByMember.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
+				var dimensionTable = dimensionTree.getTreeValue();
+				dimensionTable.clearMemberList();
+			});
+			var lastTracedMembers = void 0;
+			var lastTracedDimensionTree = void 0;
+			// 2 trace up
+			this.traceUpOrder(function (tracedTree) {
+				var _tracedTree$getTreeVa = tracedTree.getTreeValue(),
+				    tracedDimension = _tracedTree$getTreeVa.dimension;
+
+				// 3 get drill down of last members
+
+
+				var drillDownedMembers = tracedTree == _this2 ? [member] : lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+
+				// 4 set members
+				newDimensionTreeByMember.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillDownedMembers);
+
+				// 5 save current dimension and drill downed members
+				lastTracedMembers = drillDownedMembers;
+				lastTracedDimensionTree = tracedTree;
+			});
+			return newDimensionTreeByMember;
+		}
+		/**
+   * @public
+   * @param {Member} member
+   * */
+
+	}, {
+		key: 'removeProjectionOntoMember',
+		value: function removeProjectionOntoMember(member) {
+			// 1 get projection
+			var projectionDimensionTree = this.createProjectionOntoMember(member);
+			// 2 subtract projection
+			this.subtractDimensionTree(projectionDimensionTree);
+			// 3 return first level members of projection
+			var endToBeRemovedMember = {};
+
+			var _projectionDimensionT = projectionDimensionTree.getRoot().getTreeValue(),
+			    dimensionProjection = _projectionDimensionT.dimension,
+			    membersProjection = _projectionDimensionT.members;
+
+			endToBeRemovedMember[dimensionProjection] = membersProjection;
+
+			return endToBeRemovedMember;
+		}
+		/**
+   * @private
+   * @param {DimensionTree} dimensionTree
+   * */
+
+	}, {
+		key: 'subtractDimensionTree',
+		value: function subtractDimensionTree(dimensionTree) {
+			var _this3 = this;
+
+			// remove intersection
+			var toBeRemovedSpace = {};
+
+			dimensionTree.tracePostOrder(function (dimensionTreeValue) {
+				var dimension = dimensionTreeValue.dimension,
+				    members = dimensionTreeValue.members;
+
+				toBeRemovedSpace[dimension] = members;
+			});
+
+			var memberList = this.getTreeValue().members;
+
+			// travers down
+			if (memberList.length === 1) {
+				this.tracePreOrder(function (dimensionTable, tracedDimensionTree) {
+					var childMembers = dimensionTable.members,
+					    childDimension = dimensionTable.dimension;
+
+					toBeRemovedSpace[childDimension] = childMembers;
+				});
+			}
+
+			// remove removal space
+			Object.keys(toBeRemovedSpace).forEach(function (dimension) {
+				var currentDimensionTree = _this3.getDimensionTreeByDimension(dimension);
+				var dimensionTable = currentDimensionTree.getTreeValue();
+				toBeRemovedSpace[dimension].forEach(function (member) {
+					dimensionTable.removeMember(member);
+				});
+			});
+		}
+		/**
+   * @public
+   * @param {Member[]} members
+   * @return {Member[]}
+   * */
+
+	}, {
+		key: 'drillDownDimensionMembers',
+		value: function drillDownDimensionMembers() {
+			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
+
+			if (this.isRoot()) {
+				return members;
+			}
+			var parentTree = this.getParentTree();
+
+			var _parentTree$getTreeVa = parentTree.getTreeValue(),
+			    parentMembers = _parentTree$getTreeVa.members,
+			    primaryKey = _parentTree$getTreeVa.primaryKey;
+
+			var dimensionTable = this.getTreeValue();
+			var foreignKey = dimensionTable.foreignKey;
+
+			var drillDownMembers = [];
+			members.forEach(function (member) {
+				parentMembers.forEach(function (parentMember) {
+					if (parentMember[foreignKey] === member[primaryKey]) {
+						if (drillDownMembers.indexOf(parentMember) === -1) {
+							drillDownMembers.push(parentMember);
+						}
+					}
+				});
+			});
+			return drillDownMembers;
+		}
+		/**
+   * @public
+   * @this {DimensionTree}
+   * @param {Member[]} members
+   * @return {Member[]}
+   * */
+
+	}, {
+		key: 'drillUpDimensionMembers',
+		value: function drillUpDimensionMembers() {
+			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
+
+			if (this.isExternal()) {
+				return members;
+			}
+			var childTree = this.getChildTrees()[0]; // for one child always
+			var dimensionTable = childTree.getTreeValue();
+			var childMembers = dimensionTable.members,
+			    foreignKey = dimensionTable.foreignKey;
+
+			var rollUpMembers = [];
+			members.forEach(function (member) {
+				childMembers.forEach(function (childMember) {
+					if (member[foreignKey] === dimensionTable.getMemberId(childMember)) {
+						if (rollUpMembers.indexOf(childMember) === -1) {
+							rollUpMembers.push(childMember);
+						}
+					}
+				});
+			});
+			return rollUpMembers;
+		}
+		/**
+   * @public
+   * @param {object?} memberOptions
+   * */
+
+	}, {
+		key: 'createMember',
+		value: function createMember() {
+			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			var dimensionTable = this.getTreeValue();
+			var childIdAttributes = this.getChildTrees().map(function (dimensionTree) {
+				return dimensionTree.getTreeValue().foreignKey;
+			});
+			var linkProps = [];
+			childIdAttributes.forEach(function (foreignKey) {
+				linkProps.push(foreignKey);
+			});
+			return dimensionTable.createMember(memberOptions, linkProps);
+		}
+	}], [{
+		key: 'createDimensionTree',
+		value: function createDimensionTree(dimensionTreeData) {
+			return new DimensionTree(dimensionTreeData);
+		}
+	}]);
+
+	return DimensionTree;
+}(_Tree3.default);
+
+exports.default = DimensionTree;
 
 /***/ }),
 /* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Member = __webpack_require__(1);
+
+var _Member2 = _interopRequireDefault(_Member);
+
+var _const = __webpack_require__(2);
+
+var _InputMember = __webpack_require__(11);
+
+var _InputMember2 = _interopRequireDefault(_InputMember);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DimensionTable = function () {
+	function DimensionTable(_ref) {
+		var _this = this;
+
+		var dimension = _ref.dimension,
+		    _ref$foreignKey = _ref.foreignKey,
+		    foreignKey = _ref$foreignKey === undefined ? DimensionTable.genericId(dimension) : _ref$foreignKey,
+		    _ref$primaryKey = _ref.primaryKey,
+		    primaryKey = _ref$primaryKey === undefined ? _const.DEFAULT_MEMBER_ID_PROP : _ref$primaryKey,
+		    keyProps = _ref.keyProps,
+		    _ref$otherProps = _ref.otherProps,
+		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
+		    _ref$members = _ref.members,
+		    members = _ref$members === undefined ? [] : _ref$members,
+		    _ref$defaultMemberOpt = _ref.defaultMemberOptions,
+		    defaultMemberOptions = _ref$defaultMemberOpt === undefined ? {} : _ref$defaultMemberOpt;
+
+		_classCallCheck(this, DimensionTable);
+
+		if (!dimension || !keyProps) {
+			throw Error('Bad definition DimensionTable, params \"dimension\" and \"keyProps\" is required');
+		}
+		if (Object.keys(defaultMemberOptions).indexOf(primaryKey) !== -1) {
+			throw Error('Bad definition DimensionTable, \"defaultMemberOptions\" must not contain a \"primaryKey\" property');
+		}
+		/** Name of the dimension */
+		this.dimension = dimension;
+		/** id name */
+		this.foreignKey = foreignKey;
+		/** id name */
+		this.primaryKey = primaryKey;
+		/** List of key names properties of the table belonging to the current dimension */
+		this.keyProps = [].concat(keyProps);
+		/** List of additional names properties of the table belonging to the current dimension */
+		this.otherProps = [].concat(otherProps);
+		/** member list */
+		this.members = members.map(function (memberData) {
+			if (memberData instanceof _Member2.default && memberData.hasOwnProperty(_this.primaryKey)) {
+				return memberData;
+			} else {
+				return new _Member2.default(memberData, _this.primaryKey);
+			}
+		});
+		/** member default property options */
+		this.defaultMemberOptions = _extends({}, defaultMemberOptions);
+	}
+	/**
+  *
+  * */
+
+
+	_createClass(DimensionTable, [{
+		key: 'setMemberList',
+		value: function setMemberList(members) {
+			[].splice.apply(this.members, [0, this.members.length].concat(members));
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'clearMemberList',
+		value: function clearMemberList() {
+			this.members = [];
+		}
+	}, {
+		key: 'getMemberId',
+		value: function getMemberId(member) {
+			return member[this.primaryKey];
+		}
+		/**
+   * @param {Member} member
+   * */
+
+	}, {
+		key: 'addMember',
+		value: function addMember(member) {
+			if (this.members.indexOf(member) === -1) {
+				this.members.push(member);
+			} else {
+				alert('boo');
+			}
+		}
+		/**
+   * @public
+   * @param {object} memberOptions
+   * @param {[]} linkProps
+   * */
+
+	}, {
+		key: 'createMember',
+		value: function createMember() {
+			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+			var linkProps = arguments[1];
+
+			// todo тут нужна проверка на то, что все данные для члена измерения присутствуют
+			var memberData = _extends({}, this.defaultMemberOptions, memberOptions);
+			var keyProps = this.keyProps,
+			    otherProps = this.otherProps,
+			    members = this.members,
+			    primaryKey = this.primaryKey;
+
+			var keys = keyProps.concat(linkProps).concat(otherProps);
+			var id = DimensionTable.reduceId(members, primaryKey);
+			var member = _InputMember2.default.create(id, keys, memberData, primaryKey);
+			this.addMember(member);
+			return member;
+		}
+		/**
+   * @public
+   * Method of generating a unique identifier within the selected space
+   * */
+
+	}, {
+		key: 'setMemberId',
+		value: function setMemberId(member, id) {
+			member[this.primaryKey] = id;
+		}
+	}, {
+		key: 'deleteMemberId',
+		value: function deleteMemberId(member) {
+			delete member[this.primaryKey];
+		}
+		/**
+   *
+   * */
+
+	}, {
+		key: 'removeMember',
+		value: function removeMember(member) {
+			var index = this.members.indexOf(member);
+			if (index === -1) {
+				throw new Error('represented member was not found', member);
+			}
+			this.members.splice(index, 1);
+		}
+	}], [{
+		key: 'reduceId',
+		value: function reduceId(members, primaryKey) {
+			if (members.length) {
+				return members.reduce(function (acc, curValue) {
+					return acc[primaryKey] > curValue[primaryKey] ? acc : curValue;
+				}, 0)[primaryKey] + 1;
+			} else {
+				return 1;
+			}
+		}
+		/**
+   * @public
+   * A way to create a name for a property in which a unique identifier will be stored
+   * */
+
+	}, {
+		key: 'genericId',
+		value: function genericId(dimension) {
+			return _const.DEFAULT_TEMPLATE_FOREIGN_KEY.replace('%s', dimension);
+		}
+	}, {
+		key: 'createDimensionTable',
+		value: function createDimensionTable(dimensionTable) {
+			return new DimensionTable(dimensionTable);
+		}
+	}]);
+
+	return DimensionTable;
+}();
+
+exports.default = DimensionTable;
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -597,7 +1099,7 @@ var FactTable = function () {
 exports.default = FactTable;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -611,7 +1113,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _EmptyCell = __webpack_require__(9);
+var _EmptyCell = __webpack_require__(10);
 
 var _EmptyCell2 = _interopRequireDefault(_EmptyCell);
 
@@ -619,11 +1121,19 @@ var _Member = __webpack_require__(1);
 
 var _Member2 = _interopRequireDefault(_Member);
 
-var _DimensionTree = __webpack_require__(10);
+var _DimensionTree = __webpack_require__(6);
 
 var _DimensionTree2 = _interopRequireDefault(_DimensionTree);
 
-var _FactTable = __webpack_require__(7);
+var _DimensionHierarchy = __webpack_require__(13);
+
+var _DimensionHierarchy2 = _interopRequireDefault(_DimensionHierarchy);
+
+var _DimensionTable = __webpack_require__(7);
+
+var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
+
+var _FactTable = __webpack_require__(8);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -649,10 +1159,6 @@ var _Cell = __webpack_require__(3);
 
 var _Cell2 = _interopRequireDefault(_Cell);
 
-var _Settings = __webpack_require__(6);
-
-var _Settings2 = _interopRequireDefault(_Settings);
-
 var _const = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -671,13 +1177,28 @@ var CellTable = function CellTable(_ref) {
 
 	_classCallCheck(this, CellTable);
 
-	this.cells = cells.map(function (item) {
-		return _EmptyCell2.default.isEmptyCell(item) ? new _EmptyCell2.default(item) : new _Cell2.default(item);
+	this.cells = cells.map(function (cellData) {
+		if (cellData instanceof _Cell2.default) {
+			return cellData;
+		} else {
+			return _EmptyCell2.default.isEmptyCell(cellData) ? new _EmptyCell2.default(cellData) : new _Cell2.default(cellData);
+		}
 	});
 	this.primaryKey = primaryKey;
 	this.defaultFactOptions = defaultFactOptions;
 };
 
+/**
+ * @this {Cube}
+ * @private
+ * */
+
+
+function getHierarchy(hierarchy) {
+	return this.dimensionHierarchies.find(function (dimensionHierarchy) {
+		return dimensionHierarchy.getHierarchy() === hierarchy;
+	});
+}
 /**
  * It a means to retrieve data
  *
@@ -687,7 +1208,6 @@ var CellTable = function CellTable(_ref) {
  * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 
-
 var Cube = function () {
 	function Cube(cube) {
 		_classCallCheck(this, Cube);
@@ -695,9 +1215,7 @@ var Cube = function () {
 		var _cube$dimensionHierar = cube.dimensionHierarchies,
 		    dimensionHierarchies = _cube$dimensionHierar === undefined ? [] : _cube$dimensionHierar,
 		    _cube$cellTable = cube.cellTable,
-		    cellTable = _cube$cellTable === undefined ? {} : _cube$cellTable,
-		    _cube$settings = cube.settings,
-		    settings = _cube$settings === undefined ? {} : _cube$settings;
+		    cellTable = _cube$cellTable === undefined ? {} : _cube$cellTable;
 
 		if (Array.isArray(cellTable)) {
 			cellTable = { cells: cellTable };
@@ -711,11 +1229,30 @@ var Cube = function () {
 		    _cellTable$defaultFac = _cellTable.defaultFactOptions,
 		    defaultFactOptions = _cellTable$defaultFac === undefined ? {} : _cellTable$defaultFac;
 
-		this.settings = new _Settings2.default(settings);
-		this.dimensionHierarchies = [];
-		dimensionHierarchies.map(this._addDimensionHierarchy.bind(this));
-		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey, defaultFactOptions: _extends({}, defaultFactOptions) });
 
+		this.dimensionHierarchies = dimensionHierarchies.map(function (dimensionHierarchy) {
+			// duck
+			if (dimensionHierarchy.hierarchy) {
+				if (dimensionHierarchy instanceof _DimensionHierarchy2.default) {
+					return dimensionHierarchy;
+				} else {
+					return _DimensionHierarchy2.default.createDimensionHierarchy(dimensionHierarchy);
+				}
+			} else if (dimensionHierarchy.dimensionTable) {
+				if (dimensionHierarchy instanceof _DimensionTree2.default) {
+					return dimensionHierarchy;
+				} else {
+					return _DimensionTree2.default.createDimensionTree(dimensionHierarchy);
+				}
+			} else {
+				if (dimensionHierarchy instanceof _DimensionTable2.default) {
+					return dimensionHierarchy;
+				} else {
+					return _DimensionTable2.default.createDimensionTable(dimensionHierarchy);
+				}
+			}
+		});
+		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey, defaultFactOptions: _extends({}, defaultFactOptions) });
 		// const residuals = this.residuals();
 		// const count = residuals.length;
 		// if (count > 0) {
@@ -727,19 +1264,269 @@ var Cube = function () {
   * Fabric method for creating cube from facts and dimensionHierarchiesData data
   * @param {object} factTable
   * @param {object} dimensionHierarchies
-  * @param {object} options
-  * @param {string} options.templateForeignKey
   * @return {Cube}
   * */
 
 
 	_createClass(Cube, [{
-		key: 'addFacts',
+		key: 'slice',
 
+		/**
+   * is the act of picking a rectangular subset of a cube by choosing a single value for one of its dimensions, creating a new cube with one fewer dimension.
+   * @public
+   * @param {string} dimension
+   * @param {Member} member
+   * @return {Cube}
+   * */
+		value: function slice(dimension, member) {
+			return this.dice(_defineProperty({}, dimension, member));
+		}
+		/**
+   * @public
+   * @param {object} set
+   * @return {Cube}
+   * */
+
+	}, {
+		key: 'dice',
+		value: function dice(set) {
+			var _this = this;
+
+			// 1 make one projection on to member
+			var cellTable = this.getCells();
+			var fixSpace = {};
+			Object.keys(set).forEach(function (dimension) {
+				fixSpace[dimension] = Array.isArray(set[dimension]) ? set[dimension] : [set[dimension]];
+
+				// todo замена на оригинальные члены измерений
+				var dimensionTree = _this.findDimensionTreeByDimension(dimension);
+				if (!dimensionTree) {
+					return;
+				}
+				var dimensionTable = dimensionTree.getTreeValue();
+				fixSpace[dimension].forEach(function (memberData, index) {
+					var members = _this.getDimensionMembers(dimension);
+					var member = members.find(function (member) {
+						return dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData);
+					});
+					fixSpace[dimension][index] = member;
+					if (!memberData) {
+						_console2.default.warn('not founded member by id ' + dimensionTable.getMemberId(member));
+					}
+				});
+			});
+
+			var dimensionHierarchiesLength = this.dimensionHierarchies.length;
+			if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
+				throw 'set must have length: ' + dimensionHierarchiesLength;
+			}
+
+			var projectionDimensionHierarchies = [];
+
+			// для каждого измерения
+			var totalSpaces = Object.keys(fixSpace).map(function (dimension) {
+
+				// ищется его расширенная версия для каждого члена
+				var spacesForCells = fixSpace[dimension].map(function (member) {
+
+					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
+
+					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
+
+					var _dimensionTreeProject = dimensionTreeProjection.getRoot().getTreeValue(),
+					    dimensionProjection = _dimensionTreeProject.dimension,
+					    membersProjection = _dimensionTreeProject.members;
+
+					projectionDimensionHierarchies.push(dimensionTreeProjection);
+					return _defineProperty({}, dimensionProjection, membersProjection);
+				});
+
+				// после чего эти расширенные версии объекдиняются
+				var totalSpace = _Space2.default.union.apply(_Space2.default, _toConsumableArray(spacesForCells));
+
+				return totalSpace;
+			});
+
+			// фильтрация продолжается
+			var filteredCellTable = cellTable;
+
+			var cellBelongsToSpace = function cellBelongsToSpace(cell, space) {
+				var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
+					var members = space[dimension];
+
+					var _findDimensionTreeByD = _this.findDimensionTreeByDimension(dimension).getTreeValue(),
+					    foreignKey = _findDimensionTreeByD.foreignKey,
+					    primaryKey = _findDimensionTreeByD.primaryKey;
+
+					var finded = members.find(function (member) {
+						return member[primaryKey] === cell[foreignKey];
+					});
+					return !finded;
+				});
+				return !somePropOfCellNotBelongToSpace;
+			};
+
+			totalSpaces.forEach(function (space) {
+				// и ищутся те ячейки, которые принадлежат получившейся области
+				filteredCellTable = filteredCellTable.filter(function (cell) {
+					return cellBelongsToSpace(cell, space);
+				});
+			});
+
+			// 2 create new list of dimensionHierarchies
+			var newDimensionHierarchies = [];
+			this.dimensionHierarchies.forEach(function (originalDimensionHierarchy) {
+				var finded = false;
+				projectionDimensionHierarchies.forEach(function (projectionDimensionHierarchy) {
+					if (originalDimensionHierarchy.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension) {
+						newDimensionHierarchies.push(projectionDimensionHierarchy);
+						finded = true;
+					}
+				});
+				if (!finded) {
+					var _originalDimensionHie = originalDimensionHierarchy.getTreeValue(),
+					    members = _originalDimensionHie.members,
+					    dimension = _originalDimensionHie.dimension;
+
+					var projectionDimensionHierarchy = new _DimensionTree2.default(originalDimensionHierarchy);
+					members.forEach(function (member) {
+						var memberBelongToCells = false;
+						filteredCellTable.forEach(function (filteredCell) {
+							if (cellBelongsToSpace(filteredCell, _defineProperty({}, dimension, [member]))) {
+								memberBelongToCells = true;
+							}
+						});
+						if (!memberBelongToCells) {
+							var has = projectionDimensionHierarchy.getTreeValue().members.indexOf(member) !== -1;
+							if (has) {
+								projectionDimensionHierarchy.removeProjectionOntoMember(member);
+							}
+						}
+					});
+
+					newDimensionHierarchies.push(projectionDimensionHierarchy);
+				}
+			});
+
+			return new Cube({ cellTable: filteredCellTable, dimensionHierarchies: newDimensionHierarchies });
+		}
+		/**
+   * @public
+   * @param {string} hierarchy
+   * @param {string} targetDimension
+   * @return {Cube}
+   * */
+
+	}, {
+		key: 'drillUp',
+		value: function drillUp(hierarchy, targetDimension) {
+			var currentHierarchy = getHierarchy.call(this, hierarchy);
+			if (currentHierarchy && currentHierarchy.hasDimension(targetDimension)) {
+				currentHierarchy.setActiveDimension(targetDimension);
+			}
+			return this;
+		}
+		/**
+   * @public
+   * @param {string} hierarchy
+   * @param {string} targetDimension
+   * @return {Cube}
+   * */
+
+	}, {
+		key: 'drillDown',
+		value: function drillDown(hierarchy, targetDimension) {
+			var currentHierarchy = getHierarchy.call(this, hierarchy);
+			if (currentHierarchy && currentHierarchy.hasDimension(targetDimension)) {
+				currentHierarchy.setActiveDimension(targetDimension);
+			}
+			return this;
+		}
+		/**
+   * @public
+   * @param {object[]} members
+   * @param {string} currentDimension
+   * @param {string?} targetDimension
+   * @deprecated as unnecessary
+   * */
+
+	}, {
+		key: 'drillUpMembers',
+		value: function drillUpMembers(members, currentDimension, targetDimension) {
+			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+			// first rollUp if no target
+			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
+			// if cant rollUp
+			if (!targetDimension && !targetDimensionTree) {
+				return members;
+			}
+			if (!currentDimensionTree.hasChild(targetDimensionTree)) {
+				return members;
+			}
+			var targetDimensionWasAchieved = false;
+			var lastTracedDimensionTree = currentDimensionTree;
+			var lastTracedMembers = members;
+			currentDimensionTree.tracePreOrder(function (treeValue, tracedDimensionTree) {
+				if (tracedDimensionTree === currentDimensionTree) {
+					return;
+				}
+				if (!targetDimensionWasAchieved) {
+					lastTracedMembers = lastTracedDimensionTree.drillUpDimensionMembers(lastTracedMembers);
+					if (targetDimensionTree === tracedDimensionTree) {
+						targetDimensionWasAchieved = true;
+					} else {
+						lastTracedDimensionTree = tracedDimensionTree;
+					}
+				}
+			});
+			return lastTracedMembers;
+		}
+		/**
+   * @public
+   * @param {object[]} members
+   * @param {string} currentDimension
+   * @param {string?} targetDimension
+   * @deprecated as unnecessary
+   * */
+
+	}, {
+		key: 'drillDownMembers',
+		value: function drillDownMembers(members, currentDimension, targetDimension) {
+			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+			// first drillDown if no target
+			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
+			// if cant drillDown
+			if (!targetDimension && !targetDimensionTree) {
+				return members;
+			}
+			if (!currentDimensionTree.hasParent(targetDimensionTree)) {
+				return members;
+			}
+			var targetDimensionWasAchieved = false;
+			var lastTracedDimensionTree = currentDimensionTree;
+			var lastTracedMembers = members;
+			currentDimensionTree.traceUpOrder(function (tracedDimensionTree) {
+				if (tracedDimensionTree === currentDimensionTree) {
+					return;
+				}
+				if (!targetDimensionWasAchieved) {
+					lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+					if (targetDimensionTree === tracedDimensionTree) {
+						targetDimensionWasAchieved = true;
+					} else {
+						lastTracedDimensionTree = tracedDimensionTree;
+					}
+				}
+			});
+			return lastTracedMembers;
+		}
 		/**
    * @public
    * @param {Object[]} facts
    * */
+
+	}, {
+		key: 'addFacts',
 		value: function addFacts(facts) {
 			var newFactTable = new _FactTable2.default({ facts: facts, primaryKey: this.cellTable.primaryKey });
 			var cells = newFactTable.getFacts().map(function (fact) {
@@ -747,7 +1534,7 @@ var Cube = function () {
 			});
 			[].push.apply(this.getCells(), cells);
 			var factTable = this.getFacts();
-			_SnowflakeBuilder2.default.anotherBuild(factTable, cells, this.dimensionHierarchies, this.getCells(), this.cellTable.primaryKey);
+			_SnowflakeBuilder2.default.anotherBuild(factTable, cells, this._getDimensionTrees(), this.getCells(), this.cellTable.primaryKey);
 		}
 		/**
    * @public
@@ -820,121 +1607,28 @@ var Cube = function () {
 		}
 		/**
    * @public
+   * @deprecated
    * */
 
 	}, {
 		key: 'getCellsBySet',
 		value: function getCellsBySet(fixSpaceOptions) {
-			var _projection = this.projection(fixSpaceOptions),
-			    cellTable = _projection.cellTable;
-
-			return cellTable;
+			var cube = this.dice(fixSpaceOptions);
+			return cube.getCells();
 		}
 		/**
    * @public
    * @param {string} dimension - dimension from which the member will be found
    * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
    * @return {Member[]} returns members
+   * @deprecated
    * */
 
 	}, {
 		key: 'getDimensionMembersBySet',
 		value: function getDimensionMembersBySet(dimension, fixSpaceOptions) {
-			var _projection2 = this.projection(fixSpaceOptions),
-			    cellTable = _projection2.cellTable;
-
-			return this.getDimensionMembersFromCells(dimension, cellTable);
-		}
-		/**
-   * @private
-   * */
-
-	}, {
-		key: 'projection',
-		value: function projection(fixSpaceOptions) {
-			var _this = this;
-
-			if (!fixSpaceOptions) {
-				return;
-			}
-			var cellTable = this.getCells();
-			if (Object.keys(fixSpaceOptions).length === 0) {
-				return { cellTable: cellTable };
-			}
-
-			var fixSpace = {};
-			Object.keys(fixSpaceOptions).forEach(function (dimension) {
-				fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension]) ? fixSpaceOptions[dimension] : [fixSpaceOptions[dimension]];
-
-				// todo замена на оригинальные члены измерений
-				// fixSpaceOptions[dimension].forEach((memberData, index) => {
-				// 	const members = this.getDimensionMembers(dimension);
-				// 	let member = members.find(member => members.getMemberId(member) === memberData[DEFAULT_MEMBER_ID_PROP]);
-				// 	fixSpaceOptions[dimension][index] = member;
-				// 	if (!memberData) {
-				// 		console.warn(`not founded member by id ${members.getMemberId(member)}`)
-				// 	}
-				// })
-			});
-
-			var dimensionHierarchiesLength = this.dimensionHierarchies.length;
-			if (Object.keys(fixSpaceOptions).length > dimensionHierarchiesLength) {
-				throw 'set must have length: ' + dimensionHierarchiesLength;
-			}
-
-			var dimensionHierarchies = [];
-
-			// для каждого измерения
-			var totalSpaces = Object.keys(fixSpace).map(function (dimension) {
-
-				// ищется его расширенная версия для каждого члена
-				var spacesForCells = fixSpace[dimension].map(function (member) {
-
-					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
-
-					var dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
-
-					var _dimensionTreeProject = dimensionTreeProjection.getRoot().getTreeValue(),
-					    dimensionProjection = _dimensionTreeProject.dimension,
-					    membersProjection = _dimensionTreeProject.members;
-
-					dimensionHierarchies.push(dimensionTreeProjection);
-					return _defineProperty({}, dimensionProjection, membersProjection);
-				});
-
-				// после чего эти расширенные версии объекдиняются
-				var totalSpace = _Space2.default.union.apply(_Space2.default, _toConsumableArray(spacesForCells));
-
-				return totalSpace;
-			});
-
-			// фильтрация продолжается
-			var filteredCellTable = cellTable;
-
-			var cellBelongsToSpace = function cellBelongsToSpace(cell, space) {
-				var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
-					var members = space[dimension];
-
-					var _findDimensionTreeByD = _this.findDimensionTreeByDimension(dimension).getTreeValue(),
-					    foreignKey = _findDimensionTreeByD.foreignKey,
-					    primaryKey = _findDimensionTreeByD.primaryKey;
-
-					var finded = members.find(function (member) {
-						return member[primaryKey] === cell[foreignKey];
-					});
-					return !finded;
-				});
-				return !somePropOfCellNotBelongToSpace;
-			};
-
-			totalSpaces.forEach(function (space) {
-				// и ищутся те ячейки, которые принадлежат получившейся области
-				filteredCellTable = filteredCellTable.filter(function (cell) {
-					return cellBelongsToSpace(cell, space);
-				});
-			});
-
-			return { cellTable: filteredCellTable, dimensionHierarchies: dimensionHierarchies };
+			var cube = this.dice(fixSpaceOptions);
+			return cube.getDimensionMembers(dimension);
 		}
 		/**
    * @private
@@ -953,54 +1647,12 @@ var Cube = function () {
 			});
 			return findDimensionTree;
 		}
-		/**
-   * @private
-   * */
-
 	}, {
-		key: 'getDimensionMembersFromCells',
-		value: function getDimensionMembersFromCells(dimension, cells) {
-			var searchedDimensionTree = this.findDimensionTreeByDimension(dimension);
-			var dimensionTable = searchedDimensionTree.getRoot().getTreeValue();
-
-			var rootMembers = dimensionTable.members,
-			    rootDimension = dimensionTable.dimension,
-			    rootIdAttribute = dimensionTable.foreignKey;
-
-
-			var members = [];
-
-			// todo смахивает на mapFilter
-			cells.forEach(function (cell) {
-				rootMembers.forEach(function (rootMember) {
-					if (cell[rootIdAttribute] === dimensionTable.getMemberId(rootMember)) {
-						if (members.indexOf(rootMember) === -1) {
-							members.push(rootMember);
-						}
-					}
-				});
+		key: '_getDimensionTrees',
+		value: function _getDimensionTrees() {
+			return this.dimensionHierarchies.map(function (dimensionHierarchy) {
+				return dimensionHierarchy.getDimensionTree ? dimensionHierarchy.getDimensionTree() : dimensionHierarchy;
 			});
-
-			if (searchedDimensionTree.isRoot()) {
-				return members;
-			} else {
-				var lastTracedMembers = members;
-				var end = false;
-				var lastTracedDimensionTree = searchedDimensionTree;
-				searchedDimensionTree.getRoot().tracePreOrder(function (tracedDimensionTreeValue, tracedDimensionTree) {
-					if (tracedDimensionTree.isRoot()) {
-						return;
-					}
-					if (!end) {
-						lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
-						lastTracedDimensionTree = tracedDimensionTree;
-					}
-					if (tracedDimensionTreeValue.dimension === dimension) {
-						end = true;
-					}
-				});
-				return lastTracedMembers;
-			}
 		}
 		/**
    * @public
@@ -1073,7 +1725,7 @@ var Cube = function () {
 			var cells = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getCells();
 			var forSave = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
-			var data = _SnowflakeBuilder2.default.denormalize(cells, this.dimensionHierarchies);
+			var data = _SnowflakeBuilder2.default.denormalize(cells, this._getDimensionTrees());
 			if (forSave) {
 				data.forEach(function (data, index) {
 					if (cells[index] instanceof _EmptyCell2.default) {
@@ -1180,7 +1832,7 @@ var Cube = function () {
 					saveIdAttribute = parentIdAttribute;
 				}
 			});
-			this.fill(cellData);
+			this.fillEmptyCells(cellData);
 		}
 		/**
    * @public
@@ -1226,8 +1878,8 @@ var Cube = function () {
    * */
 
 	}, {
-		key: 'fill',
-		value: function fill() {
+		key: 'fillEmptyCells',
+		value: function fillEmptyCells() {
 			var customCellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
 			var cellOptions = _extends({}, this.cellTable.defaultFactOptions, customCellOptions);
@@ -1257,25 +1909,15 @@ var Cube = function () {
 			return unfilled;
 		}
 		/**
-   * @param {object} dimensionHierarchy
-   * */
-
-	}, {
-		key: '_addDimensionHierarchy',
-		value: function _addDimensionHierarchy(dimensionHierarchy) {
-			var dimensionTree = _DimensionTree2.default.createDimensionTree(dimensionHierarchy, this.settings);
-			this.dimensionHierarchies.push(dimensionTree);
-			return dimensionTree;
-		}
-		/**
    * @public
-   * @param {DimensionTree} dimensionHierarchy
+   * @param {object|DimensionTree} dimensionHierarchy
    * */
 
 	}, {
 		key: 'addDimensionHierarchy',
 		value: function addDimensionHierarchy(dimensionHierarchy) {
-			var dimensionTree = this._addDimensionHierarchy(dimensionHierarchy);
+			var dimensionTree = _DimensionTree2.default.createDimensionTree(dimensionHierarchy);
+			this.dimensionHierarchies.push(dimensionTree);
 			_SnowflakeBuilder2.default.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
 		}
 		/**
@@ -1293,145 +1935,22 @@ var Cube = function () {
 		}
 		/**
    * @public
-   * @param {string} currentDimension
-   * @param {object[]} members
-   * @param {string?} targetDimension
-   * */
-
-	}, {
-		key: 'rollUp',
-		value: function rollUp(currentDimension, members, targetDimension) {
-			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-			// first rollUp if no target
-			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
-			// if cant rollUp
-			if (!targetDimension && !targetDimensionTree) {
-				return members;
-			}
-			if (!currentDimensionTree.hasChild(targetDimensionTree)) {
-				return members;
-			}
-			var targetDimensionWasAchieved = false;
-			var lastTracedDimensionTree = currentDimensionTree;
-			var lastTracedMembers = members;
-			currentDimensionTree.tracePreOrder(function (treeValue, tracedDimensionTree) {
-				if (tracedDimensionTree === currentDimensionTree) {
-					return;
-				}
-				if (!targetDimensionWasAchieved) {
-					lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
-					if (targetDimensionTree === tracedDimensionTree) {
-						targetDimensionWasAchieved = true;
-					} else {
-						lastTracedDimensionTree = tracedDimensionTree;
-					}
-				}
-			});
-			return lastTracedMembers;
-		}
-		/**
-   * @public
-   * @param {string} currentDimension
-   * @param {object[]} members
-   * @param {string?} targetDimension
-   * */
-
-	}, {
-		key: 'drillDown',
-		value: function drillDown(currentDimension, members, targetDimension) {
-			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-			// first drillDown if no target
-			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
-			// if cant drillDown
-			if (!targetDimension && !targetDimensionTree) {
-				return members;
-			}
-			if (!currentDimensionTree.hasParent(targetDimensionTree)) {
-				return members;
-			}
-			var targetDimensionWasAchieved = false;
-			var lastTracedDimensionTree = currentDimensionTree;
-			var lastTracedMembers = members;
-			currentDimensionTree.traceUpOrder(function (tracedDimensionTree) {
-				if (tracedDimensionTree === currentDimensionTree) {
-					return;
-				}
-				if (!targetDimensionWasAchieved) {
-					lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
-					if (targetDimensionTree === tracedDimensionTree) {
-						targetDimensionWasAchieved = true;
-					} else {
-						lastTracedDimensionTree = tracedDimensionTree;
-					}
-				}
-			});
-			return lastTracedMembers;
-		}
-		/**
-   * @return {Cube}
-   * */
-
-	}, {
-		key: 'slice',
-		value: function slice(dimension, member) {
-			return this._createProjectionOfCube(_defineProperty({}, dimension, member));
-		}
-		/**
-   *
-   * */
-
-	}, {
-		key: 'dice',
-		value: function dice(fixSpaceOptions) {
-			return this._createProjectionOfCube(fixSpaceOptions);
-		}
-		/**
-   *
-   * */
-
-	}, {
-		key: '_createProjectionOfCube',
-		value: function _createProjectionOfCube(fixSpaceOptions) {
-			var _this6 = this;
-
-			// 1 make one projection on to member
-			var projection = this.projection(fixSpaceOptions);
-			var cellTable = projection.cellTable,
-			    dimensionHierarchies = projection.dimensionHierarchies;
-			// 2 create new list of dimensionHierarchies
-
-			var newDimensionHierarchies = [].concat(this.dimensionHierarchies);
-			// 3 replace original by projected dimensionHierarchy
-			dimensionHierarchies.forEach(function (projectionDimensionHierarchy) {
-				// find original dimensionHierarchy
-				var originalDimensionHierarchy = _this6.dimensionHierarchies.find(function (dimensionTree) {
-					return dimensionTree.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension;
-				});
-				// define index
-				var index = newDimensionHierarchies.indexOf(originalDimensionHierarchy);
-				// replace it
-				newDimensionHierarchies.splice(index, 1, projectionDimensionHierarchy);
-			});
-			return new Cube({ cellTable: cellTable, dimensionHierarchies: newDimensionHierarchies });
-		}
-		/**
-   * @public
    * @return {EmptyCell[]}
    * */
 
 	}, {
 		key: 'createEmptyCells',
 		value: function createEmptyCells(cellOptions) {
-			var _this7 = this;
+			var _this6 = this;
 
 			var emptyCells = [];
 			var tuples = this.cartesian();
 			tuples.forEach(function (combination) {
-				var unique = _this7.getCellsBySet(combination);
+				var unique = _this6.getCellsBySet(combination);
 				if (!unique.length) {
 					var foreignKeysCellData = {};
 					Object.keys(combination).forEach(function (dimension) {
-						var dimensionTable = _this7.findDimensionTreeByDimension(dimension).getTreeValue();
+						var dimensionTable = _this6.findDimensionTreeByDimension(dimension).getTreeValue();
 						var foreignKey = dimensionTable.foreignKey;
 
 						foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension]);
@@ -1476,7 +1995,6 @@ var Cube = function () {
 		key: 'create',
 		value: function create(factTable) {
 			var dimensionHierarchies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-			var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			if (Array.isArray(factTable)) {
 				factTable = { facts: factTable };
@@ -1495,8 +2013,7 @@ var Cube = function () {
 
 			var cube = new this({
 				cellTable: { primaryKey: primaryKey, defaultFactOptions: defaultFactOptions },
-				dimensionHierarchies: dimensionHierarchies,
-				settings: _extends({}, options)
+				dimensionHierarchies: dimensionHierarchies
 			});
 
 			// build 2: members
@@ -1521,7 +2038,7 @@ var Cube = function () {
 exports.default = Cube;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1601,542 +2118,7 @@ var EmptyCell = function (_Cell) {
 exports.default = EmptyCell;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _DimensionTable = __webpack_require__(11);
-
-var _DimensionTable2 = _interopRequireDefault(_DimensionTable);
-
-var _Settings = __webpack_require__(6);
-
-var _Settings2 = _interopRequireDefault(_Settings);
-
-var _Tree2 = __webpack_require__(13);
-
-var _Tree3 = _interopRequireDefault(_Tree2);
-
-var _errors = __webpack_require__(0);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-/**
- * It defines the relationship of generalization and specialization (roll-up/drill-down)
- * @throws {DimensionException}
- * */
-var DimensionTree = function (_Tree) {
-	_inherits(DimensionTree, _Tree);
-
-	function DimensionTree(dimensionTree) {
-		_classCallCheck(this, DimensionTree);
-
-		var _this = _possibleConstructorReturn(this, (DimensionTree.__proto__ || Object.getPrototypeOf(DimensionTree)).call(this));
-
-		var dimensionTable = dimensionTree.dimensionTable,
-		    _dimensionTree$depend = dimensionTree.dependency,
-		    dependency = _dimensionTree$depend === undefined ? [] : _dimensionTree$depend,
-		    _dimensionTree$parent = dimensionTree.parentNode,
-		    parentNode = _dimensionTree$parent === undefined ? null : _dimensionTree$parent;
-
-
-		Object.defineProperties(_this, {
-			dimensionTable: {
-				/**
-     * @property
-     * @name DimensionTree#dimensionTable
-     * */
-				value: new _DimensionTable2.default(dimensionTable),
-				editable: false,
-				enumerable: true
-			},
-			parentNode: {
-				/**
-     * @property {DimensionTree|null}
-     * @name DimensionTree#parentNode
-     * */
-				value: parentNode,
-				enumerable: false,
-				editable: false
-			},
-			dependency: {
-				/**
-     * @property {DimensionTree[]}
-     * @name DimensionTree#dependency
-     * */
-				value: dependency.map(function (dimensionTreeData) {
-					return new DimensionTree(_extends({}, dimensionTreeData, { parentNode: _this }));
-				}),
-				enumerable: true,
-				editable: false
-			}
-		});
-		return _this;
-	}
-
-	_createClass(DimensionTree, [{
-		key: 'getTreeValue',
-
-		/**
-   * @public
-   * @return {DimensionTable}
-   * */
-		value: function getTreeValue() {
-			return this.dimensionTable;
-		}
-		/**
-   * @public
-   * @return {DimensionTree|null}
-   * */
-
-	}, {
-		key: 'getParentTree',
-		value: function getParentTree() {
-			return this.parentNode;
-		}
-		/**
-   * @public
-   * @return {DimensionTree[]}
-   * */
-
-	}, {
-		key: 'getChildTrees',
-		value: function getChildTrees() {
-			return this.dependency;
-		}
-		/**
-   * @public
-   * @param {string} dimension
-   * @return {DimensionTree|undefined}
-   * */
-
-	}, {
-		key: 'getDimensionTreeByDimension',
-		value: function getDimensionTreeByDimension(dimension) {
-			return this.getRoot().searchTreeByTreeValue(function (dimensionTree) {
-				var dimensionTreeValue = dimensionTree.getTreeValue();
-				return dimensionTreeValue.dimension === dimension;
-			});
-		}
-		/**
-   * @public
-   * @param {Member} member
-   * @return {DimensionTree|undefined}
-   * */
-
-	}, {
-		key: 'createProjectionOntoMember',
-		value: function createProjectionOntoMember(member) {
-			var _this2 = this;
-
-			// 1 create copy of hierarchy with empty members
-			var newDimensionTreeByMember = new DimensionTree(this.getRoot());
-			newDimensionTreeByMember.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
-				var dimensionTable = dimensionTree.getTreeValue();
-				dimensionTable.clearMemberList();
-			});
-			var lastTracedMembers = void 0;
-			var lastTracedDimensionTree = void 0;
-			// 2 trace up
-			this.traceUpOrder(function (tracedTree) {
-				var _tracedTree$getTreeVa = tracedTree.getTreeValue(),
-				    tracedDimension = _tracedTree$getTreeVa.dimension;
-
-				// 3 get drill down of last members
-
-
-				var drillDownedMembers = tracedTree == _this2 ? [member] : lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
-
-				// 4 set members
-				newDimensionTreeByMember.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillDownedMembers);
-
-				// 5 save current dimension and drill downed members
-				lastTracedMembers = drillDownedMembers;
-				lastTracedDimensionTree = tracedTree;
-			});
-			return newDimensionTreeByMember;
-		}
-		/**
-   * @public
-   * @param {Member} member
-   * */
-
-	}, {
-		key: 'removeProjectionOntoMember',
-		value: function removeProjectionOntoMember(member) {
-			// 1 get projection
-			var projectionDimensionTree = this.createProjectionOntoMember(member);
-			// 2 subtract projection
-			this.subtractDimensionTree(projectionDimensionTree);
-			// 3 return first level members of projection
-			var endToBeRemovedMember = {};
-
-			var _projectionDimensionT = projectionDimensionTree.getRoot().getTreeValue(),
-			    dimensionProjection = _projectionDimensionT.dimension,
-			    membersProjection = _projectionDimensionT.members;
-
-			endToBeRemovedMember[dimensionProjection] = membersProjection;
-
-			return endToBeRemovedMember;
-		}
-		/**
-   * @private
-   * @param {DimensionTree} dimensionTree
-   * */
-
-	}, {
-		key: 'subtractDimensionTree',
-		value: function subtractDimensionTree(dimensionTree) {
-			var _this3 = this;
-
-			// remove intersection
-			var toBeRemovedSpace = {};
-
-			dimensionTree.tracePostOrder(function (dimensionTreeValue) {
-				var dimension = dimensionTreeValue.dimension,
-				    members = dimensionTreeValue.members;
-
-				toBeRemovedSpace[dimension] = members;
-			});
-
-			var memberList = this.getTreeValue().members;
-
-			// travers down
-			if (memberList.length === 1) {
-				this.tracePreOrder(function (tracedDimensionTree) {
-					var _tracedDimensionTree$ = tracedDimensionTree.getTreeValue(),
-					    childMembers = _tracedDimensionTree$.members,
-					    childDimension = _tracedDimensionTree$.dimension;
-
-					toBeRemovedSpace[childDimension] = childMembers;
-				});
-			}
-
-			// remove removal space
-			Object.keys(toBeRemovedSpace).forEach(function (dimension) {
-				var currentDimensionTree = _this3.getDimensionTreeByDimension(dimension);
-				var dimensionTable = currentDimensionTree.getTreeValue();
-				toBeRemovedSpace[dimension].forEach(function (member) {
-					dimensionTable.removeMember(member);
-				});
-			});
-		}
-		/**
-   * @public
-   * @param {Member[]} members
-   * @return {Member[]}
-   * */
-
-	}, {
-		key: 'drillDownDimensionMembers',
-		value: function drillDownDimensionMembers() {
-			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
-
-			if (this.isRoot()) {
-				return members;
-			}
-			var parentTree = this.getParentTree();
-
-			var _parentTree$getTreeVa = parentTree.getTreeValue(),
-			    parentMembers = _parentTree$getTreeVa.members,
-			    primaryKey = _parentTree$getTreeVa.primaryKey;
-
-			var _getTreeValue = this.getTreeValue(),
-			    foreignKey = _getTreeValue.foreignKey;
-
-			var drillDownMembers = [];
-			members.forEach(function (member) {
-				parentMembers.forEach(function (parentMember) {
-					if (parentMember[foreignKey] === member[primaryKey]) {
-						if (drillDownMembers.indexOf(parentMember) === -1) {
-							drillDownMembers.push(parentMember);
-						}
-					}
-				});
-			});
-			return drillDownMembers;
-		}
-		/**
-   * @public
-   * @this {DimensionTree}
-   * @param {Member[]} members
-   * @return {Member[]}
-   * */
-
-	}, {
-		key: 'rollUpDimensionMembers',
-		value: function rollUpDimensionMembers() {
-			var members = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getTreeValue().members;
-
-			if (this.isExternal()) {
-				return members;
-			}
-			var childTree = this.getChildTrees()[0]; // for one child always
-			var dimensionTable = childTree.getTreeValue();
-			var childMembers = dimensionTable.members,
-			    foreignKey = dimensionTable.foreignKey;
-
-			var rollUpMembers = [];
-			members.forEach(function (member) {
-				childMembers.forEach(function (childMember) {
-					if (member[foreignKey] === dimensionTable.getMemberId(childMember)) {
-						if (rollUpMembers.indexOf(childMember) === -1) {
-							rollUpMembers.push(childMember);
-						}
-					}
-				});
-			});
-			return rollUpMembers;
-		}
-		/**
-   * @public
-   * @param {object?} memberOptions
-   * */
-
-	}, {
-		key: 'createMember',
-		value: function createMember() {
-			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-			var dimensionTable = this.getTreeValue();
-			var childIdAttributes = this.getChildTrees().map(function (dimensionTree) {
-				return dimensionTree.getTreeValue().foreignKey;
-			});
-			var linkProps = [];
-			childIdAttributes.forEach(function (foreignKey) {
-				linkProps.push(foreignKey);
-			});
-			return dimensionTable.createMember(memberOptions, linkProps);
-		}
-	}], [{
-		key: 'createDimensionTree',
-		value: function createDimensionTree(dimensionTreeData) {
-			var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new _Settings2.default(),
-			    templateForeignKey = _ref.templateForeignKey;
-
-			// build 1: foreignKeys
-			var buildIdAttributeDimensionTable = function buildIdAttributeDimensionTable(dimensionTable) {
-				if (!dimensionTable.foreignKey) {
-					dimensionTable.foreignKey = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey);
-				}
-			};
-			var dimensionTree = new DimensionTree(dimensionTreeData);
-			dimensionTree.tracePostOrder(buildIdAttributeDimensionTable);
-			return dimensionTree;
-		}
-		/**
-   * @public
-   * A way to create a name for a property in which a unique identifier will be stored
-   * */
-
-	}, {
-		key: 'genericId',
-		value: function genericId(dimension, templateForeignKey) {
-			return templateForeignKey.replace('%s', dimension);
-		}
-	}]);
-
-	return DimensionTree;
-}(_Tree3.default);
-
-exports.default = DimensionTree;
-
-/***/ }),
 /* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _Member = __webpack_require__(1);
-
-var _Member2 = _interopRequireDefault(_Member);
-
-var _const = __webpack_require__(2);
-
-var _InputMember = __webpack_require__(12);
-
-var _InputMember2 = _interopRequireDefault(_InputMember);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var DimensionTable = function () {
-	function DimensionTable(_ref) {
-		var _this = this;
-
-		var dimension = _ref.dimension,
-		    foreignKey = _ref.foreignKey,
-		    _ref$primaryKey = _ref.primaryKey,
-		    primaryKey = _ref$primaryKey === undefined ? _const.DEFAULT_MEMBER_ID_PROP : _ref$primaryKey,
-		    keyProps = _ref.keyProps,
-		    _ref$otherProps = _ref.otherProps,
-		    otherProps = _ref$otherProps === undefined ? [] : _ref$otherProps,
-		    _ref$members = _ref.members,
-		    members = _ref$members === undefined ? [] : _ref$members,
-		    _ref$defaultMemberOpt = _ref.defaultMemberOptions,
-		    defaultMemberOptions = _ref$defaultMemberOpt === undefined ? {} : _ref$defaultMemberOpt;
-
-		_classCallCheck(this, DimensionTable);
-
-		if (!dimension || !keyProps) {
-			throw Error('Bad definition DimensionTable, params \"dimension\" and \"keyProps\" is required');
-		}
-		if (Object.keys(defaultMemberOptions).indexOf(primaryKey) !== -1) {
-			throw Error('Bad definition DimensionTable, \"defaultMemberOptions\" must not contain a \"primaryKey\" property');
-		}
-		/** Name of the dimension */
-		this.dimension = dimension;
-		/** id name */
-		this.foreignKey = foreignKey;
-		/** id name */
-		this.primaryKey = primaryKey;
-		/** List of key names properties of the table belonging to the current dimension */
-		this.keyProps = [].concat(keyProps);
-		/** List of additional names properties of the table belonging to the current dimension */
-		this.otherProps = [].concat(otherProps);
-		/** member list */
-		this.members = members.map(function (member) {
-			return new _Member2.default(member, _this.primaryKey);
-		});
-		/** member default property options */
-		this.defaultMemberOptions = _extends({}, defaultMemberOptions);
-	}
-	/**
-  *
-  * */
-
-
-	_createClass(DimensionTable, [{
-		key: 'setMemberList',
-		value: function setMemberList(members) {
-			[].splice.apply(this.members, [0, this.members.length].concat(members));
-		}
-		/**
-   *
-   * */
-
-	}, {
-		key: 'clearMemberList',
-		value: function clearMemberList() {
-			this.members = [];
-		}
-	}, {
-		key: 'getMemberId',
-		value: function getMemberId(member) {
-			return member[this.primaryKey];
-		}
-		/**
-   * @param {Member} member
-   * */
-
-	}, {
-		key: 'addMember',
-		value: function addMember(member) {
-			if (this.members.indexOf(member) === -1) {
-				this.members.push(member);
-			} else {
-				alert('boo');
-			}
-		}
-		/**
-   * @public
-   * @param {object} memberOptions
-   * @param {[]} linkProps
-   * */
-
-	}, {
-		key: 'createMember',
-		value: function createMember() {
-			var memberOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-			var linkProps = arguments[1];
-
-			// todo тут нужна проверка на то, что все данные для члена измерения присутствуют
-			var memberData = _extends({}, this.defaultMemberOptions, memberOptions);
-			var keyProps = this.keyProps,
-			    otherProps = this.otherProps,
-			    members = this.members,
-			    primaryKey = this.primaryKey;
-
-			var keys = keyProps.concat(linkProps).concat(otherProps);
-			var id = DimensionTable.reduceId(members, primaryKey);
-			var member = _InputMember2.default.create(id, keys, memberData, primaryKey);
-			this.addMember(member);
-			return member;
-		}
-		/**
-   * @public
-   * Method of generating a unique identifier within the selected space
-   * */
-
-	}, {
-		key: 'setMemberId',
-		value: function setMemberId(member, id) {
-			member[this.primaryKey] = id;
-		}
-	}, {
-		key: 'deleteMemberId',
-		value: function deleteMemberId(member) {
-			delete member[this.primaryKey];
-		}
-		/**
-   *
-   * */
-
-	}, {
-		key: 'removeMember',
-		value: function removeMember(member) {
-			var index = this.members.indexOf(member);
-			if (index === -1) {
-				throw new Error('represented member was not found', member);
-			}
-			this.members.splice(index, 1);
-		}
-	}], [{
-		key: 'reduceId',
-		value: function reduceId(members, primaryKey) {
-			if (members.length) {
-				return members.reduce(function (acc, curValue) {
-					return acc[primaryKey] > curValue[primaryKey] ? acc : curValue;
-				}, 0)[primaryKey] + 1;
-			} else {
-				return 1;
-			}
-		}
-	}]);
-
-	return DimensionTable;
-}();
-
-exports.default = DimensionTable;
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2195,7 +2177,7 @@ var InputMember = function (_Member) {
 exports.default = InputMember;
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2260,16 +2242,6 @@ var Tree = function () {
 		key: 'isExternal',
 		value: function isExternal() {
 			return !this.getChildTrees().length;
-		}
-		/**
-   * @public
-   * @return {boolean}
-   * */
-
-	}, {
-		key: 'isFirstLevel',
-		value: function isFirstLevel() {
-			return !this.isRoot() && this.getParentTree().getParentTree() === null;
 		}
 		/**
    * @public
@@ -2413,6 +2385,83 @@ var Tree = function () {
 exports.default = Tree;
 
 /***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _DimensionTree = __webpack_require__(6);
+
+var _DimensionTree2 = _interopRequireDefault(_DimensionTree);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The elements of a dimension can be organized as a hierarchy
+ * */
+var DimensionHierarchy = function () {
+	function DimensionHierarchy(_ref) {
+		var dimensionTree = _ref.dimensionTree,
+		    activeDimension = _ref.activeDimension,
+		    hierarchy = _ref.hierarchy;
+
+		_classCallCheck(this, DimensionHierarchy);
+
+		if (!hierarchy) {
+			throw Error('attribute "hierarchy" must be defined');
+		}
+		this.dimensionTree = dimensionTree instanceof _DimensionTree2.default ? dimensionTree : _DimensionTree2.default.createDimensionTree(dimensionTree);
+		this.activeDimension = activeDimension || this.dimensionTree.getTreeValue().dimension;
+		this.hierarchy = hierarchy;
+	}
+
+	_createClass(DimensionHierarchy, [{
+		key: 'getDimensionTree',
+		value: function getDimensionTree() {
+			return this.dimensionTree;
+		}
+	}, {
+		key: 'hasDimension',
+		value: function hasDimension(dimension) {
+			return !!this.dimensionTree.getDimensionTreeByDimension(dimension);
+		}
+	}, {
+		key: 'getActiveDimension',
+		value: function getActiveDimension() {
+			return this.activeDimension;
+		}
+	}, {
+		key: 'setActiveDimension',
+		value: function setActiveDimension(activeDimension) {
+			this.activeDimension = activeDimension;
+		}
+	}, {
+		key: 'getHierarchy',
+		value: function getHierarchy() {
+			return this.hierarchy;
+		}
+	}], [{
+		key: 'createDimensionHierarchy',
+		value: function createDimensionHierarchy(dimensionHierarchy) {
+			return new DimensionHierarchy(dimensionHierarchy);
+		}
+	}]);
+
+	return DimensionHierarchy;
+}();
+
+exports.default = DimensionHierarchy;
+
+/***/ }),
 /* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2427,7 +2476,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FactTable = __webpack_require__(7);
+var _FactTable = __webpack_require__(8);
 
 var _FactTable2 = _interopRequireDefault(_FactTable);
 
@@ -2472,7 +2521,6 @@ var SnowflakeBuilder = function () {
 	}, {
 		key: 'processDimension',
 		value: function processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
-			var isFirstLevel = dimensionTree.isFirstLevel();
 			var dimensionTable = dimensionTree.getTreeValue();
 			var dimension = dimensionTable.dimension,
 			    _dimensionTable$keyPr = dimensionTable.keyProps,
@@ -2493,7 +2541,7 @@ var SnowflakeBuilder = function () {
 			var members = void 0;
 
 			var existMemberCount = memberList.length;
-			var args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable];
+			var args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, cellTable];
 
 			if (!childIdAttributes.length) {
 				members = SnowflakeBuilder.makeMemberList.apply(null, args);
@@ -2502,7 +2550,7 @@ var SnowflakeBuilder = function () {
 				var _dimensionTable = dimensionTree.getDimensionTreeByDimension(childDimensions[0]).getTreeValue();
 				var memberListForFilter = _dimensionTable.members;
 				entitiesParts = SnowflakeBuilder.mapFilter(childIdAttributes[0], cells, memberListForFilter, _dimensionTable);
-				members = SnowflakeBuilder.makeMemberListDependency.apply(null, args.concat([childIdAttributes, entitiesParts]));
+				members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
 			}
 
 			// только после того как список сформирован, удалаять данные из ячеек
@@ -2543,14 +2591,14 @@ var SnowflakeBuilder = function () {
    * */
 
 	}, {
-		key: 'makeMemberListDependency',
-		value: function makeMemberListDependency(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, childIdAttributes, entitiesParts) {
+		key: 'makeMemberListLevel',
+		value: function makeMemberListLevel(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, cellTable, childIdAttributes, entitiesParts) {
 			var totalMemberList = [];
 
 			var countId = 0;
 			entitiesParts.forEach(function (entitiesPart) {
 				if (entitiesPart.length) {
-					var members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, countId);
+					var members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, cellTable, countId);
 					countId = countId + members.length;
 
 					var etalon = entitiesPart[0];
@@ -2581,7 +2629,6 @@ var SnowflakeBuilder = function () {
    * @param {string} dimension - The dimension for which members will be created
    * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
    * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
-   * @param {boolean} isFirstLevel
    * @param {Cell} cells
    * @param {Cell[]} cellTable
    * @return {[]}
@@ -2594,9 +2641,8 @@ var SnowflakeBuilder = function () {
 			var keyProps = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : [];
 			var otherProps = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
 			var cells = arguments[9];
-			var isFirstLevel = arguments[10];
-			var cellTable = arguments[11];
-			var startFrom = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : 0;
+			var cellTable = arguments[10];
+			var startFrom = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : 0;
 
 			// соотношение созданных id к ключам
 			var cache = {};
@@ -2681,14 +2727,14 @@ var SnowflakeBuilder = function () {
 
 	}, {
 		key: 'denormalize',
-		value: function denormalize(cellTable, dimensionHierarchies) {
+		value: function denormalize(cellTable, dimensionTrees) {
 			var factTable = new _FactTable2.default();
 			var facts = factTable.getFacts();
 			cellTable.forEach(function (cell) {
 				facts.push(_extends({}, cell));
 			});
 			facts.forEach(function (fact) {
-				dimensionHierarchies.forEach(function (dimensionTree) {
+				dimensionTrees.forEach(function (dimensionTree) {
 					SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
 				});
 			});
@@ -2706,13 +2752,11 @@ var SnowflakeBuilder = function () {
 	}, {
 		key: 'removeMembers',
 		value: function removeMembers(cube, dimensionTree, member, memberList, dimension, cell, foreignKey) {
-			var _cube$projection = cube.projection(_defineProperty({}, dimension, member)),
-			    cellTable = _cube$projection.cellTable;
-
+			var dicedCube = cube.dice(_defineProperty({}, dimension, member));
 			var dimensionTable = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue();
 			// last cell was removed at the beginning of the algorithm,
 			// so if the member is no longer used, the projection will be empty
-			if (!cellTable.length) {
+			if (!dicedCube.getCells().length) {
 				dimensionTable.removeMember(member);
 			}
 		}
