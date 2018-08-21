@@ -1,5 +1,4 @@
 import DimensionTable from './DimensionTable.js'
-import Settings from './Settings.js'
 import Tree from './Tree.js'
 import {DimensionException} from './errors.js'
 /**
@@ -18,7 +17,7 @@ export default class DimensionTree extends Tree {
 				 * @property
 				 * @name DimensionTree#dimensionTable
 				 * */
-				value: new DimensionTable(dimensionTable),
+				value: DimensionTable.createDimensionTable(dimensionTable),
 				editable: false,
 				enumerable: true
 			},
@@ -44,23 +43,8 @@ export default class DimensionTree extends Tree {
 			}
 		});
 	}
-	static createDimensionTree(dimensionTreeData, { templateForeignKey } = new Settings()) {
-		// build 1: foreignKeys
-		const buildIdAttributeDimensionTable = (dimensionTable) => {
-			if (!dimensionTable.foreignKey) {
-				dimensionTable.foreignKey = DimensionTree.genericId(dimensionTable.dimension, templateForeignKey)
-			}
-		};
-		const dimensionTree = new DimensionTree(dimensionTreeData);
-		dimensionTree.tracePostOrder(buildIdAttributeDimensionTable);
-		return dimensionTree;
-	}
-	/**
-	 * @public
-	 * A way to create a name for a property in which a unique identifier will be stored
-	 * */
-	static genericId(dimension, templateForeignKey) {
-		return templateForeignKey.replace('%s', dimension);
+	static createDimensionTree(dimensionTreeData) {
+		return new DimensionTree(dimensionTreeData);
 	}
 	/**
 	 * @public
@@ -167,8 +151,8 @@ export default class DimensionTree extends Tree {
 
 		// travers down
 		if (memberList.length === 1) {
-			this.tracePreOrder(tracedDimensionTree => {
-				const {members: childMembers, dimension: childDimension} = tracedDimensionTree.getTreeValue();
+			this.tracePreOrder((dimensionTable, tracedDimensionTree) => {
+				const {members: childMembers, dimension: childDimension} = dimensionTable;
 				toBeRemovedSpace[childDimension] = childMembers;
 			})
 		}
@@ -193,7 +177,8 @@ export default class DimensionTree extends Tree {
 		}
 		const parentTree = this.getParentTree();
 		const { members: parentMembers, primaryKey } = parentTree.getTreeValue();
-		const { foreignKey } = this.getTreeValue();
+		const dimensionTable = this.getTreeValue();
+		const { foreignKey } = dimensionTable;
 		const drillDownMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
@@ -212,7 +197,7 @@ export default class DimensionTree extends Tree {
 	 * @param {Member[]} members
 	 * @return {Member[]}
 	 * */
-	rollUpDimensionMembers(members = this.getTreeValue().members) {
+	drillUpDimensionMembers(members = this.getTreeValue().members) {
 		if (this.isExternal()) {
 			return members;
 		}

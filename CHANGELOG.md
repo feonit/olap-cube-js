@@ -1,6 +1,18 @@
 ## Change Log
 *0.14.0*
-- Changed property `dependency` to `level`
+- Changed property `dependency` renamed to `level`
+- Removed `templateForeignKey` property from Settings since there is a more fine tuning for custom `foreignKey` and settings own
+- Deprecated
+	method `getCellsBySet` use `this.dice(set).getCells()`, 
+	method `getFactsBySet` use `this.dice(set).denormalize().getCells()`
+	method `getDimensionMembersBySet` use `this.dice(set).getDimensionMembers(dimension)`
+	
+- Braking changes
+	`rollUp` renamed to `drillUpMembers`
+	`drillDown` renamed to `drillDownMembers`
+	added new `drillUp` method
+	added new `drillDown` method
+- Added a new structure for working with the hierarchy through `drillUp` and `drillDown` methods
 
 *0.13.0*
 - Added new settings for members: `defaultMemberOptions`

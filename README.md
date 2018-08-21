@@ -42,9 +42,8 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Added dimension hierarchy](#added-dimension-hierarchy)
   - [Removing dimension hierarchy](#removing-dimension-hierarchy)
   - [Filling empty cells](#filling-empty-cells)
-  - [Delete empty cells](#delete-empty-cells)
-  - [Settings](#settings)
-  - [Roll-up members](#roll-up-members)
+  - [Removing empty cells](#removing-empty-cells)
+  - [Drill-up members](#drill-up-members)
   - [Drill-down members](#drill-down-members)
   - [Slice](#slice)
   - [Dice](#dice)
@@ -520,7 +519,7 @@ factsFilled will be:
 ]
 ```
 
-### Remove empty cells
+### Removing empty cells
 You can remove all or some of the empty cells. At the same time, some of the dimension members can be removed too if no more cells found correspond to the dimension member
 ```js
 cube.removeCell(cube.getEmptyCells())
@@ -529,20 +528,13 @@ cube.removeCell(cube.getEmptyCells().filter(({ value }) => !value))
 
 ```
 
-### Settings
-You can pass some settings to cube via third argument, example
-`Cube.create(facts, dimensionHierarchies, settings)`
-
-Possible options:
-- `templateForeignKey` default value: `%s_id`, where %s will be replaced by dimension
-
-### Roll-up members
+### Drill-up members
 ```js
-let markMembers = cube.rollUp('product', productMembers, 'mark')
+let markMembers = cube.drillUpMembers('product', productMembers, 'mark')
 ```
 ### Drill-down members
 ```js
-let productMembers = cube.drillDown('mark', markMembers, 'product')
+let productMembers = cube.drillDownMembers('mark', markMembers, 'product')
 ```
 
 ### Slice

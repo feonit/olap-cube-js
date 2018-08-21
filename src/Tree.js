@@ -38,13 +38,6 @@ export default class Tree {
 	 * @public
 	 * @return {boolean}
 	 * */
-	isFirstLevel() {
-		return !this.isRoot() && (this.getParentTree().getParentTree() === null)
-	}
-	/**
-	 * @public
-	 * @return {boolean}
-	 * */
 	isRoot() {
 		return this.getParentTree() === null;
 	}

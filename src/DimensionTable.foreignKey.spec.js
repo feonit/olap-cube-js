@@ -3,7 +3,7 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('test property foreignKey', () => {
 	let debug;
-	it('foreignKey of dimension table can be any and have high priority', () => {
+	it('foreignKey of dimension table can be any string', () => {
 		let facts = [
 			{ id: 1, x: 0 },
 		];
@@ -12,7 +12,8 @@ describe('test property foreignKey', () => {
 			{
 				dimensionTable: {
 					dimension: 'x',
-					keyProps: ['x']
+					keyProps: ['x'],
+					foreignKey: 'my_foreign_key_x'
 				},
 				level: [
 					{
@@ -25,13 +26,10 @@ describe('test property foreignKey', () => {
 				]
 			}
 		];
-		let options = {
-			templateForeignKey: '%sId'
-		};
-		let cube = Cube.create(facts, dimensionHierarchies, options);
+		let cube = Cube.create(facts, dimensionHierarchies);
 		debug = isEqualObjects(
 			cube.getCells()[0],
-			{ id: 1, xId: 1 }
+			{ id: 1, my_foreign_key_x: 1 }
 		);
 		debug = isEqualObjects(
 			cube.getDimensionMembers('x')[0],

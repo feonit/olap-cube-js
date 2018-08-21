@@ -1,6 +1,8 @@
 import EmptyCell from './EmptyCell.js'
 import Member from './Member.js'
 import DimensionTree from './DimensionTree.js'
+import DimensionHierarchy from './DimensionHierarchy.js'
+import DimensionTable from './DimensionTable.js'
 import FactTable from './FactTable.js'
 import {
 	CantAddMemberRollupException,
@@ -11,7 +13,6 @@ import console from './console.js'
 import TupleTable from './TupleTable.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
-import Settings from './Settings.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
 
 class CellTable {
@@ -29,6 +30,15 @@ class CellTable {
 }
 
 /**
+ * @this {Cube}
+ * @private
+ * */
+function getHierarchy(hierarchy) {
+	return this.dimensionHierarchies.find(dimensionHierarchy => {
+		return dimensionHierarchy.getHierarchy() === hierarchy
+	});
+}
+/**
  * It a means to retrieve data
  *
  * Base class for normalizing a denormalized data array
@@ -38,16 +48,36 @@ class CellTable {
  * */
 class Cube {
 	constructor(cube) {
-		let { dimensionHierarchies = [], cellTable = {}, settings = {} } = cube;
+		let { dimensionHierarchies = [], cellTable = {} } = cube;
 		if (Array.isArray(cellTable)) {
 			cellTable = { cells: cellTable };
 			console.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table')
 		}
 		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
-		this.settings = new Settings(settings);
-		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => dimensionHierarchy instanceof DimensionTree ? dimensionHierarchy : DimensionTree.createDimensionTree(dimensionHierarchy, this.settings));
-		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
 
+		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => {
+			// duck
+			if (dimensionHierarchy.hierarchy) {
+				if (dimensionHierarchy instanceof DimensionHierarchy) {
+					return dimensionHierarchy;
+				} else {
+					return DimensionHierarchy.createDimensionHierarchy(dimensionHierarchy);
+				}
+			} else if (dimensionHierarchy.dimensionTable) {
+				if ( dimensionHierarchy instanceof DimensionTree ){
+					return dimensionHierarchy;
+				} else {
+					return DimensionTree.createDimensionTree(dimensionHierarchy);
+				}
+			} else {
+				if (dimensionHierarchy instanceof DimensionTable) {
+					return dimensionHierarchy;
+				} else {
+					return DimensionTable.createDimensionTable(dimensionHierarchy);
+				}
+			}
+		});
+		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
 		// const residuals = this.residuals();
 		// const count = residuals.length;
 		// if (count > 0) {
@@ -59,11 +89,9 @@ class Cube {
 	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
 	 * @param {object} factTable
 	 * @param {object} dimensionHierarchies
-	 * @param {object} options
-	 * @param {string} options.templateForeignKey
 	 * @return {Cube}
 	 * */
-	static create(factTable, dimensionHierarchies = [], options = {}) {
+	static create(factTable, dimensionHierarchies = []) {
 		if (Array.isArray(factTable)) {
 			factTable = { facts: factTable };
 			console.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table')
@@ -76,13 +104,237 @@ class Cube {
 		const cube = new this({
 			cellTable: { primaryKey, defaultFactOptions },
 			dimensionHierarchies: dimensionHierarchies,
-			settings: { ...options }
 		});
 
 		// build 2: members
 		cube.addFacts(facts);
 
 		return cube;
+	}
+	/**
+	 * is the act of picking a rectangular subset of a cube by choosing a single value for one of its dimensions, creating a new cube with one fewer dimension.
+	 * @public
+	 * @param {string} dimension
+	 * @param {Member} member
+	 * @return {Cube}
+	 * */
+	slice(dimension, member) {
+		return this.dice({ [dimension]: member })
+	}
+	/**
+	 * @public
+	 * @param {object} set
+	 * @return {Cube}
+	 * */
+	dice(set) {
+		// 1 make one projection on to member
+		const cellTable = this.getCells();
+		const fixSpace = {};
+		Object.keys(set).forEach(dimension => {
+			fixSpace[dimension] = Array.isArray(set[dimension])
+				? set[dimension]
+				: [set[dimension]];
+
+			// todo замена на оригинальные члены измерений
+			const dimensionTree = this.findDimensionTreeByDimension(dimension);
+			if (!dimensionTree) {
+				return;
+			}
+			const dimensionTable = dimensionTree.getTreeValue();
+			fixSpace[dimension].forEach((memberData, index) => {
+				const members = this.getDimensionMembers(dimension);
+				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
+				fixSpace[dimension][index] = member;
+				if (!memberData) {
+					console.warn(`not founded member by id ${dimensionTable.getMemberId(member)}`)
+				}
+			})
+		});
+
+		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
+		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
+			throw `set must have length: ${dimensionHierarchiesLength}`
+		}
+
+		const projectionDimensionHierarchies = [];
+
+		// для каждого измерения
+		const totalSpaces = Object.keys(fixSpace).map(dimension => {
+
+			// ищется его расширенная версия для каждого члена
+			const spacesForCells = fixSpace[dimension].map(member => {
+
+				let searchedInTree = this.findDimensionTreeByDimension(dimension);
+
+				const dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
+				const {
+					dimension: dimensionProjection,
+					members: membersProjection
+				} = dimensionTreeProjection.getRoot().getTreeValue();
+
+				projectionDimensionHierarchies.push(dimensionTreeProjection);
+				return { [dimensionProjection]: membersProjection };
+			});
+
+			// после чего эти расширенные версии объекдиняются
+			const totalSpace = Space.union(...spacesForCells);
+
+			return totalSpace;
+		});
+
+		// фильтрация продолжается
+		let filteredCellTable = cellTable;
+
+		const cellBelongsToSpace = (cell, space) => {
+			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
+				const members = space[dimension];
+				const { foreignKey, primaryKey } = this.findDimensionTreeByDimension(dimension).getTreeValue();
+				const finded = members.find(member => {
+					return member[primaryKey] === cell[foreignKey]
+				});
+				return !finded;
+			});
+			return !somePropOfCellNotBelongToSpace;
+		};
+
+		totalSpaces.forEach(space => {
+			// и ищутся те ячейки, которые принадлежат получившейся области
+			filteredCellTable = filteredCellTable.filter(cell => {
+				return cellBelongsToSpace(cell, space)
+			});
+		});
+
+		// 2 create new list of dimensionHierarchies
+		const newDimensionHierarchies = [];
+		this.dimensionHierarchies.forEach(originalDimensionHierarchy => {
+			let finded = false;
+			projectionDimensionHierarchies.forEach(projectionDimensionHierarchy => {
+				if (originalDimensionHierarchy.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension) {
+					newDimensionHierarchies.push(projectionDimensionHierarchy);
+					finded = true;
+				}
+			});
+			if (!finded) {
+				const { members, dimension } = originalDimensionHierarchy.getTreeValue();
+				const projectionDimensionHierarchy = new DimensionTree(originalDimensionHierarchy);
+				members.forEach(member => {
+					let memberBelongToCells = false;
+					filteredCellTable.forEach(filteredCell => {
+						if (cellBelongsToSpace(filteredCell, { [dimension]: [member] })) {
+							memberBelongToCells = true;
+						}
+					});
+					if (!memberBelongToCells) {
+						let has = projectionDimensionHierarchy.getTreeValue().members.indexOf(member) !== -1;
+						if (has) {
+							projectionDimensionHierarchy.removeProjectionOntoMember(member)
+						}
+					}
+				});
+
+				newDimensionHierarchies.push(projectionDimensionHierarchy);
+			}
+		});
+
+		return new Cube({ cellTable: filteredCellTable, dimensionHierarchies: newDimensionHierarchies })
+	}
+	/**
+	 * @public
+	 * @param {string} hierarchy
+	 * @param {string} targetDimension
+	 * @return {Cube}
+	 * */
+	drillUp(hierarchy, targetDimension) {
+		const currentHierarchy = getHierarchy.call(this, hierarchy);
+		if (currentHierarchy && currentHierarchy.hasDimension(targetDimension)) {
+			currentHierarchy.setActiveDimension(targetDimension);
+		}
+		return this;
+	}
+	/**
+	 * @public
+	 * @param {string} hierarchy
+	 * @param {string} targetDimension
+	 * @return {Cube}
+	 * */
+	drillDown(hierarchy, targetDimension) {
+		const currentHierarchy = getHierarchy.call(this, hierarchy);
+		if (currentHierarchy && currentHierarchy.hasDimension(targetDimension)) {
+			currentHierarchy.setActiveDimension(targetDimension);
+		}
+		return this;
+	}
+	/**
+	 * @public
+	 * @param {object[]} members
+	 * @param {string} currentDimension
+	 * @param {string?} targetDimension
+	 * @deprecated as unnecessary
+	 * */
+	drillUpMembers(members, currentDimension, targetDimension) {
+		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+		// first rollUp if no target
+		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
+		// if cant rollUp
+		if (!targetDimension && !targetDimensionTree) {
+			return members;
+		}
+		if (!currentDimensionTree.hasChild(targetDimensionTree)) {
+			return members;
+		}
+		let targetDimensionWasAchieved = false;
+		let lastTracedDimensionTree = currentDimensionTree;
+		let lastTracedMembers = members;
+		currentDimensionTree.tracePreOrder((treeValue, tracedDimensionTree) => {
+			if (tracedDimensionTree === currentDimensionTree) {
+				return;
+			}
+			if (!targetDimensionWasAchieved) {
+				lastTracedMembers = lastTracedDimensionTree.drillUpDimensionMembers(lastTracedMembers);
+				if (targetDimensionTree === tracedDimensionTree) {
+					targetDimensionWasAchieved = true;
+				} else {
+					lastTracedDimensionTree = tracedDimensionTree;
+				}
+			}
+		});
+		return lastTracedMembers;
+	}
+	/**
+	 * @public
+	 * @param {object[]} members
+	 * @param {string} currentDimension
+	 * @param {string?} targetDimension
+	 * @deprecated as unnecessary
+	 * */
+	drillDownMembers(members, currentDimension, targetDimension) {
+		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
+		// first drillDown if no target
+		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
+		// if cant drillDown
+		if (!targetDimension && !targetDimensionTree) {
+			return members;
+		}
+		if (!currentDimensionTree.hasParent(targetDimensionTree)) {
+			return members;
+		}
+		let targetDimensionWasAchieved = false;
+		let lastTracedDimensionTree = currentDimensionTree;
+		let lastTracedMembers = members;
+		currentDimensionTree.traceUpOrder((tracedDimensionTree) => {
+			if (tracedDimensionTree === currentDimensionTree) {
+				return;
+			}
+			if (!targetDimensionWasAchieved) {
+				lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+				if (targetDimensionTree === tracedDimensionTree) {
+					targetDimensionWasAchieved = true;
+				} else {
+					lastTracedDimensionTree = tracedDimensionTree;
+				}
+			}
+		});
+		return lastTracedMembers;
 	}
 	/**
 	 * @public
@@ -93,7 +345,7 @@ class Cube {
 		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
 		[].push.apply(this.getCells(), cells);
 		const factTable = this.getFacts();
-		SnowflakeBuilder.anotherBuild(factTable, cells, this.dimensionHierarchies, this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuild(factTable, cells, this._getDimensionTrees(), this.getCells(), this.cellTable.primaryKey);
 	}
 	/**
 	 * @public
@@ -146,103 +398,22 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @deprecated
 	 * */
 	getCellsBySet(fixSpaceOptions) {
-		let { cellTable } = this.projection(fixSpaceOptions);
-		return cellTable;
+		let cube = this.dice(fixSpaceOptions);
+		return cube.getCells();
 	}
 	/**
 	 * @public
 	 * @param {string} dimension - dimension from which the member will be found
 	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
 	 * @return {Member[]} returns members
+	 * @deprecated
 	 * */
 	getDimensionMembersBySet(dimension, fixSpaceOptions) {
-		let { cellTable } = this.projection(fixSpaceOptions);
-		return this.getDimensionMembersFromCells(dimension, cellTable);
-	}
-	/**
-	 * @private
-	 * @param {object} fixSpaceOptions
-	 * */
-	projection(fixSpaceOptions) {
-		const cellTable = this.getCells();
-		const fixSpace = {};
-		Object.keys(fixSpaceOptions).forEach(dimension => {
-			fixSpace[dimension] = Array.isArray(fixSpaceOptions[dimension])
-				? fixSpaceOptions[dimension]
-				: [fixSpaceOptions[dimension]];
-
-			// todo замена на оригинальные члены измерений
-			const dimensionTree = this.findDimensionTreeByDimension(dimension);
-			if (!dimensionTree) {
-				return;
-			}
-			const dimensionTable = dimensionTree.getTreeValue();
-			fixSpace[dimension].forEach((memberData, index) => {
-				const members = this.getDimensionMembers(dimension);
-				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
-				fixSpace[dimension][index] = member;
-				if (!memberData) {
-					console.warn(`not founded member by id ${dimensionTable.getMemberId(member)}`)
-				}
-			})
-		});
-
-		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
-		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
-			throw `set must have length: ${dimensionHierarchiesLength}`
-		}
-
-		const dimensionHierarchies = [];
-
-		// для каждого измерения
-		const totalSpaces = Object.keys(fixSpace).map(dimension => {
-
-			// ищется его расширенная версия для каждого члена
-			const spacesForCells = fixSpace[dimension].map(member => {
-
-				let searchedInTree = this.findDimensionTreeByDimension(dimension);
-
-				const dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
-				const {
-					dimension: dimensionProjection,
-					members: membersProjection
-				} = dimensionTreeProjection.getRoot().getTreeValue();
-
-				dimensionHierarchies.push(dimensionTreeProjection);
-				return { [dimensionProjection]: membersProjection };
-			});
-
-			// после чего эти расширенные версии объекдиняются
-			const totalSpace = Space.union(...spacesForCells);
-
-			return totalSpace;
-		});
-
-		// фильтрация продолжается
-		let filteredCellTable = cellTable;
-
-		const cellBelongsToSpace = (cell, space) => {
-			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
-				const members = space[dimension];
-				const { foreignKey, primaryKey } = this.findDimensionTreeByDimension(dimension).getTreeValue();
-				const finded = members.find(member => {
-					return member[primaryKey] === cell[foreignKey]
-				});
-				return !finded;
-			});
-			return !somePropOfCellNotBelongToSpace;
-		};
-
-		totalSpaces.forEach(space => {
-			// и ищутся те ячейки, которые принадлежат получившейся области
-			filteredCellTable = filteredCellTable.filter(cell => {
-				return cellBelongsToSpace(cell, space)
-			});
-		});
-
-		return { cellTable: filteredCellTable, dimensionHierarchies };
+		let cube = this.dice(fixSpaceOptions);
+		return cube.getDimensionMembers(dimension);
 	}
 	/**
 	 * @private
@@ -258,52 +429,12 @@ class Cube {
 		});
 		return findDimensionTree;
 	}
-	/**
-	 * @private
-	 * */
-	getDimensionMembersFromCells(dimension, cells) {
-		const searchedDimensionTree = this.findDimensionTreeByDimension(dimension);
-		const dimensionTable = searchedDimensionTree.getRoot().getTreeValue();
-
-		const {
-			members: rootMembers,
-			dimension: rootDimension,
-			foreignKey: rootIdAttribute
-		} = dimensionTable;
-
-		const members = [];
-
-		// todo смахивает на mapFilter
-		cells.forEach(cell => {
-			rootMembers.forEach(rootMember => {
-				if (cell[rootIdAttribute] === dimensionTable.getMemberId(rootMember)) {
-					if (members.indexOf(rootMember) === -1) {
-						members.push(rootMember)
-					}
-				}
-			})
-		});
-
-		if (searchedDimensionTree.isRoot()) {
-			return members
-		} else {
-			let lastTracedMembers = members;
-			let end = false;
-			let lastTracedDimensionTree = searchedDimensionTree;
-			searchedDimensionTree.getRoot().tracePreOrder((tracedDimensionTreeValue, tracedDimensionTree) => {
-				if (tracedDimensionTree.isRoot()) {
-					return;
-				}
-				if (!end) {
-					lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
-					lastTracedDimensionTree = tracedDimensionTree;
-				}
-				if (tracedDimensionTreeValue.dimension === dimension) {
-					end = true;
-				}
-			});
-			return lastTracedMembers;
-		}
+	_getDimensionTrees() {
+		return this.dimensionHierarchies.map(dimensionHierarchy => {
+			return dimensionHierarchy.getDimensionTree
+				? dimensionHierarchy.getDimensionTree()
+				: dimensionHierarchy
+		})
 	}
 	/**
 	 * @public
@@ -353,7 +484,7 @@ class Cube {
 	 * Get facts from cube
 	 * */
 	denormalize(cells = this.getCells(), forSave = true) {
-		const data = SnowflakeBuilder.denormalize(cells, this.dimensionHierarchies);
+		const data = SnowflakeBuilder.denormalize(cells, this._getDimensionTrees());
 		if (forSave) {
 			data.forEach((data, index) => {
 				if (cells[index] instanceof EmptyCell) {
@@ -500,21 +631,14 @@ class Cube {
 		return unfilled;
 	}
 	/**
-	 * @param {object} dimensionHierarchy
+	 * @public
+	 * @param {object|DimensionTree} dimensionHierarchy
 	 * */
-	_addDimensionHierarchy(dimensionHierarchy) {
-		const dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy, this.settings);
+	addDimensionHierarchy(dimensionHierarchy) {
+		const dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy);
 		this.dimensionHierarchies.push(
 			dimensionTree
 		);
-		return dimensionTree;
-	}
-	/**
-	 * @public
-	 * @param {DimensionTree} dimensionHierarchy
-	 * */
-	addDimensionHierarchy(dimensionHierarchy) {
-		const dimensionTree = this._addDimensionHierarchy(dimensionHierarchy);
 		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
 	}
 	/**
@@ -526,110 +650,6 @@ class Cube {
 		SnowflakeBuilder.destroyDimensionTree(this.getCells(), this.getCells(), dimensionHierarchy, this);
 		// then target dimension hierarchy
 		this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
-	}
-	/**
-	 * @public
-	 * @param {string} currentDimension
-	 * @param {object[]} members
-	 * @param {string?} targetDimension
-	 * */
-	rollUp(currentDimension, members, targetDimension) {
-		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-		// first rollUp if no target
-		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
-		// if cant rollUp
-		if (!targetDimension && !targetDimensionTree) {
-			return members;
-		}
-		if (!currentDimensionTree.hasChild(targetDimensionTree)) {
-			return members;
-		}
-		let targetDimensionWasAchieved = false;
-		let lastTracedDimensionTree = currentDimensionTree;
-		let lastTracedMembers = members;
-		currentDimensionTree.tracePreOrder((treeValue, tracedDimensionTree) => {
-			if (tracedDimensionTree === currentDimensionTree) {
-				return;
-			}
-			if (!targetDimensionWasAchieved) {
-				lastTracedMembers = lastTracedDimensionTree.rollUpDimensionMembers(lastTracedMembers);
-				if (targetDimensionTree === tracedDimensionTree) {
-					targetDimensionWasAchieved = true;
-				} else {
-					lastTracedDimensionTree = tracedDimensionTree;
-				}
-			}
-		});
-		return lastTracedMembers;
-	}
-	/**
-	 * @public
-	 * @param {string} currentDimension
-	 * @param {object[]} members
-	 * @param {string?} targetDimension
-	 * */
-	drillDown(currentDimension, members, targetDimension) {
-		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-		// first drillDown if no target
-		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
-		// if cant drillDown
-		if (!targetDimension && !targetDimensionTree) {
-			return members;
-		}
-		if (!currentDimensionTree.hasParent(targetDimensionTree)) {
-			return members;
-		}
-		let targetDimensionWasAchieved = false;
-		let lastTracedDimensionTree = currentDimensionTree;
-		let lastTracedMembers = members;
-		currentDimensionTree.traceUpOrder((tracedDimensionTree) => {
-			if (tracedDimensionTree === currentDimensionTree) {
-				return;
-			}
-			if (!targetDimensionWasAchieved) {
-				lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
-				if (targetDimensionTree === tracedDimensionTree) {
-					targetDimensionWasAchieved = true;
-				} else {
-					lastTracedDimensionTree = tracedDimensionTree;
-				}
-			}
-		});
-		return lastTracedMembers;
-	}
-	/**
-	 * @return {Cube}
-	 * */
-	slice(dimension, member) {
-		return this._createProjectionOfCube({ [dimension]: member })
-	}
-	/**
-	 *
-	 * */
-	dice(fixSpaceOptions) {
-		return this._createProjectionOfCube(fixSpaceOptions)
-	}
-	/**
-	 *
-	 * */
-	_createProjectionOfCube(fixSpaceOptions) {
-		// 1 make one projection on to member
-		const projection = this.projection(fixSpaceOptions);
-		const { cellTable, dimensionHierarchies } = projection;
-		// 2 create new list of dimensionHierarchies
-		const newDimensionHierarchies = [].concat(this.dimensionHierarchies);
-		// 3 replace original by projected dimensionHierarchy
-		dimensionHierarchies.forEach(projectionDimensionHierarchy => {
-			// find original dimensionHierarchy
-			const originalDimensionHierarchy = this.dimensionHierarchies.find(dimensionTree => {
-				return dimensionTree.getTreeValue().dimension === projectionDimensionHierarchy.getTreeValue().dimension;
-			});
-			// define index
-			const index = newDimensionHierarchies.indexOf(originalDimensionHierarchy);
-			// replace it
-			newDimensionHierarchies.splice(index, 1, projectionDimensionHierarchy);
-		});
-		return new Cube({ cellTable, dimensionHierarchies: newDimensionHierarchies })
 	}
 	/**
 	 * @public

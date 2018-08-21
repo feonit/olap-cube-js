@@ -1,9 +1,9 @@
 import Member from './Member.js'
-import {DEFAULT_MEMBER_ID_PROP} from './const.js'
+import {DEFAULT_MEMBER_ID_PROP, DEFAULT_TEMPLATE_FOREIGN_KEY} from './const.js'
 import InputMember from './InputMember.js'
 
 export default class DimensionTable {
-	constructor({ dimension, foreignKey, primaryKey = DEFAULT_MEMBER_ID_PROP, keyProps, otherProps = [], members = [], defaultMemberOptions = {}}) {
+	constructor({ dimension, foreignKey = DimensionTable.genericId(dimension), primaryKey = DEFAULT_MEMBER_ID_PROP, keyProps, otherProps = [], members = [], defaultMemberOptions = {}}) {
 		if (!dimension || !keyProps) {
 			throw Error('Bad definition DimensionTable, params \"dimension\" and \"keyProps\" is required');
 		}
@@ -84,6 +84,13 @@ export default class DimensionTable {
 			return 1;
 		}
 	}
+	/**
+	 * @public
+	 * A way to create a name for a property in which a unique identifier will be stored
+	 * */
+	static genericId(dimension) {
+		return DEFAULT_TEMPLATE_FOREIGN_KEY.replace('%s', dimension);
+	}
 	setMemberId(member, id) {
 		member[this.primaryKey] = id;
 	}
@@ -99,5 +106,8 @@ export default class DimensionTable {
 			throw new Error('represented member was not found', member);
 		}
 		this.members.splice(index, 1);
+	}
+	static createDimensionTable(dimensionTable) {
+		return new DimensionTable(dimensionTable)
 	}
 }

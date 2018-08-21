@@ -24,7 +24,6 @@ export default class SnowflakeBuilder {
 	}
 
 	static processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
-		const isFirstLevel = dimensionTree.isFirstLevel();
 		const dimensionTable = dimensionTree.getTreeValue();
 		const { dimension, keyProps = [], otherProps = [], members: memberList, foreignKey, primaryKey } = dimensionTable;
 		const childIdAttributes = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().foreignKey);
@@ -33,7 +32,7 @@ export default class SnowflakeBuilder {
 		let members;
 
 		const existMemberCount = memberList.length;
-		const args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable];
+		const args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, cellTable];
 
 		if (!childIdAttributes.length) {
 			members = SnowflakeBuilder.makeMemberList.apply(null, args);
@@ -78,13 +77,13 @@ export default class SnowflakeBuilder {
 	/**
 	 * @private
 	 * */
-	static makeMemberListLevel(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, childIdAttributes, entitiesParts) {
+	static makeMemberListLevel(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, cellTable, childIdAttributes, entitiesParts) {
 		let totalMemberList = [];
 
 		let countId = 0;
 		entitiesParts.forEach(entitiesPart => {
 			if (entitiesPart.length) {
-				const members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, isFirstLevel, cellTable, countId);
+				const members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, cellTable, countId);
 				countId = countId + members.length;
 
 				const etalon = entitiesPart[0];
@@ -116,7 +115,6 @@ export default class SnowflakeBuilder {
 	 * @param {string} dimension - The dimension for which members will be created
 	 * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
 	 * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
-	 * @param {boolean} isFirstLevel
 	 * @param {Cell} cells
 	 * @param {Cell[]} cellTable
 	 * @return {[]}
@@ -133,7 +131,6 @@ export default class SnowflakeBuilder {
 		keyProps = [],
 		otherProps = [],
 		cells,
-		isFirstLevel,
 		cellTable,
 		startFrom = 0
 	) {
@@ -209,14 +206,14 @@ export default class SnowflakeBuilder {
 	/**
 	 * Method allows to generate fact tables from cells
 	 * */
-	static denormalize(cellTable, dimensionHierarchies) {
+	static denormalize(cellTable, dimensionTrees) {
 		const factTable = new FactTable();
 		const facts = factTable.getFacts();
 		cellTable.forEach(cell => {
 			facts.push({...cell})
 		});
 		facts.forEach(fact => {
-			dimensionHierarchies.forEach(dimensionTree => {
+			dimensionTrees.forEach(dimensionTree => {
 				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
 			});
 		});
@@ -230,11 +227,11 @@ export default class SnowflakeBuilder {
 		Object.assign(cell, memberCopy)
 	}
 	static removeMembers(cube, dimensionTree, member, memberList, dimension, cell, foreignKey) {
-		const { cellTable } = cube.projection({ [dimension]: member });
+		const dicedCube = cube.dice({ [dimension]: member });
 		const dimensionTable = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue();
 		// last cell was removed at the beginning of the algorithm,
 		// so if the member is no longer used, the projection will be empty
-		if (!cellTable.length) {
+		if (!dicedCube.getCells().length) {
 			dimensionTable.removeMember(member)
 		}
 	}

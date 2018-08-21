@@ -79,7 +79,7 @@ describe('readme', () => {
 		debug = isEqualObjects(products, cube.getDimensionMembers('products'));
 		debug = isEqualObjects(categories, cube.getDimensionMembers('categories'));
 
-		const result = cube.projection({ categories: [{ id: 1 }] });
+		const result = cube.dice({ categories: [{ id: 1 }] });
 
 		debug = isEqualObjects(
 			[
