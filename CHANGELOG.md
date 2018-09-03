@@ -1,10 +1,14 @@
 ## Change Log
+*0.15.0*
+- Removed `getCellsBySet`, `getFactsBySet` and `getDimensionMembersBySet`
+- Fix changelog record for 0.14.0
+
 *0.14.0*
 - Changed property `dependency` renamed to `level`
 - Removed `templateForeignKey` property from Settings since there is a more fine tuning for custom `foreignKey` and settings own
 - Deprecated
 	method `getCellsBySet` use `this.dice(set).getCells()`, 
-	method `getFactsBySet` use `this.dice(set).denormalize().getCells()`,
+	method `getFactsBySet` use `this.dice(set).getFacts()`,
 	method `getDimensionMembersBySet` use `this.dice(set).getDimensionMembers(dimension)`
 	
 - Braking changes

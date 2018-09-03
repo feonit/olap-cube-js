@@ -59,7 +59,7 @@ describe('methods slice and dice must work', () => {
 	});
 	it('dice target dimensionTable must contain all members as passed in arguments', () => {
 		const subCube = cube.dice({ y: yMember, x: xMember });
-		expect(debug = subCube.getDimensionMembers('y')[0] === subCube.getDimensionMembers('y')[0]).toBe(true);
-		expect(debug = subCube.getDimensionMembers('x')[0] === subCube.getDimensionMembers('x')[0]).toBe(true);
+		expect(debug = subCube.getDimensionMembers('y')[0] === cube.getDimensionMembers('y')[0]).toBe(true);
+		expect(debug = subCube.getDimensionMembers('x')[0] === cube.getDimensionMembers('x')[0]).toBe(true);
 	});
 });

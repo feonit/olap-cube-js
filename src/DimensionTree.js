@@ -85,11 +85,15 @@ export default class DimensionTree extends Tree {
 	 * */
 	createProjectionOntoMember(member) {
 		// 1 create copy of hierarchy with empty members
-		const newDimensionTreeByMember = new DimensionTree(this.getRoot());
-		newDimensionTreeByMember.tracePostOrder((dimensionTreeValue, dimensionTree) => {
-			const dimensionTable = dimensionTree.getTreeValue();
-			dimensionTable.clearMemberList();
-		});
+		const newDimensionTreeByMember = this.cloneDimensionTreeWithoutMembers();
+
+		this.projectDrillDown(newDimensionTreeByMember, member);
+		this.projectDrillUp(newDimensionTreeByMember, member);
+
+		return newDimensionTreeByMember;
+	}
+	// насытить связными данными снизу
+	projectDrillDown(dimensionTree, member){
 		let lastTracedMembers;
 		let lastTracedDimensionTree;
 		// 2 trace up
@@ -102,7 +106,7 @@ export default class DimensionTree extends Tree {
 				: lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
 
 			// 4 set members
-			newDimensionTreeByMember
+			dimensionTree
 				.getDimensionTreeByDimension(tracedDimension)
 				.getTreeValue()
 				.setMemberList(drillDownedMembers);
@@ -111,7 +115,33 @@ export default class DimensionTree extends Tree {
 			lastTracedMembers = drillDownedMembers;
 			lastTracedDimensionTree = tracedTree;
 		});
-		return newDimensionTreeByMember;
+	}
+	// насытить связными данными сверху
+	projectDrillUp(dimensionTree, member){
+		let lastTracedMembers2;
+		let lastTracedDimensionTree2;
+		this.tracePreOrder((b, tracedTree) => {
+			const { dimension: tracedDimension } = tracedTree.getTreeValue();
+			const drillUppedMembers = tracedTree == this
+				? [member]
+				: lastTracedDimensionTree2.drillUpDimensionMembers(lastTracedMembers2);
+
+			dimensionTree
+				.getDimensionTreeByDimension(tracedDimension)
+				.getTreeValue()
+				.setMemberList(drillUppedMembers);
+
+			lastTracedMembers2 = drillUppedMembers;
+			lastTracedDimensionTree2 = tracedTree;
+		})
+	}
+	cloneDimensionTreeWithoutMembers(){
+		const clone = new DimensionTree(this.getRoot());
+		clone.tracePostOrder((dimensionTreeValue, dimensionTree) => {
+			const dimensionTable = dimensionTree.getTreeValue();
+			dimensionTable.clearMemberList();
+		});
+		return clone;
 	}
 	/**
 	 * @public
@@ -119,7 +149,9 @@ export default class DimensionTree extends Tree {
 	 * */
 	removeProjectionOntoMember(member) {
 		// 1 get projection
-		const projectionDimensionTree = this.createProjectionOntoMember(member);
+		const projectionDimensionTree = this.cloneDimensionTreeWithoutMembers();
+		this.projectDrillDown(projectionDimensionTree, member);
+
 		// 2 subtract projection
 		this.subtractDimensionTree(projectionDimensionTree);
 		// 3 return first level members of projection
@@ -163,6 +195,28 @@ export default class DimensionTree extends Tree {
 			const dimensionTable = currentDimensionTree.getTreeValue();
 			toBeRemovedSpace[dimension].forEach(member => {
 				dimensionTable.removeMember(member);
+			})
+		});
+	}
+	unionDimensionTree(dimensionTree){
+		const toBeAddedSpace = {};
+		dimensionTree.tracePostOrder(dimensionTreeValue => {
+			const {dimension, members} = dimensionTreeValue;
+			toBeAddedSpace[dimension] = members;
+		});
+		const memberList = this.getTreeValue().members;
+
+		// if (memberList.length === 1){
+		// 	this.tracePreOrder((dimensionTable, tracedDimensionTree) => {
+		// 		const {members: childMembers, dimension: childDimension} = dimensionTable;
+		// 		toBeAddedSpace[childDimension] = childMembers;
+		// 	})
+		// }
+		Object.keys(toBeAddedSpace).forEach(dimension => {
+			const currentDimensionTree = this.getDimensionTreeByDimension(dimension);
+			const dimensionTable = currentDimensionTree.getTreeValue();
+			toBeAddedSpace[dimension].forEach(member => {
+				dimensionTable.addMember(member);
 			})
 		});
 	}

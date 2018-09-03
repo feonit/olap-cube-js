@@ -133,4 +133,15 @@ describe('class DimensionTree', function() {
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('xxx').drillUpDimensionMembers([secondMemberLevel_1]), [secondMemberLevel_2]);
 		debug = isEqualObjects(dimensionTree.getDimensionTreeByDimension('xx').drillDownDimensionMembers([secondMemberLevel_2]), [secondMemberLevel_1, thirdMemberLevel_1]);
 	})
+
+	// todo заменить на projectDrillDown/UP
+	// xit('createProjectionOntoMember must work', () => {
+	// 	const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
+	// 	const memberLevel_1 = { id: 2, xxx: 0.868, xx_id: 2 };
+	// 	const newDimensionTree = dimensionTree.createProjectionOntoMember(memberLevel_1);
+	//
+	// 	isEqualObjects(newDimensionTree.getDimensionTreeByDimension('xxx').getTreeValue().members, [{ id: 2, xxx: 0.868, xx_id: 2 }])
+	// 	isEqualObjects(newDimensionTree.getDimensionTreeByDimension('xx').getTreeValue().members, [{ id: 2, xx: 0.87, x_id: 2 }])
+	// 	isEqualObjects(newDimensionTree.getDimensionTreeByDimension('x').getTreeValue().members, [{ id: 2, x: 0.9 }])
+	// })
 });

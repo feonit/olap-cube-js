@@ -161,20 +161,33 @@ class Cube {
 		// для каждого измерения
 		const totalSpaces = Object.keys(fixSpace).map(dimension => {
 
+			let dimensionTreeProjection;
 			// ищется его расширенная версия для каждого члена
 			const spacesForCells = fixSpace[dimension].map(member => {
 
 				let searchedInTree = this.findDimensionTreeByDimension(dimension);
 
-				const dimensionTreeProjection = searchedInTree.createProjectionOntoMember(member);
+				const current = searchedInTree.cloneDimensionTreeWithoutMembers();
+
+				searchedInTree.projectDrillDown(current, member);
+				searchedInTree.projectDrillUp(current, member);
+
+				if (dimensionTreeProjection){
+					dimensionTreeProjection.unionDimensionTree(current)
+				} else {
+					dimensionTreeProjection = current;
+				}
 				const {
 					dimension: dimensionProjection,
 					members: membersProjection
 				} = dimensionTreeProjection.getRoot().getTreeValue();
 
-				projectionDimensionHierarchies.push(dimensionTreeProjection);
 				return { [dimensionProjection]: membersProjection };
 			});
+
+			if (dimensionTreeProjection){
+				projectionDimensionHierarchies.push(dimensionTreeProjection);
+			}
 
 			// после чего эти расширенные версии объекдиняются
 			const totalSpace = Space.union(...spacesForCells);
@@ -383,37 +396,9 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-	 * @return {FactTable} returns members
-	 * @deprecated
-	 * */
-	getFactsBySet(fixSpaceOptions) {
-		return this.denormalize(this.getCellsBySet(fixSpaceOptions));
-	}
-	/**
-	 * @public
 	 * */
 	getCells() {
 		return this.cellTable.cells;
-	}
-	/**
-	 * @public
-	 * @deprecated
-	 * */
-	getCellsBySet(fixSpaceOptions) {
-		let cube = this.dice(fixSpaceOptions);
-		return cube.getCells();
-	}
-	/**
-	 * @public
-	 * @param {string} dimension - dimension from which the member will be found
-	 * @param {object} fixSpaceOptions - the composed aggregate object, members grouped by dimension names
-	 * @return {Member[]} returns members
-	 * @deprecated
-	 * */
-	getDimensionMembersBySet(dimension, fixSpaceOptions) {
-		let cube = this.dice(fixSpaceOptions);
-		return cube.getDimensionMembers(dimension);
 	}
 	/**
 	 * @private
@@ -502,7 +487,7 @@ class Cube {
 		const tuples = this.cartesian();
 		const totalFacts = [];
 		tuples.forEach(tuple => {
-			const partFacts = this.getFactsBySet(tuple);
+			const partFacts = this.dice(tuple).getFacts();
 			if (partFacts.length > 1) {
 				totalFacts.push(tuple)
 			}
@@ -623,7 +608,7 @@ class Cube {
 		const tuples = this.cartesian();
 		const unfilled = [];
 		tuples.forEach(tuple => {
-			const members = this.getFactsBySet(tuple);
+			const members = this.dice(tuple).getFacts(tuple);
 			if (members.length === 0) {
 				unfilled.push(tuple)
 			}
@@ -659,7 +644,7 @@ class Cube {
 		const emptyCells = [];
 		const tuples = this.cartesian();
 		tuples.forEach(combination => {
-			const unique = this.getCellsBySet(combination);
+			const unique = this.dice(combination).getCells();
 			if (!unique.length) {
 				let foreignKeysCellData = {};
 				Object.keys(combination).forEach(dimension => {

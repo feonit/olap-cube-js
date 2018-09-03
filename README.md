@@ -242,7 +242,7 @@ let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } }
 ```
 execute:
 ```js
-cube.getCellsBySet(set)
+cube.dice(set).getCells()
 ```
 return:
 ```js
@@ -252,7 +252,7 @@ return:
 ```
 execute:
 ```js
-cube.getFactsBySet(set)
+cube.dice(set).getFacts()
 ```
 return:
 ```js
@@ -268,7 +268,7 @@ let subSet = { regions: { id: 3 } }
 ```
 execute:
 ```js
-cube.getCellsBySet(subSet)
+cube.dice(subSet).getCells()
 ```
 return:
 ```js
@@ -279,7 +279,7 @@ return:
 ```
 execute:
 ```js
-cube.getFactsBySet(subSet)
+cube.dice(subSet).getFacts()
 ```
 return:
 ```js
@@ -295,7 +295,7 @@ let emptySet = {}
 ```
 execute:
 ```js
-cube.getCellsBySet(emptySet)
+cube.dice(emptySet).getCells()
 // or little shorter
 cube.getCells()
 ```
@@ -310,7 +310,7 @@ return:
 ```
 execute:
 ```js
-cube.getFactsBySet(emptySet)
+cube.dice(emptySet).getFacts()
 // or little shorter
 cube.getFacts()
 ```
@@ -330,7 +330,7 @@ let multiSet = { regions: [ { id: 1 }, { id: 2 } ] }
 ```
 execute:
 ```js
-cube.getCellsBySet(multiSet)
+cube.dice(multiSet).getCells()
 ```
 return:
 ```js
@@ -341,7 +341,7 @@ return:
 ```
 execute:
 ```js
-cube.getFactsBySet(multiSet)
+cube.dice(multiSet).getFacts()
 ```
 return:
 ```js
@@ -354,7 +354,7 @@ return:
 ##### EmptySet <br/>
 Simple call return all members of the dimension:
 ```js
-cube.getDimensionMembersBySet('products', {})
+cube.dice({}).getDimensionMembers('products')
 // or little shorter
 cube.getDimensionMembers('products')
 ```
@@ -371,7 +371,7 @@ return:
 Queries with the second argument return some members of the dimension in accordance with the passed set
 
 ```js
-cube.getDimensionMembersBySet('products', { categories: { id: 1 } })
+cube.dice({ categories: { id: 1 } }).getDimensionMembers('products')
 ```
 return:
 ```js
@@ -382,7 +382,7 @@ return:
 ```
 Other example:
 ```js
-cube.getDimensionMembersBySet('regions', { categories: { id: 1 } })
+cube.dice({ categories: { id: 1 } }).getDimensionMembers('regions')
 ```
 return:
 ```js
@@ -394,7 +394,7 @@ return:
 
 ##### Multiset <br/>
 ```js
-cube.getDimensionMembersBySet('products', { regions: [{ id: 2 }, { id: 3 }] } )
+cube.dice({ regions: [{ id: 2 }, { id: 3 }] }).getDimensionMembers('products')
 ```
 return:
 ```js

@@ -53,7 +53,7 @@ export default class DimensionTable {
 		if (this.members.indexOf(member) === -1) {
 			this.members.push(member)
 		} else {
-			alert('boo')
+			console.log('boo')
 		}
 	}
 	/**

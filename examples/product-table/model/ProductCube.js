@@ -73,7 +73,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 			}
 			return new TreeTableData({
 				headerName: 'Month',
-				rows: self.getDimensionMembersBySet('month', space).map(function(member) {
+				rows: self.dice(space).getDimensionMembers('month').map(function(member) {
 					return new TreeTableData({ member: member })
 				}),
 				remove: function(member) { self.removeDimensionMember('month', member) },
@@ -88,7 +88,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 			}
 			return new TreeTableData({
 				headerName: 'Qr',
-				rows: self.getDimensionMembersBySet('qr', space).map(function(member) {
+				rows: self.dice(space).getDimensionMembers('qr').map(function(member) {
 					return new TreeTableData({ member: member })
 				}),
 				remove: function(member) { self.removeDimensionMember('qr', member) },
@@ -103,7 +103,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 			}
 			return new TreeTableData({
 				headerName: 'Year',
-				rows: self.getDimensionMembersBySet('year', space).map(function(member) {
+				rows: self.dice(space).getDimensionMembers('year').map(function(member) {
 					return new TreeTableData({ member: member })
 				}),
 				remove: function(member) { self.removeDimensionMember('year', member) },
@@ -139,7 +139,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 							self.addDimensionMember('month', member, insideSpace)
 						},
 						remove: function(member){ self.removeDimensionMember('month', member) },
-						rows: self.getDimensionMembersBySet('month', space).map(function(member) {
+						rows: self.dice(space).getDimensionMembers('month').map(function(member) {
 							return new TreeTableData({ member: member })
 						})
 					})
@@ -164,7 +164,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 						member: year,
 						add: function(member) { self.addDimensionMember('qr', member, space) },
 						remove: function(member) { self.removeDimensionMember('qr', member) },
-						rows: self.getDimensionMembersBySet('qr', space).map(function(member) {
+						rows: self.dice(space).getDimensionMembers('qr').map(function(member) {
 							return new TreeTableData({ member: member })
 						})
 					});
@@ -190,7 +190,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 						categoryName: 'Qr category',
 						remove: function(member) { self.removeDimensionMember('qr', member) },
 						add: function(member) { self.addDimensionMember('qr', member, space) },
-						rows: self.getDimensionMembersBySet('qr', space).map(function(qr) {
+						rows: self.dice(space).getDimensionMembers('qr').map(function(qr) {
 							var space = {};
 							if (qr) {
 								space.qr = qr
@@ -201,7 +201,7 @@ angular.module('demo').factory('ProductCube', ['TreeTableData', function(TreeTab
 								headerName: 'Month',
 								remove: function(member) { self.removeDimensionMember('month', member) },
 								add: function(member) { self.addDimensionMember('month', member, space) },
-								rows: self.getDimensionMembersBySet('month', space).map(function(month) {
+								rows: self.dice(space).getDimensionMembers('month').map(function(month) {
 									return new TreeTableData({
 										member: month
 									})
