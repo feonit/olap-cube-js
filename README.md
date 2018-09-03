@@ -522,19 +522,19 @@ factsFilled will be:
 ### Removing empty cells
 You can remove all or some of the empty cells. At the same time, some of the dimension members can be removed too if no more cells found correspond to the dimension member
 ```js
-cube.removeCell(cube.getEmptyCells())
+cube.removeCells(cube.getEmptyCells())
 // or
-cube.removeCell(cube.getEmptyCells().filter(({ value }) => !value))
+cube.removeCells(cube.getEmptyCells().filter(({ value }) => !value))
 
 ```
 
 ### Drill-up members
 ```js
-let markMembers = cube.drillUpMembers('product', productMembers, 'mark')
+let markMembers = cube.dice({'product': productMembers}).getDimensionMembers('mark')
 ```
 ### Drill-down members
 ```js
-let productMembers = cube.drillDownMembers('mark', markMembers, 'product')
+let productMembers = cube.dice({'mark': markMembers}).getDimensionMembers('product')
 ```
 
 ### Slice
