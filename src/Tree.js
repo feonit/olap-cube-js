@@ -1,4 +1,5 @@
 /**
+ * Tree traversing https://en.wikipedia.org/wiki/Tree_traversal
  * @class Tree
  * @abstract class cannot be instantiated with new
  * */

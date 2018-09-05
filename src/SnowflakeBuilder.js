@@ -6,6 +6,8 @@ import Member from './Member.js'
  *
  * is a special case of snowflake dimensionHierarchies
  * where every dimension is represented by one table even if the dimensions has multiple levels
+ *
+ * snowflaking - normalization process of measurement tables
  * */
 export default class SnowflakeBuilder {
 	static anotherBuild(factTable, cells, dimensionsTrees, cellTable, factPrimaryKey) {
@@ -132,6 +134,7 @@ export default class SnowflakeBuilder {
 		otherProps = [],
 		cells,
 		cellTable,
+		// It is recommended that the key field be a simple integer because a key value is meaningless
 		startFrom = 0
 	) {
 		// соотношение созданных id к ключам

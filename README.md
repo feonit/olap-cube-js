@@ -526,6 +526,7 @@ cube.removeCells(cube.getEmptyCells())
 // or
 cube.removeCells(cube.getEmptyCells().filter(({ value }) => !value))
 
+// for flexibility use other api methods `createEmptyCells`, `isEmptyCell` and `addEmptyCells`
 ```
 
 ### Drill-up members

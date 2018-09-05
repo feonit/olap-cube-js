@@ -8,6 +8,10 @@ function uuidv4() {
 	});
 }
 
+/**
+ * Empty cells - in the fact table there is no data for them
+ * The cell is identified by a tuple
+ * */
 export default class EmptyCell extends Cell {
 	constructor(data, options) {
 		if (!data.id) {

@@ -1,109 +1,60 @@
-summary - для описания значений данных в ячейках
 
-иерархия - выявленные стойкие взаимосвязи между многоуровневыми объединениями измерений и мер
-В кубе введены отношения обобщения и специализации (roll-up/drill-down)-- это операции
-по иерархиям измерений
+=====================================================================================================================
 
 http://www.ykud.ru/articles/olap_lattices/olap_lattices.pdf
 http://media.ls.urfu.ru/632/1734/4218/5290/
 http://kek.ksu.ru/eos/DW/OLAP_Microsoft.pdf
-
-
-кортеж - набор членов каждого из измерений
-
-ячейка идентифицируется кортежем
-
-пустые ячейчки - в таблице фактов для них не содержится данных
-
-Surrogate key https://en.wikipedia.org/wiki/Surrogate_key
-ключ It is recommended that the key field be a simple integer because a key value is meaningless
-
-решение проблемы  Typical Multidimensional Problem: missing values
-
-В одном измерении можно реализовать более одной иерархии - скажем, для времени: {Год, Квартал, Месяц, День} и {Год, Неделя, День}.
-
-Tree traversing https://en.wikipedia.org/wiki/Tree_traversal
-
 http://www.cfin.ru/itm/olap/glossary.shtml
+http://www.olapcube.com/mdxhelp/KeyConcepts.htm
 
 sets example:
 https://codepen.io/beaucarnes/pen/dvGeeq?editors=0012
 https://habrahabr.ru/company/netologyru/blog/334914/
 http://www.vertabelo.com/blog/technical-articles/data-warehouse-modeling-the-snowflake-schema
 
-cells это агрегированные данные
-snowflaking процесс нормализации таблиц измерений
-
-
 =====================================================================================================================
 
-- Change place of logo image to special branch
+- addDimensionMember нужно аргументы переставить местами
 
-обновление таблицы фактов, вместо удаления/добавления
-попробовать привести в порядок историю комментов в git
+- cube.createEmptyCells(cellData, genericIdFn = uuid)
+Deprecated methods `getFacts`, use `getCells` instead или все же не стоит?
 
-попробовать выделить разные наборы данных и прогонять их через все тесты
-удалить из addDimensionMember fill метод + проверить и написать тест что fill выполняется там как нужно
-ref для createMember
-тесты на кортеж добавить
+- in factTable move uuid generator
 
-как бы сделать Pivot повороты
+- think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
 
-тудушки разобрать
+- update residuals
 
-getFacts => createFacts?
-может cellTable и вовсе нету никакой
+- addDimensionMember => addMember?
 
-http://www.olapcube.com/mdxhelp/KeyConcepts.htm
-each cell is an intersection of all the dimensions of the cube
- tuples can uniquely identify every cell in the cube
+- set, instead object make tuple array with check dimension order
 
- Custom Member Options может быть параметром к таблицам измерений, чтобы не прокидывать каждый раз их в функциях
- по аналогии Cell Properties
+- Cube.create replace arguments order
 
-удовлетворить программное требование: в случае возникновения ошибок, состояние не должно быть сломано
+- change place of logo image to special branch
 
-удалить extends Error and Reflect, custom errors
+- update fact table instead remove/add?
 
-дефолтные опциональные данные для ячеек
+- try tidy up history of old git commits
 
-починить example
+- check and fix example work
 
-!!! deprecated
-1)
-addDimensionMember нужно аргументы переставить местами
+- remove extends Error and Reflect api, custom errors
 
-2)
-заменить метод fill на
-cube.createEmptyCells(cellData, genericIdFn = uuid) и тут подумать над методом isEmptyCell
-cube.addEmptyCells(emptyCells)
-тогда fill() заменится на cube.addEmptyCells(cube.createEmptyCells()), что гибче, но можно и оставить fillEmptyCells
-getEmptyCells нужен для удаления нужных ячеек через метод removeCells
-тогда removeEmptyCells выглядит как cube.removeCells(cube.getEmptyCells())
-когда fill метод переименую, добавить спецификации методам
-Deprecated methods `getFacts` and `getFactsBySet`, use `getCells` and `getCellsBySet` instead или все же не стоит?
+- try to select common sets of data from specifications and run them through all tests
 
-3)
-в factTable отправить uuidv4
+- members must have refs to categories data (in createMember method?)
 
-4)
-подумать об инверсии уровней в обратном порядке, инверсия должна быть совместима с multiple hierarchies
+- в одном измерении можно реализовать более одной иерархии - скажем, для времени: {Год, Квартал, Месяц, День} и {Год, Неделя, День}.
 
-5)
- разобраться с residuals
+- do todos
 
-6)
-порядок аргументов изменить с facts, dimensionHierarchies на обратный
+- add test for tuple
 
+- remove from addDimensionMember fill method, check and write test that all is correct
 
-8) addDimensionMember => addMember?
-
-
-member должны иметь ссылки на категории...
-
-9) set вместо объекта сделать кортеж массивом с проверками
-
-10) Cube.create аргументы местами поменять
-
-
-slice удаляет измерение, а dice  нет
+slice remove dimension?, аnd dice not?
+may be name if hierarchy is it first name of dimension?
+may be rename getFacts => createFacts?
+may be cellTable is it factTable?
+how make Pivot operation?

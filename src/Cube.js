@@ -252,6 +252,8 @@ class Cube {
 		return new Cube({ cellTable: filteredCellTable, dimensionHierarchies: newDimensionHierarchies })
 	}
 	/**
+	 * The cube introduces generalization relations
+	 * it's operations on dimension hierarchies
 	 * @public
 	 * @param {string} hierarchy
 	 * @param {string} targetDimension
@@ -265,6 +267,8 @@ class Cube {
 		return this;
 	}
 	/**
+	 * The cube introduced specialization relations
+	 * it's operations on dimension hierarchies
 	 * @public
 	 * @param {string} hierarchy
 	 * @param {string} targetDimension
@@ -666,6 +670,13 @@ class Cube {
 	 * */
 	getEmptyCells() {
 		return this.getCells().filter(cell => EmptyCell.isEmptyCell(cell))
+	}
+	/**
+	 * @public
+	 * @return {boolean}
+	 * */
+	isEmptyCell(cell) {
+		return EmptyCell.isEmptyCell(cell);
 	}
 	/**
 	 * @public
