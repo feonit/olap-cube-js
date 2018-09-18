@@ -1,5 +1,59 @@
 
+API
+- Add support for single keyProp in schema and single level
+- Update method addMember without rollup options (then more than one member will be added)
+- think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
+- Cube.create replace arguments order. Or remove
+- members must have refs to categories data (in createMember method?)
+- try make for hierarchy: {Year, Qr, Month, Day}, {Год, Weak, Day}.
+- remove from addDimensionMember fill method, check and write test that all is correct
+- new api, add variety for determine tuple from set argument, {product: {id: 1}} => {product: 1} => [1]
+- may be need update member structure to {id: <number>, attributes: {...}}
+- method `dice` should be able to receive both types of data: set and tuple
+- addDimensionMember research arguments order
+- cube.createEmptyCells(cellData, genericIdFn = uuid)
+
+Code quality
+- Update code with JsDoc
+- Add amd/umd/common/ES6 builds
+- Security protection for the key values
+- Add validation for all public methods
+- Remove responsibility for "id" prop at facts (residuals)
+- in factTable move uuid generator
+- update fact table instead remove/add?
+- remove extends Error and Reflect api, custom errors
+- do todos
+
+Example
+- check and fix example work
+
+Spec
+- try to select common sets of data from specifications and run them through all tests
+- add test for cartesian
+
+Project
+- change place of logo image to special branch
+- try tidy up history of old git commits
+- add d.ts
+
+
 =====================================================================================================================
+Other thoughts
+
+slice remove dimension?, аnd dice not?
+may be name if hierarchy is it first name of dimension?
+may be rename getFacts => createFacts?
+may be cellTable is it factTable?
+how make Pivot operation?
+Deprecated methods `getFacts`, use `getCells` instead или все же не стоит?
+
+
+DimensionMember is determined by two parameters: dimension and id of member
+DimensionHierarchy is determined by by one parameters: dimension which it contains or hierarchy name
+
+
+=====================================================================================================================
+My books
 
 http://www.ykud.ru/articles/olap_lattices/olap_lattices.pdf
 http://media.ls.urfu.ru/632/1734/4218/5290/
@@ -13,48 +67,3 @@ https://habrahabr.ru/company/netologyru/blog/334914/
 http://www.vertabelo.com/blog/technical-articles/data-warehouse-modeling-the-snowflake-schema
 
 =====================================================================================================================
-
-- addDimensionMember нужно аргументы переставить местами
-
-- cube.createEmptyCells(cellData, genericIdFn = uuid)
-Deprecated methods `getFacts`, use `getCells` instead или все же не стоит?
-
-- in factTable move uuid generator
-
-- think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
-
-- update residuals
-
-- addDimensionMember => addMember?
-
-- set, instead object make tuple array with check dimension order
-
-- Cube.create replace arguments order
-
-- change place of logo image to special branch
-
-- update fact table instead remove/add?
-
-- try tidy up history of old git commits
-
-- check and fix example work
-
-- remove extends Error and Reflect api, custom errors
-
-- try to select common sets of data from specifications and run them through all tests
-
-- members must have refs to categories data (in createMember method?)
-
-- в одном измерении можно реализовать более одной иерархии - скажем, для времени: {Год, Квартал, Месяц, День} и {Год, Неделя, День}.
-
-- do todos
-
-- add test for tuple
-
-- remove from addDimensionMember fill method, check and write test that all is correct
-
-slice remove dimension?, аnd dice not?
-may be name if hierarchy is it first name of dimension?
-may be rename getFacts => createFacts?
-may be cellTable is it factTable?
-how make Pivot operation?

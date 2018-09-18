@@ -2,6 +2,7 @@ import DimensionTree from './DimensionTree.js'
 
 /**
  * The elements of a dimension can be organized as a hierarchy
+ * Hierarchy is a dimension hierarchy of a cube
  * */
 export default class DimensionHierarchy {
 	constructor({ dimensionTree, activeDimension, hierarchy}) {

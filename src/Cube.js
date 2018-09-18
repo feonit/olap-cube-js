@@ -10,7 +10,7 @@ import {
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
 import console from './console.js'
-import TupleTable from './TupleTable.js'
+import Tuple from './Tuple.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
@@ -29,15 +29,6 @@ class CellTable {
 	}
 }
 
-/**
- * @this {Cube}
- * @private
- * */
-function getHierarchy(hierarchy) {
-	return this.dimensionHierarchies.find(dimensionHierarchy => {
-		return dimensionHierarchy.getHierarchy() === hierarchy
-	});
-}
 /**
  * It a means to retrieve data
  *
@@ -78,7 +69,7 @@ class Cube {
 			}
 		});
 		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
-		// const residuals = this.residuals();
+		// const residuals = residuals(this);
 		// const count = residuals.length;
 		// if (count > 0) {
 		// 	console.warn('Fact table has residuals', residuals)
@@ -112,7 +103,8 @@ class Cube {
 		return cube;
 	}
 	/**
-	 * is the act of picking a rectangular subset of a cube by choosing a single value for one of its dimensions, creating a new cube with one fewer dimension.
+	 * is the act of picking a rectangular subset of a cube by choosing a single value
+	 * for one of its dimensions, creating a new cube with one fewer dimension.
 	 * @public
 	 * @param {string} dimension
 	 * @param {Member} member
@@ -136,7 +128,7 @@ class Cube {
 				: [set[dimension]];
 
 			// todo замена на оригинальные члены измерений
-			const dimensionTree = this.findDimensionTreeByDimension(dimension);
+			const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 			if (!dimensionTree) {
 				return;
 			}
@@ -165,7 +157,7 @@ class Cube {
 			// ищется его расширенная версия для каждого члена
 			const spacesForCells = fixSpace[dimension].map(member => {
 
-				let searchedInTree = this.findDimensionTreeByDimension(dimension);
+				let searchedInTree = findDimensionTreeByDimension.call(this, dimension);
 
 				const current = searchedInTree.cloneDimensionTreeWithoutMembers();
 
@@ -201,7 +193,7 @@ class Cube {
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
 				const members = space[dimension];
-				const { foreignKey, primaryKey } = this.findDimensionTreeByDimension(dimension).getTreeValue();
+				const { foreignKey, primaryKey } = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
 				const finded = members.find(member => {
 					return member[primaryKey] === cell[foreignKey]
 				});
@@ -283,86 +275,23 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * @param {object[]} members
-	 * @param {string} currentDimension
-	 * @param {string?} targetDimension
-	 * @deprecated as unnecessary
+	 * @return {FactTable} returns facts
 	 * */
-	drillUpMembers(members, currentDimension, targetDimension) {
-		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-		// first rollUp if no target
-		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
-		// if cant rollUp
-		if (!targetDimension && !targetDimensionTree) {
-			return members;
-		}
-		if (!currentDimensionTree.hasChild(targetDimensionTree)) {
-			return members;
-		}
-		let targetDimensionWasAchieved = false;
-		let lastTracedDimensionTree = currentDimensionTree;
-		let lastTracedMembers = members;
-		currentDimensionTree.tracePreOrder((treeValue, tracedDimensionTree) => {
-			if (tracedDimensionTree === currentDimensionTree) {
-				return;
-			}
-			if (!targetDimensionWasAchieved) {
-				lastTracedMembers = lastTracedDimensionTree.drillUpDimensionMembers(lastTracedMembers);
-				if (targetDimensionTree === tracedDimensionTree) {
-					targetDimensionWasAchieved = true;
-				} else {
-					lastTracedDimensionTree = tracedDimensionTree;
-				}
-			}
-		});
-		return lastTracedMembers;
-	}
-	/**
-	 * @public
-	 * @param {object[]} members
-	 * @param {string} currentDimension
-	 * @param {string?} targetDimension
-	 * @deprecated as unnecessary
-	 * */
-	drillDownMembers(members, currentDimension, targetDimension) {
-		const currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-		// first drillDown if no target
-		const targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
-		// if cant drillDown
-		if (!targetDimension && !targetDimensionTree) {
-			return members;
-		}
-		if (!currentDimensionTree.hasParent(targetDimensionTree)) {
-			return members;
-		}
-		let targetDimensionWasAchieved = false;
-		let lastTracedDimensionTree = currentDimensionTree;
-		let lastTracedMembers = members;
-		currentDimensionTree.traceUpOrder((tracedDimensionTree) => {
-			if (tracedDimensionTree === currentDimensionTree) {
-				return;
-			}
-			if (!targetDimensionWasAchieved) {
-				lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
-				if (targetDimensionTree === tracedDimensionTree) {
-					targetDimensionWasAchieved = true;
-				} else {
-					lastTracedDimensionTree = tracedDimensionTree;
-				}
-			}
-		});
-		return lastTracedMembers;
+	getFacts() {
+		return denormalize.call(this, this.getCells());
 	}
 	/**
 	 * @public
 	 * @param {Object[]} facts
+	 * @return {Cube}
 	 * */
 	addFacts(facts) {
 		const newFactTable = new FactTable({facts, primaryKey: this.cellTable.primaryKey});
 		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
 		[].push.apply(this.getCells(), cells);
 		const factTable = this.getFacts();
-		SnowflakeBuilder.anotherBuild(factTable, cells, this._getDimensionTrees(), this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.primaryKey);
+		return this;
 	}
 	/**
 	 * @public
@@ -378,17 +307,17 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @return {CellTable}
 	 * */
-	removeCells(cells) {
-		SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
+	getCells() {
+		return this.cellTable.cells;
 	}
 	/**
 	 * @public
-	 * @return {FactTable} returns members
-	 * @deprecated
+	 * @param {Cell[]} cells
 	 * */
-	getFacts() {
-		return this.denormalize(this.getCells());
+	removeCells(cells) {
+		SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
 	}
 	/**
 	 * @public
@@ -396,107 +325,7 @@ class Cube {
 	 * @return {Member[]} returns members
 	 * */
 	getDimensionMembers(dimension) {
-		return this.findDimensionTreeByDimension(dimension).getTreeValue().members;
-	}
-	/**
-	 * @public
-	 * */
-	getCells() {
-		return this.cellTable.cells;
-	}
-	/**
-	 * @private
-	 * Поиск по всем иерархиям
-	 * */
-	findDimensionTreeByDimension(dimension) {
-		let findDimensionTree;
-		this.dimensionHierarchies.forEach(dimensionTree => {
-			const searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
-			if (searchedDimensionTree) {
-				findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
-			}
-		});
-		return findDimensionTree;
-	}
-	_getDimensionTrees() {
-		return this.dimensionHierarchies.map(dimensionHierarchy => {
-			return dimensionHierarchy.getDimensionTree
-				? dimensionHierarchy.getDimensionTree()
-				: dimensionHierarchy
-		})
-	}
-	/**
-	 * @public
-	 * Cartesian product - list of all possible tuples
-	 * */
-	cartesian() {
-		const f = (a, b) => [].concat(...a.map(d => {
-			return b.map(e => {
-				return [].concat(d, e)
-			})
-		}));
-
-		const cartesian = (a, b, ...c) => {
-			return b ? cartesian(f(a, b), ...c) : a
-		};
-
-		const dimensionsOrder = [];
-
-		const set = this.dimensionHierarchies.map(dimensionTree => dimensionTree.getTreeValue()).map(dimensionTable => {
-			dimensionsOrder.push(dimensionTable.dimension);
-			return dimensionTable.members;
-		});
-
-		const tupleTable = new TupleTable();
-
-		let res;
-		if (set.length) {
-			if (set.length > 1) {
-				res = cartesian.apply(null, set);
-			} else {
-				res = set[0].map(i => [i])
-			}
-			res.forEach(arr => {
-				const item = {};
-				dimensionsOrder.forEach((dimension, index) => {
-					item[dimension] = arr[index]
-				});
-				tupleTable.addTuple(item);
-				return item;
-			});
-		}
-
-		return tupleTable;
-	}
-	/**
-	 * @private
-	 * Get facts from cube
-	 * */
-	denormalize(cells = this.getCells(), forSave = true) {
-		const data = SnowflakeBuilder.denormalize(cells, this._getDimensionTrees());
-		if (forSave) {
-			data.forEach((data, index) => {
-				if (cells[index] instanceof EmptyCell) {
-					delete data[this.cellTable.primaryKey];
-				}
-			})
-		}
-		return data;
-	}
-	/**
-	 * @public
-	 * Residuals - list of tuples, according to which there is more than one member
-	 * */
-	residuals() {
-		const tuples = this.cartesian();
-		const totalFacts = [];
-		tuples.forEach(tuple => {
-			const partFacts = this.dice(tuple).getFacts();
-			if (partFacts.length > 1) {
-				totalFacts.push(tuple)
-			}
-		});
-		return totalFacts;
+		return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
 	}
 	/**
 	 * @public
@@ -515,7 +344,7 @@ class Cube {
 		Object.keys(rollupCoordinatesData).forEach(dimension => {
 			const memberData = rollupCoordinatesData[dimension];
 			const memberList = this.getDimensionMembers(dimension);
-			const dimensionTable = this.findDimensionTreeByDimension(dimension).getTreeValue();
+			const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
 			const { primaryKey } = dimensionTable;
 			const id = memberData[primaryKey];
 			const find = memberList.find(member => {
@@ -527,7 +356,7 @@ class Cube {
 				rollupCoordinates[dimension] = find;
 			}
 		});
-		const dimensionTree = this.findDimensionTreeByDimension(dimension);
+		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 		const childDimensionTrees = dimensionTree.getChildTrees();
 		const dimensionTable = dimensionTree.getTreeValue();
 		const { foreignKey } = dimensionTable;
@@ -564,7 +393,7 @@ class Cube {
 	 * @param {Member} member - the member will be removed
 	 * */
 	removeDimensionMember(dimension, member) {
-		const dimensionTree = this.findDimensionTreeByDimension(dimension);
+		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 		const cellTable = this.getCells();
 		const getRemoveMeasures = (dimension, members) => {
@@ -594,33 +423,6 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * Filling method for full size of cube
-	 * @param {object?} customCellOptions - properties for empty cells
-	 * */
-	fillEmptyCells(customCellOptions = {}) {
-		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
-		if (!this.residuals().length) {
-			const emptyCells = this.createEmptyCells(cellOptions);
-			this.addEmptyCells(emptyCells);
-		}
-	}
-	/**
-	 * @public
-	 * Unfilled - list of tuples, in accordance with which there is not a single member
-	 * */
-	unfilled() {
-		const tuples = this.cartesian();
-		const unfilled = [];
-		tuples.forEach(tuple => {
-			const members = this.dice(tuple).getFacts(tuple);
-			if (members.length === 0) {
-				unfilled.push(tuple)
-			}
-		});
-		return unfilled;
-	}
-	/**
-	 * @public
 	 * @param {object|DimensionTree} dimensionHierarchy
 	 * */
 	addDimensionHierarchy(dimensionHierarchy) {
@@ -646,13 +448,13 @@ class Cube {
 	 * */
 	createEmptyCells(cellOptions) {
 		const emptyCells = [];
-		const tuples = this.cartesian();
+		const tuples = cartesian(this);
 		tuples.forEach(combination => {
 			const unique = this.dice(combination).getCells();
 			if (!unique.length) {
 				let foreignKeysCellData = {};
 				Object.keys(combination).forEach(dimension => {
-					const dimensionTable = this.findDimensionTreeByDimension(dimension).getTreeValue();
+					const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
 					const { foreignKey } = dimensionTable;
 					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension])
 				});
@@ -687,6 +489,18 @@ class Cube {
 		[].push.apply(this.getCells(), emptyCells);
 	}
 	/**
+	 * @public
+	 * Filling method for full size of cube
+	 * @param {object?} customCellOptions - properties for empty cells
+	 * */
+	fillEmptyCells(customCellOptions = {}) {
+		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
+		if (!residuals(this).length) {
+			const emptyCells = this.createEmptyCells(cellOptions);
+			this.addEmptyCells(emptyCells);
+		}
+	}
+	/**
 	 * @param {EmptyCell[]} emptyCells
 	 * @throw {TypeError}
 	 * */
@@ -698,4 +512,130 @@ class Cube {
 		});
 	}
 }
+
+/**
+ * @this {Cube}
+ * @return {DimensionHierarchy}
+ * */
+function getHierarchy(hierarchy) {
+	return this.dimensionHierarchies.find(dimensionHierarchy => {
+		return dimensionHierarchy.getHierarchy() === hierarchy
+	});
+}
+/**
+ * @this {Cube}
+ * @return {DimensionTree}
+ * */
+function findDimensionTreeByDimension(dimension) {
+	let findDimensionTree;
+	this.dimensionHierarchies.forEach(dimensionTree => {
+		const searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
+		if (searchedDimensionTree) {
+			findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
+		}
+	});
+	return findDimensionTree;
+}
+/**
+ * @this {Cube}
+ * @return {DimensionTree[]}
+ * */
+function getDimensionTrees() {
+	return this.dimensionHierarchies.map(dimensionHierarchy => {
+		return dimensionHierarchy.getDimensionTree
+			? dimensionHierarchy.getDimensionTree()
+			: dimensionHierarchy
+	})
+}
+/**
+ * Cartesian product - list of all possible tuples
+ * @param {Cube} cube
+ * @return {Tuple[]}
+ * */
+export function cartesian(cube) {
+	const f = (a, b) => [].concat(...a.map(d => {
+		return b.map(e => {
+			return [].concat(d, e)
+		})
+	}));
+
+	const cartesian = (a, b, ...c) => {
+		return b ? cartesian(f(a, b), ...c) : a
+	};
+
+	const dimensionsOrder = [];
+
+	const set = cube.dimensionHierarchies.map(dimensionTree => dimensionTree.getTreeValue()).map(dimensionTable => {
+		dimensionsOrder.push(dimensionTable.dimension);
+		return dimensionTable.members;
+	});
+
+	const tupleList = [];
+
+	let res;
+	if (set.length) {
+		if (set.length > 1) {
+			res = cartesian.apply(null, set);
+		} else {
+			res = set[0].map(i => [i])
+		}
+		res.forEach(arr => {
+			const item = {};
+			dimensionsOrder.forEach((dimension, index) => {
+				item[dimension] = arr[index]
+			});
+			tupleList.push(new Tuple(item));
+			return item;
+		});
+	}
+
+	return tupleList;
+}
+/**
+ * @private
+ * Get facts from cube
+ * */
+function denormalize(cells = this.getCells(), forSave = true) {
+	const data = SnowflakeBuilder.denormalize(cells, getDimensionTrees.call(this));
+	if (forSave) {
+		data.forEach((data, index) => {
+			if (cells[index] instanceof EmptyCell) {
+				delete data[this.cellTable.primaryKey];
+			}
+		})
+	}
+	return data;
+}
+/**
+ * @public
+ * Residuals - list of tuples, according to which there is more than one member
+ * @return {Tuple[]}
+ * */
+function residuals(cube) {
+	const tuples = cartesian(cube);
+	const totalTuples = [];
+	tuples.forEach(tuple => {
+		const partFacts = cube.dice(tuple).getFacts();
+		if (partFacts.length > 1) {
+			totalTuples.push(tuple)
+		}
+	});
+	return totalTuples;
+}
+/**
+ * Unfilled - list of tuples, in accordance with which there is not a single member
+ * @this {Cube}
+ * */
+function unfilled() {
+	const tuples = this.cartesian();
+	const unfilled = [];
+	tuples.forEach(tuple => {
+		const members = this.dice(tuple).getFacts(tuple);
+		if (members.length === 0) {
+			unfilled.push(tuple)
+		}
+	});
+	return unfilled;
+}
+
 export default Cube

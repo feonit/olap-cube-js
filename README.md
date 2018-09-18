@@ -197,10 +197,10 @@ let structure = {
 };
 ```
 
-[8]: https://en.wikipedia.org/wiki/Set_(mathematics)
-[9]: https://en.wikipedia.org/wiki/Subset
-[10]: https://en.wikipedia.org/wiki/Empty_set
-[11]: https://en.wikipedia.org/wiki/Multiset
+[set]: https://en.wikipedia.org/wiki/Set_(mathematics)
+[subset]: https://en.wikipedia.org/wiki/Subset
+[emptyset]: https://en.wikipedia.org/wiki/Empty_set
+[nultiset]: https://en.wikipedia.org/wiki/Multiset
 [12]: https://en.wikipedia.org/wiki/Set_(mathematics)#Unions
 
 ### Sets
@@ -209,7 +209,7 @@ A set is a collection of distinct objects.
 Set provides a specialized syntax for getting and manipulating the multidimensional data stored in OLAP cubes.
 Access to the elements of the OLAP-cube can be carried out several types of sets
 
-##### Types of sets: [Set][8], [Subset][9], [EmptySet][10], [Multiset][11]
+##### Types of sets: [Set][set], [Subset][subset], [Emptyset][emptyset], [Multiset][nultiset]
 ***Set***, that type determines one element:
 <br/>
 ***w : ( x , y , z ) → w<sub>xyz</sub>*** ,
@@ -218,11 +218,11 @@ Access to the elements of the OLAP-cube can be carried out several types of sets
 <br/>
 ***W : ( x , y ) → W = { w<sub>z1</sub> , w<sub>z2</sub> , … , w<sub>zn</sub> }*** ,
 
-***EmptySet***, that type determines all elements:
+***Emptyset***, that type determines all elements:
 <br/>
 ***W : () → W = { w<sub>x1 y1 z1</sub> , w<sub>x1 y1 z2</sub> , … , w<sub>xn yn zn</sub> }*** ,
 
-***EmptySet***, that type determines union of elements:
+***Emptyset***, that type determines union of elements:
 <br/>
 ***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>x1 y1</sub> , W<sub>xn yn</sub> } = { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z2</sub>*** .
 <br/>
@@ -288,7 +288,7 @@ return:
     { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
-##### EmptySet <br/>
+##### Emptyset <br/>
 This way you can take all the facts from the cube back:
 ```js
 let emptySet = {}
@@ -351,7 +351,7 @@ return:
 ]
 ```
 ### Access to members of the dimensions
-##### EmptySet <br/>
+##### Emptyset <br/>
 Simple call return all members of the dimension:
 ```js
 cube.dice({}).getDimensionMembers('products')
@@ -461,7 +461,7 @@ cube.addDimensionHierarchy({
         }
     ]
 })
-console.log(cube.cellTable)
+console.log(cube.getCells())
 ```
 return:
 ```js
@@ -696,20 +696,10 @@ cube.addDimensionMember('x', { x: 3 })
 ## Versioning
 We use <a href="https://semver.org/">SemVer</a> for versioning.
 Until olap-cube-js reaches a 1.0 release, breaking changes will be released with a new minor version. For example 0.10.0, and 0.10.1 will have the same API, but 0.11.0 will have breaking changes.
+The project is on stage of developing API.
 
 ## Todo
 In future versions:
-
-API
-- Add support for single keyProp in schema and single level
-- Update method addMember without rollup options (then more than one member will be added)
-
-Code quality
-- Update code with JsDoc
-- Add amd/umd/common/ES6 builds
-- Security protection for the key values
-- Add validation for all public methods
-- Remove responsibility for "id" prop at facts (residuals)
 
 Perhaps
 - Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)

@@ -1,25 +1,9 @@
 import Cube from '../src/Cube.js';
 import {CreateInstanceException} from '../src/errors.js'
-import {recursiveObjectsNotHaveCommonLinks} from '../spec/helpers/helpers.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('class Cube', function() {
 	let debug;
-
-	describe(`[ API prototype ${Cube.name}]`,() => {
-
-		it('should define residuals', () => {
-			expect(Cube.prototype.residuals).toBeDefined();
-		});
-
-		it('should define denormalize', () => {
-			expect(Cube.prototype.denormalize).toBeDefined();
-		});
-
-		it('should define unfilled', () => {
-			expect(Cube.prototype.unfilled).toBeDefined();
-		});
-	});
 
 	describe(`[ API static ${Cube.name}]`,() => {
 
@@ -137,7 +121,4 @@ describe('class Cube', function() {
 		expect(error instanceof CreateInstanceException).toBe(true)
 	});
 
-	it('should define cartesian', () => {
-		expect(Cube.prototype.cartesian).toBeDefined();
-	});
 });

@@ -1,4 +1,4 @@
-import Cube from '../src/Cube.js';
+import Cube, {cartesian} from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 describe('method Cube.prototype.fillEmptyCells', function() {
@@ -27,10 +27,10 @@ describe('method Cube.prototype.fillEmptyCells', function() {
 
 	it('should normalize count of cells for non-normalized data', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
-		expect(debug = cube.cartesian().length).toBe(8);
+		expect(debug = cartesian(cube).length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(5);
 		cube.fillEmptyCells({ is: false });
-		expect(debug = cube.cartesian().length).toBe(8);
+		expect(debug = cartesian(cube).length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(8);
 	});
 
@@ -91,11 +91,11 @@ describe('method Cube.prototype.fillEmptyCells', function() {
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug = cube.cartesian().length).toBe(4);
-			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(2);
+			expect(debug = cartesian(cube).length).toBe(4);
+			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(2);
 			cube.fillEmptyCells({ humans: 0 });
-			expect(debug = cube.cartesian().length).toBe(4);
-			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
+			expect(debug = cartesian(cube).length).toBe(4);
+			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(0);
 		});
 
 		it('should work level 3', () => {
@@ -106,11 +106,11 @@ describe('method Cube.prototype.fillEmptyCells', function() {
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug = cube.cartesian().length).toBe(6);
-			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(3);
+			expect(debug = cartesian(cube).length).toBe(6);
+			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(3);
 			cube.fillEmptyCells({ humans: 0 });
-			expect(debug = cube.cartesian().length).toBe(6);
-			expect(debug = cube.cartesian().length - cube.getFacts().length).toBe(0);
+			expect(debug = cartesian(cube).length).toBe(6);
+			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(0);
 		})
 
 	});
@@ -136,7 +136,7 @@ describe('method Cube.prototype.fillEmptyCells', function() {
 		const cube = Cube.create(factTable, dimensionHierarchies)
 		cube.fillEmptyCells({ xy: false });
 
-		debug = isEqualObjects(cube.denormalize(), [
+		debug = isEqualObjects(cube.getFacts(), [
 			{ id: 1, x: 0, y: 1, xy: true },
 			{ id: 2, x: 1, y: 0, xy: true },
 			{ x: 0, y: 0, xy: false },

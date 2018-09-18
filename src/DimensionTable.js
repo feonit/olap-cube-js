@@ -2,6 +2,10 @@ import Member from './Member.js'
 import {DEFAULT_MEMBER_ID_PROP, DEFAULT_TEMPLATE_FOREIGN_KEY} from './const.js'
 import InputMember from './InputMember.js'
 
+/**
+ * Dimension is a dimension of a cube. A dimension is a primary organizer of measure and attribute information in a cube
+ * A dimension will contain some members organized in some hierarchy or hierarchies containing levels.
+ * */
 export default class DimensionTable {
 	constructor({ dimension, foreignKey = DimensionTable.genericId(dimension), primaryKey = DEFAULT_MEMBER_ID_PROP, keyProps, otherProps = [], members = [], defaultMemberOptions = {}}) {
 		if (!dimension || !keyProps) {

@@ -1,4 +1,7 @@
 ## Change Log
+*0.15.1*
+- Remove private methods from cube
+
 *0.15.0*
 - Removed `getCellsBySet`, `getFactsBySet` and `getDimensionMembersBySet`
 - Fix changelog record for 0.14.0
