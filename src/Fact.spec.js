@@ -31,20 +31,4 @@ describe('class Fact', () => {
 		const fact = new Fact(data);
 		debug = isEqualObjects({ id: 1, prop1: 'prop1', prop2: 100, prop4: null }, fact);
 	});
-
-	xit('should throw error if not found id param', () => {
-		expect(() => {
-			new Fact({name: 'me'})
-		}).toThrow();
-	});
-
-	xit('should throw special error if not found id param', () => {
-		let err;
-		try {
-			new Fact({ region: 'North' })
-		} catch (error) {
-			err = error
-		}
-		expect(err instanceof NotFoundFactId).toBe(true)
-	})
 });

@@ -13,9 +13,9 @@ export class CantAddMemberRollupException extends Error {
 }
 
 export class NotFoundFactId extends Error {
-	constructor() {
+	constructor(name) {
 		super();
-		this.message = 'Not found fact id'
+		this.message = `In fact data, no property was found with the name: ${name}`
 	}
 }
 

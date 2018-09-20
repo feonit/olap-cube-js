@@ -1,7 +1,13 @@
 import FactTable from './FactTable.js'
 
 describe('class FactTable', () => {
-	it('should define validateFactData', () => {
-		expect(FactTable.validateFactData).toBeDefined();
+	let factTable;
+
+	beforeEach(() => {
+		factTable = new FactTable();
 	});
+
+	it('defaults', () => {
+		expect(factTable.primaryKey === 'id').toBe(true);
+	})
 });
