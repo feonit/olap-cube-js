@@ -5,7 +5,7 @@ import DimensionHierarchy from './DimensionHierarchy.js'
 import DimensionTable from './DimensionTable.js'
 import FactTable from './FactTable.js'
 import {
-	CantAddMemberRollupException,
+	InsufficientRollupData,
 	CreateInstanceException
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
@@ -334,6 +334,7 @@ class Cube {
 	 * @param {object?} rollupCoordinatesData
 	 * @param {object?} drillDownCoordinatesOptions
 	 * @param {object?} cellData
+	 * @throw {InsufficientRollupData}
 	 * */
 	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
 		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
@@ -351,7 +352,7 @@ class Cube {
 				return id === dimensionTable.getMemberId(member)
 			});
 			if (!find) {
-				throw new CantAddMemberRollupException(dimension, id)
+				throw new InsufficientRollupData(dimension, id)
 			} else {
 				rollupCoordinates[dimension] = find;
 			}
@@ -366,7 +367,7 @@ class Cube {
 			const { dimension, foreignKey, primaryKey } = dimensionTable;
 			const member = rollupCoordinatesData[dimension];
 			if (!member) {
-				throw new CantAddMemberRollupException(dimension)
+				throw new InsufficientRollupData(dimension)
 			} else {
 				foreignKeysMemberData[foreignKey] = member[primaryKey];
 			}

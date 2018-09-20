@@ -1,14 +1,7 @@
-export class NotCompletelySpaceException extends Error {
-	constructor(dimension) {
-		super();
-		this.message = `Not completely defined space for added member, not found member for dimension: "${dimension}"`;
-	}
-}
-
-export class CantAddMemberRollupException extends Error {
+export class InsufficientRollupData extends Error {
 	constructor(dimension, id) {
 		super();
-		this.message = `Can't add member, rollup dimension: ${dimension} with id: ${id} not found`;
+		this.message = `Can't add member, member for rollup dimension: ${dimension} with id: ${id} not found`;
 	}
 }
 

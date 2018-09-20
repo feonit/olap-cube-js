@@ -1,6 +1,6 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
-import { NotCompletelySpaceException, CantAddMemberRollupException } from '../src/errors.js';
+import { InsufficientRollupData } from '../src/errors.js';
 
 describe('method Cube.prototype.addDimensionMember', () => {
 	let debug;
@@ -54,26 +54,36 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			expect(Cube.prototype.addDimensionMember).toBeDefined();
 		});
 
-		xit('should throw when defined not completely space for added member level 1', () => {
+		it('should throw when defined not completely space for added member level 1', () => {
 			expect(() => {
 				cube.addDimensionMember('xxx', { xxx: 1 })
 			}).toThrow();
 		});
 
-		xit('should throw when defined not completely space for added member level 2', () => {
-			expect(() => {
-				cube.addDimensionMember('xx', { xx: 1 })
-			}).toThrow();
-		});
-
-		xit('should throw specified error when defined not completely space for added member', () => {
+		it('should throw specified error when defined not completely space for added member level 1', () => {
 			let err;
 			try {
 				cube.addDimensionMember('xxx', { xxx: 1 })
 			} catch (error) {
 				err = error;
 			}
-			expect(err instanceof NotCompletelySpaceException).toBe(true);
+			expect(err instanceof InsufficientRollupData).toBe(true);
+		});
+
+		it('should throw when defined not completely space for added member level 2', () => {
+			expect(() => {
+				cube.addDimensionMember('xx', { xx: 1 })
+			}).toThrow();
+		});
+
+		it('should throw specified error when defined not completely space for added member level 2', () => {
+			let err;
+			try {
+				cube.addDimensionMember('xx', { xx: 1 })
+			} catch (error) {
+				err = error;
+			}
+			expect(err instanceof InsufficientRollupData).toBe(true);
 		});
 
 		it('should throw when was try add member with not existed rollup member', () => {
@@ -89,7 +99,13 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			} catch (error) {
 				err = error;
 			}
-			expect(err instanceof CantAddMemberRollupException).toBe(true);
+			expect(err instanceof InsufficientRollupData).toBe(true);
+		});
+
+		it('should passed when was try add member with not existed rollup member', () => {
+			expect(() => {
+				cube.addDimensionMember('xx', { xx: 1 }, { x: { id: 1 } })
+			}).not.toThrow()
 		});
 
 	});
