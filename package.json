@@ -19,6 +19,7 @@
     "istanbul": "^0.4.5",
     "jasmine": "^2.8.0",
     "jasmine-node": "^1.14.5",
+    "jest": "^23.6.0",
     "lodash": "^4.17.4",
     "nyc": "^11.4.1",
     "webpack": "^3.10.0"
@@ -27,13 +28,13 @@
     "port": "8080"
   },
   "scripts": {
-    "test": "npm run build:spec && node_modules/.bin/jasmine",
-    "build:spec": "node_modules/.bin/webpack --profile --progress --display-modules --config config/webpack.config.spec.js",
+    "test": "jest && codecov",
     "build": "node_modules/.bin/webpack --profile --progress --display-modules  --config config/webpack.config.app.js",
-    "build:example": "./node_modules/.bin/webpack --config config/webpack.config.example.js",
-    "dev": "node node_modules/http-server/bin/http-server -p 8080",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
-    "codecov": "./node_modules/.bin/codecov"
+    "dev": "node node_modules/http-server/bin/http-server -p 8080"
+  },
+  "jest": {
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "author": {
     "name": "Orlov Leonid",

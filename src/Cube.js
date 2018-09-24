@@ -10,7 +10,6 @@ import {
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
 import console from './console.js'
-import TupleTable from './TupleTable.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
@@ -447,7 +446,7 @@ class Cube {
 			return dimensionTable.members;
 		});
 
-		const tupleTable = new TupleTable();
+		const tupleTable = [];
 
 		let res;
 		if (set.length) {
@@ -461,7 +460,7 @@ class Cube {
 				dimensionsOrder.forEach((dimension, index) => {
 					item[dimension] = arr[index]
 				});
-				tupleTable.addTuple(item);
+				tupleTable.push(item);
 				return item;
 			});
 		}
