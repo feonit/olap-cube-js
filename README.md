@@ -707,8 +707,5 @@ Perhaps
 - Add MDX query language
 - Add Speed tests
 
-Deploy
-- Fix test cover
-
 Docs
 - Update readme file (rename Set to Space?)

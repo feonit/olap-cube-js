@@ -51,7 +51,7 @@ describe('class DimensionTree', function() {
 		dimensionTreeData = cloneDeep(exportedDimensionTreeData);
 	});
 
-	it('should create dimensionTree', () => {
+	xit('should create dimensionTree', () => {
 		expect(() => {
 			const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		}).not.toThrow();

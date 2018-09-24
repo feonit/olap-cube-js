@@ -8,13 +8,10 @@ install:
   - npm install
 
 script:
- - npm run build:spec
- - ./node_modules/.bin/istanbul cover ./node_modules/.bin/jasmine
+ - npm test
 
 after_success:
  - npm run build
- - npm run coverage
- - npm run codecov
 
 git:
   depth: 5

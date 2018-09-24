@@ -334,6 +334,12 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * */
+	getCells() {
+		return this.cellTable.cells;
+	}
+	/**
+	 * @public
 	 * @param {string} dimension - dimension in which the member is created
 	 * @param {object?} customMemberOptions - properties for the created member
 	 * @param {object?} rollupCoordinatesData
