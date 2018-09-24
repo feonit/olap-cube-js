@@ -241,7 +241,12 @@ class Cube {
 			}
 		});
 
-		return new Cube({ cellTable: filteredCellTable, dimensionHierarchies: newDimensionHierarchies })
+		return new SubCube({
+			cellTable: filteredCellTable,
+			dimensionHierarchies: newDimensionHierarchies,
+			originalCube: this.originalCube || this,
+			previousCube: this
+		})
 	}
 	/**
 	 * The cube introduces generalization relations
@@ -511,6 +516,17 @@ class Cube {
 				throw new TypeError('some item in list of argument is not instances of EmptyCell')
 			}
 		});
+	}
+}
+
+/**
+ * SubCube is the target cube whose members are members of the source cube.
+ * */
+export class SubCube extends Cube {
+	constructor({originalCube, ...rest}){
+		super(rest);
+		/** link for chaining between operations */
+		this.originalCube = originalCube;
 	}
 }
 

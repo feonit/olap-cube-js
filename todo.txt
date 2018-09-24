@@ -12,6 +12,7 @@ API
 - method `dice` should be able to receive both types of data: set and tuple
 - addDimensionMember research arguments order
 - cube.createEmptyCells(cellData, genericIdFn = uuid)
+- export error classes
 
 Code quality
 - Update code with JsDoc

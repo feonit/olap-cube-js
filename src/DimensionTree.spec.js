@@ -51,11 +51,11 @@ describe('class DimensionTree', function() {
 		dimensionTreeData = cloneDeep(exportedDimensionTreeData);
 	});
 
-	xit(('should create dimensionTree', () => {
+	it('should create dimensionTree', () => {
 		expect(() => {
 			const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		}).not.toThrow();
-	}));
+	});
 
 	xit('should create copy', () => {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);

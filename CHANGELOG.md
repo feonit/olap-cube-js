@@ -1,6 +1,9 @@
 ## Change Log
 *0.15.1*
 - Remove private methods from cube
+- Remove deprecated methods
+- Fixed FactTable spec
+- Added SubCube with back link to original cube `originalCube` for chaining between operations
 
 *0.15.0*
 - Removed `getCellsBySet`, `getFactsBySet` and `getDimensionMembersBySet`
