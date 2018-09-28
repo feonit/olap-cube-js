@@ -407,10 +407,19 @@ return:
 
 ### Editing dimension members
 ```js
-let regions = cube.getDimensionMembers('regions')
+let regions = cube.getDimensionMembers('regions');
+// if regions = [{id: 1, region: 'South'}, {id: 2, region: 'West'}]
 let member = regions[0]
 member['region'] = 'East'; 
 ```
+
+> The cube and its subcubes have common links to dimension members. It is made possible to edit data in dimension members between operations.
+> ````
+> const subCube = cube.dice({ product: { id: 1 } }) // some operation
+> const memberFromCube = cube.getDimensionMembers('regions').find(({id}) => id === 1)
+> const memberFromSubcube = subCube.getDimensionMembers('regions').find(({id}) => id === 1)
+> memberFromCube === memberFromSubcube // true
+> ````
 
 ### Adding dimension members
 ```js
@@ -688,7 +697,7 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(factTable, dimensionHierarchies)
+let cube = Cube.create(factTable, dimensionHierarchies);
 cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })
 ```
@@ -706,6 +715,3 @@ Perhaps
 - Add calculated members
 - Add MDX query language
 - Add Speed tests
-
-Docs
-- Update readme file (rename Set to Space?)
