@@ -1,5 +1,5 @@
 /*!
- * Version: "0.15.0"
+ * Version: "0.15.1"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  * 
  */
@@ -89,216 +89,46 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-function _extendableBuiltin9(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-function _extendableBuiltin7(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-function _extendableBuiltin5(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-function _extendableBuiltin3(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+var InsufficientRollupData = exports.InsufficientRollupData = function InsufficientRollupData(dimension, id) {
+	_classCallCheck(this, InsufficientRollupData);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	this.message = 'Can\'t add member, member for rollup dimension: ' + dimension + ' with id: ' + id + ' not found';
+};
 
-function _extendableBuiltin(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
+var NotFoundFactId = exports.NotFoundFactId = function NotFoundFactId(name) {
+	_classCallCheck(this, NotFoundFactId);
 
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
+	this.message = 'In fact data, no property was found with the name: ' + name;
+};
 
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
+var NotCompletelySpaceException = exports.NotCompletelySpaceException = function NotCompletelySpaceException(dimension) {
+	_classCallCheck(this, NotCompletelySpaceException);
 
-	return ExtendableBuiltin;
-}
+	this.message = 'Not completely defined space for added member, not found member for dimension: "' + dimension + '"';
+};
 
-var NotCompletelySpaceException = exports.NotCompletelySpaceException = function (_extendableBuiltin2) {
-	_inherits(NotCompletelySpaceException, _extendableBuiltin2);
+var CantAddMemberRollupException = exports.CantAddMemberRollupException = function CantAddMemberRollupException(dimension, id) {
+	_classCallCheck(this, CantAddMemberRollupException);
 
-	function NotCompletelySpaceException(dimension) {
-		_classCallCheck(this, NotCompletelySpaceException);
+	this.message = 'Can\'t add member, rollup dimension: ' + dimension + ' with id: ' + id + ' not found';
+};
 
-		var _this = _possibleConstructorReturn(this, (NotCompletelySpaceException.__proto__ || Object.getPrototypeOf(NotCompletelySpaceException)).call(this));
+var CreateInstanceException = exports.CreateInstanceException = function CreateInstanceException() {
+	_classCallCheck(this, CreateInstanceException);
 
-		_this.message = 'Not completely defined space for added member, not found member for dimension: "' + dimension + '"';
-		return _this;
-	}
+	this.message = 'this must have prototype of Cube';
+};
 
-	return NotCompletelySpaceException;
-}(_extendableBuiltin(Error));
+var DimensionException = exports.DimensionException = function DimensionException(dimension) {
+	_classCallCheck(this, DimensionException);
 
-var CantAddMemberRollupException = exports.CantAddMemberRollupException = function (_extendableBuiltin4) {
-	_inherits(CantAddMemberRollupException, _extendableBuiltin4);
-
-	function CantAddMemberRollupException(dimension, id) {
-		_classCallCheck(this, CantAddMemberRollupException);
-
-		var _this2 = _possibleConstructorReturn(this, (CantAddMemberRollupException.__proto__ || Object.getPrototypeOf(CantAddMemberRollupException)).call(this));
-
-		_this2.message = 'Can\'t add member, rollup dimension: ' + dimension + ' with id: ' + id + ' not found';
-		return _this2;
-	}
-
-	return CantAddMemberRollupException;
-}(_extendableBuiltin3(Error));
-
-var NotFoundFactId = exports.NotFoundFactId = function (_extendableBuiltin6) {
-	_inherits(NotFoundFactId, _extendableBuiltin6);
-
-	function NotFoundFactId() {
-		_classCallCheck(this, NotFoundFactId);
-
-		var _this3 = _possibleConstructorReturn(this, (NotFoundFactId.__proto__ || Object.getPrototypeOf(NotFoundFactId)).call(this));
-
-		_this3.message = 'Not found fact id';
-		return _this3;
-	}
-
-	return NotFoundFactId;
-}(_extendableBuiltin5(Error));
-
-var CreateInstanceException = exports.CreateInstanceException = function (_extendableBuiltin8) {
-	_inherits(CreateInstanceException, _extendableBuiltin8);
-
-	function CreateInstanceException() {
-		_classCallCheck(this, CreateInstanceException);
-
-		var _this4 = _possibleConstructorReturn(this, (CreateInstanceException.__proto__ || Object.getPrototypeOf(CreateInstanceException)).call(this));
-
-		_this4.message = 'this must have prototype of Cube';
-		return _this4;
-	}
-
-	return CreateInstanceException;
-}(_extendableBuiltin7(Error));
-
-var DimensionException = exports.DimensionException = function (_extendableBuiltin10) {
-	_inherits(DimensionException, _extendableBuiltin10);
-
-	function DimensionException(dimension) {
-		_classCallCheck(this, DimensionException);
-
-		var _this5 = _possibleConstructorReturn(this, (DimensionException.__proto__ || Object.getPrototypeOf(DimensionException)).call(this));
-
-		_this5.message = 'For the name "' + dimension + '" the dimension is already set';
-		return _this5;
-	}
-
-	return DimensionException;
-}(_extendableBuiltin9(Error));
+	this.message = 'For the name "' + dimension + '" the dimension is already set';
+};
 
 var handleError = exports.handleError = function handleError(error) {
-	if (error instanceof Error) {
-		error.message = '[Cube] ' + error.message;
-	}
+	error.message = '[Cube] ' + error.message;
 	throw error;
 };
 
@@ -582,10 +412,25 @@ var DimensionTree = function (_Tree) {
 				editable: false
 			}
 		});
+		_this.validate();
 		return _this;
 	}
 
 	_createClass(DimensionTree, [{
+		key: 'validate',
+		value: function validate() {
+			var dimensions = [];
+			this.tracePostOrder(function (tracedDimensionTreeValue) {
+				var dimension = tracedDimensionTreeValue.dimension;
+
+				if (dimensions.indexOf(dimension) === -1) {
+					dimensions.push(dimension);
+				} else {
+					throw new _errors.DimensionException();
+				}
+			});
+		}
+	}, {
 		key: 'getTreeValue',
 
 		/**
@@ -697,6 +542,7 @@ var DimensionTree = function (_Tree) {
 	}, {
 		key: 'cloneDimensionTreeWithoutMembers',
 		value: function cloneDimensionTreeWithoutMembers() {
+			// todo new members must be not created here
 			var clone = new DimensionTree(this.getRoot());
 			clone.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
 				var dimensionTable = dimensionTree.getTreeValue();
@@ -890,6 +736,19 @@ var DimensionTree = function (_Tree) {
 		value: function createDimensionTree(dimensionTreeData) {
 			return new DimensionTree(dimensionTreeData);
 		}
+	}, {
+		key: 'createProxyDimensionTree',
+		value: function createProxyDimensionTree(dimensionTree) {
+			var newDimensionTree = dimensionTree.cloneDimensionTreeWithoutMembers();
+			dimensionTree.tracePostOrder(function (tracedTreeValue) {
+				var tracedDimension = tracedTreeValue.dimension,
+				    members = tracedTreeValue.members;
+
+
+				newDimensionTree.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(members);
+			});
+			return newDimensionTree;
+		}
 	}]);
 
 	return DimensionTree;
@@ -926,6 +785,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+/**
+ * Dimension is a dimension of a cube. A dimension is a primary organizer of measure and attribute information in a cube
+ * A dimension will contain some members organized in some hierarchy or hierarchies containing levels.
+ * */
 var DimensionTable = function () {
 	function DimensionTable(_ref) {
 		var _this = this;
@@ -963,11 +826,7 @@ var DimensionTable = function () {
 		this.otherProps = [].concat(otherProps);
 		/** member list */
 		this.members = members.map(function (memberData) {
-			if (memberData instanceof _Member2.default && memberData.hasOwnProperty(_this.primaryKey)) {
-				return memberData;
-			} else {
-				return new _Member2.default(memberData, _this.primaryKey);
-			}
+			return new _Member2.default(memberData, _this.primaryKey);
 		});
 		/** member default property options */
 		this.defaultMemberOptions = _extends({}, defaultMemberOptions);
@@ -1121,7 +980,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
- *
+ * @throw {NotFoundFactId}
  * */
 var FactTable = function () {
 	function FactTable() {
@@ -1137,10 +996,10 @@ var FactTable = function () {
 
 		this.primaryKey = primaryKey;
 		this.facts = facts.map(function (factData) {
-			FactTable.validateFactData(factData, primaryKey);
 			return new _Fact2.default(factData);
 		});
 		this.defaultFactOptions = defaultFactOptions;
+		this.facts.forEach(this.validateFactData.bind(this));
 	}
 
 	_createClass(FactTable, [{
@@ -1148,14 +1007,14 @@ var FactTable = function () {
 		value: function getFacts() {
 			return this.facts;
 		}
-	}], [{
+	}, {
 		key: 'validateFactData',
-		value: function validateFactData(factData, primaryKey) {
-			if (!factData[primaryKey]) {
-				throw _errors.NotFoundFactId;
+		value: function validateFactData(factData) {
+			if (!factData.hasOwnProperty(this.primaryKey)) {
+				throw new _errors.NotFoundFactId(this.primaryKey);
 			}
 		}
-	}, {
+	}], [{
 		key: 'deleteProps',
 		value: function deleteProps(fact, props, primaryKey) {
 			props.forEach(function (prop) {
@@ -1181,10 +1040,13 @@ exports.default = FactTable;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+exports.SubCube = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+exports.cartesian = cartesian;
 
 var _EmptyCell = __webpack_require__(10);
 
@@ -1220,11 +1082,11 @@ var _console = __webpack_require__(5);
 
 var _console2 = _interopRequireDefault(_console);
 
-var _TupleTable = __webpack_require__(15);
+var _Tuple = __webpack_require__(15);
 
-var _TupleTable2 = _interopRequireDefault(_TupleTable);
+var _Tuple2 = _interopRequireDefault(_Tuple);
 
-var _Space = __webpack_require__(17);
+var _Space = __webpack_require__(16);
 
 var _Space2 = _interopRequireDefault(_Space);
 
@@ -1235,6 +1097,12 @@ var _Cell2 = _interopRequireDefault(_Cell);
 var _const = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -1262,17 +1130,6 @@ var CellTable = function CellTable(_ref) {
 };
 
 /**
- * @this {Cube}
- * @private
- * */
-
-
-function getHierarchy(hierarchy) {
-	return this.dimensionHierarchies.find(function (dimensionHierarchy) {
-		return dimensionHierarchy.getHierarchy() === hierarchy;
-	});
-}
-/**
  * It a means to retrieve data
  *
  * Base class for normalizing a denormalized data array
@@ -1280,6 +1137,7 @@ function getHierarchy(hierarchy) {
  *
  * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
+
 
 var Cube = function () {
 	function Cube(cube) {
@@ -1326,7 +1184,7 @@ var Cube = function () {
 			}
 		});
 		this.cellTable = new CellTable({ cells: cells, primaryKey: primaryKey, defaultFactOptions: _extends({}, defaultFactOptions) });
-		// const residuals = this.residuals();
+		// const residuals = residuals(this);
 		// const count = residuals.length;
 		// if (count > 0) {
 		// 	console.warn('Fact table has residuals', residuals)
@@ -1345,7 +1203,8 @@ var Cube = function () {
 		key: 'slice',
 
 		/**
-   * is the act of picking a rectangular subset of a cube by choosing a single value for one of its dimensions, creating a new cube with one fewer dimension.
+   * is the act of picking a rectangular subset of a cube by choosing a single value
+   * for one of its dimensions, creating a new cube with one fewer dimension.
    * @public
    * @param {string} dimension
    * @param {Member} member
@@ -1366,14 +1225,16 @@ var Cube = function () {
 			var _this = this;
 
 			// 1 make one projection on to member
-			var cellTable = this.getCells();
 			var fixSpace = {};
 			Object.keys(set).forEach(function (dimension) {
+				// work with arrays
 				fixSpace[dimension] = Array.isArray(set[dimension]) ? set[dimension] : [set[dimension]];
 
-				// todo замена на оригинальные члены измерений
-				var dimensionTree = _this.findDimensionTreeByDimension(dimension);
+				var dimensionTree = findDimensionTreeByDimension.call(_this, dimension);
+
+				// discard non-existent dimensions
 				if (!dimensionTree) {
+					_console2.default.warn('Not existed dimension: ' + dimension);
 					return;
 				}
 				var dimensionTable = dimensionTree.getTreeValue();
@@ -1384,26 +1245,26 @@ var Cube = function () {
 					});
 					fixSpace[dimension][index] = member;
 					if (!memberData) {
-						_console2.default.warn('not founded member by id ' + dimensionTable.getMemberId(member));
+						_console2.default.warn('Not found member by id ' + dimensionTable.getMemberId(member));
 					}
 				});
 			});
 
 			var dimensionHierarchiesLength = this.dimensionHierarchies.length;
 			if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
-				throw 'set must have length: ' + dimensionHierarchiesLength;
+				throw Error('Set must have a size not more than ' + dimensionHierarchiesLength + ' dimensions');
 			}
 
 			var projectionDimensionHierarchies = [];
 
-			// для каждого измерения
+			// for every dimension in set
 			var totalSpaces = Object.keys(fixSpace).map(function (dimension) {
 
 				var dimensionTreeProjection = void 0;
 				// ищется его расширенная версия для каждого члена
 				var spacesForCells = fixSpace[dimension].map(function (member) {
 
-					var searchedInTree = _this.findDimensionTreeByDimension(dimension);
+					var searchedInTree = findDimensionTreeByDimension.call(_this, dimension);
 
 					var current = searchedInTree.cloneDimensionTreeWithoutMembers();
 
@@ -1434,13 +1295,13 @@ var Cube = function () {
 			});
 
 			// фильтрация продолжается
-			var filteredCellTable = cellTable;
+			var filteredCellTable = this.getCells();
 
 			var cellBelongsToSpace = function cellBelongsToSpace(cell, space) {
 				var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
 					var members = space[dimension];
 
-					var _findDimensionTreeByD = _this.findDimensionTreeByDimension(dimension).getTreeValue(),
+					var _findDimensionTreeByD = findDimensionTreeByDimension.call(_this, dimension).getTreeValue(),
 					    foreignKey = _findDimensionTreeByD.foreignKey,
 					    primaryKey = _findDimensionTreeByD.primaryKey;
 
@@ -1474,7 +1335,7 @@ var Cube = function () {
 					    members = _originalDimensionHie.members,
 					    dimension = _originalDimensionHie.dimension;
 
-					var projectionDimensionHierarchy = new _DimensionTree2.default(originalDimensionHierarchy);
+					var projectionDimensionHierarchy = _DimensionTree2.default.createProxyDimensionTree(originalDimensionHierarchy);
 					members.forEach(function (member) {
 						var memberBelongToCells = false;
 						filteredCellTable.forEach(function (filteredCell) {
@@ -1494,7 +1355,12 @@ var Cube = function () {
 				}
 			});
 
-			return new Cube({ cellTable: filteredCellTable, dimensionHierarchies: newDimensionHierarchies });
+			return new SubCube({
+				cellTable: filteredCellTable,
+				dimensionHierarchies: newDimensionHierarchies,
+				originalCube: this.originalCube || this,
+				previousCube: this
+			});
 		}
 		/**
    * The cube introduces generalization relations
@@ -1534,85 +1400,18 @@ var Cube = function () {
 		}
 		/**
    * @public
-   * @param {object[]} members
-   * @param {string} currentDimension
-   * @param {string?} targetDimension
-   * @deprecated as unnecessary
+   * @return {FactTable} returns facts
    * */
 
 	}, {
-		key: 'drillUpMembers',
-		value: function drillUpMembers(members, currentDimension, targetDimension) {
-			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-			// first rollUp if no target
-			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getChildTrees()[0];
-			// if cant rollUp
-			if (!targetDimension && !targetDimensionTree) {
-				return members;
-			}
-			if (!currentDimensionTree.hasChild(targetDimensionTree)) {
-				return members;
-			}
-			var targetDimensionWasAchieved = false;
-			var lastTracedDimensionTree = currentDimensionTree;
-			var lastTracedMembers = members;
-			currentDimensionTree.tracePreOrder(function (treeValue, tracedDimensionTree) {
-				if (tracedDimensionTree === currentDimensionTree) {
-					return;
-				}
-				if (!targetDimensionWasAchieved) {
-					lastTracedMembers = lastTracedDimensionTree.drillUpDimensionMembers(lastTracedMembers);
-					if (targetDimensionTree === tracedDimensionTree) {
-						targetDimensionWasAchieved = true;
-					} else {
-						lastTracedDimensionTree = tracedDimensionTree;
-					}
-				}
-			});
-			return lastTracedMembers;
-		}
-		/**
-   * @public
-   * @param {object[]} members
-   * @param {string} currentDimension
-   * @param {string?} targetDimension
-   * @deprecated as unnecessary
-   * */
-
-	}, {
-		key: 'drillDownMembers',
-		value: function drillDownMembers(members, currentDimension, targetDimension) {
-			var currentDimensionTree = this.findDimensionTreeByDimension(currentDimension);
-			// first drillDown if no target
-			var targetDimensionTree = targetDimension ? this.findDimensionTreeByDimension(targetDimension) : currentDimensionTree.getParentTree();
-			// if cant drillDown
-			if (!targetDimension && !targetDimensionTree) {
-				return members;
-			}
-			if (!currentDimensionTree.hasParent(targetDimensionTree)) {
-				return members;
-			}
-			var targetDimensionWasAchieved = false;
-			var lastTracedDimensionTree = currentDimensionTree;
-			var lastTracedMembers = members;
-			currentDimensionTree.traceUpOrder(function (tracedDimensionTree) {
-				if (tracedDimensionTree === currentDimensionTree) {
-					return;
-				}
-				if (!targetDimensionWasAchieved) {
-					lastTracedMembers = lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
-					if (targetDimensionTree === tracedDimensionTree) {
-						targetDimensionWasAchieved = true;
-					} else {
-						lastTracedDimensionTree = tracedDimensionTree;
-					}
-				}
-			});
-			return lastTracedMembers;
+		key: 'getFacts',
+		value: function getFacts() {
+			return denormalize.call(this, this.getCells());
 		}
 		/**
    * @public
    * @param {Object[]} facts
+   * @return {Cube}
    * */
 
 	}, {
@@ -1624,7 +1423,8 @@ var Cube = function () {
 			});
 			[].push.apply(this.getCells(), cells);
 			var factTable = this.getFacts();
-			_SnowflakeBuilder2.default.anotherBuild(factTable, cells, this._getDimensionTrees(), this.getCells(), this.cellTable.primaryKey);
+			_SnowflakeBuilder2.default.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.primaryKey);
+			return this;
 		}
 		/**
    * @public
@@ -1645,23 +1445,23 @@ var Cube = function () {
 		}
 		/**
    * @public
+   * @return {Cell[]}
+   * */
+
+	}, {
+		key: 'getCells',
+		value: function getCells() {
+			return this.cellTable.cells;
+		}
+		/**
+   * @public
+   * @param {Cell[]} cells
    * */
 
 	}, {
 		key: 'removeCells',
 		value: function removeCells(cells) {
 			_SnowflakeBuilder2.default.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
-		}
-		/**
-   * @public
-   * @return {FactTable} returns members
-   * @deprecated
-   * */
-
-	}, {
-		key: 'getFacts',
-		value: function getFacts() {
-			return this.denormalize(this.getCells());
 		}
 		/**
    * @public
@@ -1672,141 +1472,7 @@ var Cube = function () {
 	}, {
 		key: 'getDimensionMembers',
 		value: function getDimensionMembers(dimension) {
-			return this.findDimensionTreeByDimension(dimension).getTreeValue().members;
-		}
-		/**
-   * @public
-   * */
-
-	}, {
-		key: 'getCells',
-		value: function getCells() {
-			return this.cellTable.cells;
-		}
-		/**
-   * @private
-   * Поиск по всем иерархиям
-   * */
-
-	}, {
-		key: 'findDimensionTreeByDimension',
-		value: function findDimensionTreeByDimension(dimension) {
-			var findDimensionTree = void 0;
-			this.dimensionHierarchies.forEach(function (dimensionTree) {
-				var searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
-				if (searchedDimensionTree) {
-					findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
-				}
-			});
-			return findDimensionTree;
-		}
-	}, {
-		key: '_getDimensionTrees',
-		value: function _getDimensionTrees() {
-			return this.dimensionHierarchies.map(function (dimensionHierarchy) {
-				return dimensionHierarchy.getDimensionTree ? dimensionHierarchy.getDimensionTree() : dimensionHierarchy;
-			});
-		}
-		/**
-   * @public
-   * Cartesian product - list of all possible tuples
-   * */
-
-	}, {
-		key: 'cartesian',
-		value: function cartesian() {
-			var f = function f(a, b) {
-				var _ref3;
-
-				return (_ref3 = []).concat.apply(_ref3, _toConsumableArray(a.map(function (d) {
-					return b.map(function (e) {
-						return [].concat(d, e);
-					});
-				})));
-			};
-
-			var cartesian = function cartesian(a, b) {
-				for (var _len = arguments.length, c = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-					c[_key - 2] = arguments[_key];
-				}
-
-				return b ? cartesian.apply(undefined, [f(a, b)].concat(c)) : a;
-			};
-
-			var dimensionsOrder = [];
-
-			var set = this.dimensionHierarchies.map(function (dimensionTree) {
-				return dimensionTree.getTreeValue();
-			}).map(function (dimensionTable) {
-				dimensionsOrder.push(dimensionTable.dimension);
-				return dimensionTable.members;
-			});
-
-			var tupleTable = new _TupleTable2.default();
-
-			var res = void 0;
-			if (set.length) {
-				if (set.length > 1) {
-					res = cartesian.apply(null, set);
-				} else {
-					res = set[0].map(function (i) {
-						return [i];
-					});
-				}
-				res.forEach(function (arr) {
-					var item = {};
-					dimensionsOrder.forEach(function (dimension, index) {
-						item[dimension] = arr[index];
-					});
-					tupleTable.addTuple(item);
-					return item;
-				});
-			}
-
-			return tupleTable;
-		}
-		/**
-   * @private
-   * Get facts from cube
-   * */
-
-	}, {
-		key: 'denormalize',
-		value: function denormalize() {
-			var _this2 = this;
-
-			var cells = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getCells();
-			var forSave = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-			var data = _SnowflakeBuilder2.default.denormalize(cells, this._getDimensionTrees());
-			if (forSave) {
-				data.forEach(function (data, index) {
-					if (cells[index] instanceof _EmptyCell2.default) {
-						delete data[_this2.cellTable.primaryKey];
-					}
-				});
-			}
-			return data;
-		}
-		/**
-   * @public
-   * Residuals - list of tuples, according to which there is more than one member
-   * */
-
-	}, {
-		key: 'residuals',
-		value: function residuals() {
-			var _this3 = this;
-
-			var tuples = this.cartesian();
-			var totalFacts = [];
-			tuples.forEach(function (tuple) {
-				var partFacts = _this3.dice(tuple).getFacts();
-				if (partFacts.length > 1) {
-					totalFacts.push(tuple);
-				}
-			});
-			return totalFacts;
+			return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
 		}
 		/**
    * @public
@@ -1815,6 +1481,7 @@ var Cube = function () {
    * @param {object?} rollupCoordinatesData
    * @param {object?} drillDownCoordinatesOptions
    * @param {object?} cellData
+   * @throw {InsufficientRollupData}
    * */
 
 	}, {
@@ -1823,7 +1490,7 @@ var Cube = function () {
 			var customMemberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 			var rollupCoordinatesData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-			var _this4 = this;
+			var _this2 = this;
 
 			var drillDownCoordinatesOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 			var cellData = arguments[4];
@@ -1835,8 +1502,8 @@ var Cube = function () {
 			var rollupCoordinates = {};
 			Object.keys(rollupCoordinatesData).forEach(function (dimension) {
 				var memberData = rollupCoordinatesData[dimension];
-				var memberList = _this4.getDimensionMembers(dimension);
-				var dimensionTable = _this4.findDimensionTreeByDimension(dimension).getTreeValue();
+				var memberList = _this2.getDimensionMembers(dimension);
+				var dimensionTable = findDimensionTreeByDimension.call(_this2, dimension).getTreeValue();
 				var primaryKey = dimensionTable.primaryKey;
 
 				var id = memberData[primaryKey];
@@ -1844,12 +1511,12 @@ var Cube = function () {
 					return id === dimensionTable.getMemberId(member);
 				});
 				if (!find) {
-					throw new _errors.CantAddMemberRollupException(dimension, id);
+					throw new _errors.InsufficientRollupData(dimension, id);
 				} else {
 					rollupCoordinates[dimension] = find;
 				}
 			});
-			var dimensionTree = this.findDimensionTreeByDimension(dimension);
+			var dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 			var childDimensionTrees = dimensionTree.getChildTrees();
 			var dimensionTable = dimensionTree.getTreeValue();
 			var foreignKey = dimensionTable.foreignKey;
@@ -1863,7 +1530,7 @@ var Cube = function () {
 
 				var member = rollupCoordinatesData[dimension];
 				if (!member) {
-					throw new _errors.CantAddMemberRollupException(dimension);
+					throw new _errors.InsufficientRollupData(dimension);
 				} else {
 					foreignKeysMemberData[foreignKey] = member[primaryKey];
 				}
@@ -1896,7 +1563,7 @@ var Cube = function () {
 	}, {
 		key: 'removeDimensionMember',
 		value: function removeDimensionMember(dimension, member) {
-			var dimensionTree = this.findDimensionTreeByDimension(dimension);
+			var dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 			var endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 			var cellTable = this.getCells();
 			var getRemoveMeasures = function getRemoveMeasures(dimension, members) {
@@ -1923,43 +1590,6 @@ var Cube = function () {
 					}
 				});
 			});
-		}
-		/**
-   * @public
-   * Filling method for full size of cube
-   * @param {object?} customCellOptions - properties for empty cells
-   * */
-
-	}, {
-		key: 'fillEmptyCells',
-		value: function fillEmptyCells() {
-			var customCellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-			var cellOptions = _extends({}, this.cellTable.defaultFactOptions, customCellOptions);
-			if (!this.residuals().length) {
-				var emptyCells = this.createEmptyCells(cellOptions);
-				this.addEmptyCells(emptyCells);
-			}
-		}
-		/**
-   * @public
-   * Unfilled - list of tuples, in accordance with which there is not a single member
-   * */
-
-	}, {
-		key: 'unfilled',
-		value: function unfilled() {
-			var _this5 = this;
-
-			var tuples = this.cartesian();
-			var unfilled = [];
-			tuples.forEach(function (tuple) {
-				var members = _this5.dice(tuple).getFacts(tuple);
-				if (members.length === 0) {
-					unfilled.push(tuple);
-				}
-			});
-			return unfilled;
 		}
 		/**
    * @public
@@ -1994,16 +1624,16 @@ var Cube = function () {
 	}, {
 		key: 'createEmptyCells',
 		value: function createEmptyCells(cellOptions) {
-			var _this6 = this;
+			var _this3 = this;
 
 			var emptyCells = [];
-			var tuples = this.cartesian();
+			var tuples = cartesian(this);
 			tuples.forEach(function (combination) {
-				var unique = _this6.dice(combination).getCells();
+				var unique = _this3.dice(combination).getCells();
 				if (!unique.length) {
 					var foreignKeysCellData = {};
 					Object.keys(combination).forEach(function (dimension) {
-						var dimensionTable = _this6.findDimensionTreeByDimension(dimension).getTreeValue();
+						var dimensionTable = findDimensionTreeByDimension.call(_this3, dimension).getTreeValue();
 						var foreignKey = dimensionTable.foreignKey;
 
 						foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension]);
@@ -2048,6 +1678,23 @@ var Cube = function () {
 		value: function addEmptyCells(emptyCells) {
 			Cube.validateInstance(emptyCells);
 			[].push.apply(this.getCells(), emptyCells);
+		}
+		/**
+   * @public
+   * Filling method for full size of cube
+   * @param {object?} customCellOptions - properties for empty cells
+   * */
+
+	}, {
+		key: 'fillEmptyCells',
+		value: function fillEmptyCells() {
+			var customCellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			var cellOptions = _extends({}, this.cellTable.defaultFactOptions, customCellOptions);
+			if (!residuals(this).length) {
+				var emptyCells = this.createEmptyCells(cellOptions);
+				this.addEmptyCells(emptyCells);
+			}
 		}
 		/**
    * @param {EmptyCell[]} emptyCells
@@ -2097,6 +1744,177 @@ var Cube = function () {
 
 	return Cube;
 }();
+
+/**
+ * SubCube is the target cube whose members are members of the source cube.
+ * */
+
+
+var SubCube = exports.SubCube = function (_Cube) {
+	_inherits(SubCube, _Cube);
+
+	function SubCube(_ref3) {
+		var originalCube = _ref3.originalCube,
+		    previousCube = _ref3.previousCube,
+		    rest = _objectWithoutProperties(_ref3, ['originalCube', 'previousCube']);
+
+		_classCallCheck(this, SubCube);
+
+		/** link for chaining between operations */
+		var _this4 = _possibleConstructorReturn(this, (SubCube.__proto__ || Object.getPrototypeOf(SubCube)).call(this, rest));
+
+		_this4.originalCube = originalCube;
+		/** link for chaining between operations */
+		_this4.previousCube = previousCube;
+		return _this4;
+	}
+
+	return SubCube;
+}(Cube);
+
+/**
+ * @this {Cube}
+ * @return {DimensionHierarchy}
+ * */
+
+
+function getHierarchy(hierarchy) {
+	return this.dimensionHierarchies.find(function (dimensionHierarchy) {
+		return dimensionHierarchy.getHierarchy() === hierarchy;
+	});
+}
+/**
+ * @this {Cube}
+ * @return {DimensionTree}
+ * */
+function findDimensionTreeByDimension(dimension) {
+	var findDimensionTree = void 0;
+	this.dimensionHierarchies.forEach(function (dimensionTree) {
+		var searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
+		if (searchedDimensionTree) {
+			findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
+		}
+	});
+	return findDimensionTree;
+}
+/**
+ * @this {Cube}
+ * @return {DimensionTree[]}
+ * */
+function getDimensionTrees() {
+	return this.dimensionHierarchies.map(function (dimensionHierarchy) {
+		return dimensionHierarchy.getDimensionTree ? dimensionHierarchy.getDimensionTree() : dimensionHierarchy;
+	});
+}
+/**
+ * Cartesian product - list of all possible tuples
+ * @param {Cube} cube
+ * @return {Tuple[]}
+ * */
+function cartesian(cube) {
+	var f = function f(a, b) {
+		var _ref4;
+
+		return (_ref4 = []).concat.apply(_ref4, _toConsumableArray(a.map(function (d) {
+			return b.map(function (e) {
+				return [].concat(d, e);
+			});
+		})));
+	};
+
+	var cartesian = function cartesian(a, b) {
+		for (var _len = arguments.length, c = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+			c[_key - 2] = arguments[_key];
+		}
+
+		return b ? cartesian.apply(undefined, [f(a, b)].concat(c)) : a;
+	};
+
+	var dimensionsOrder = [];
+
+	var set = cube.dimensionHierarchies.map(function (dimensionTree) {
+		return dimensionTree.getTreeValue();
+	}).map(function (dimensionTable) {
+		dimensionsOrder.push(dimensionTable.dimension);
+		return dimensionTable.members;
+	});
+
+	var tupleList = [];
+
+	var res = void 0;
+	if (set.length) {
+		if (set.length > 1) {
+			res = cartesian.apply(null, set);
+		} else {
+			res = set[0].map(function (i) {
+				return [i];
+			});
+		}
+		res.forEach(function (arr) {
+			var item = {};
+			dimensionsOrder.forEach(function (dimension, index) {
+				item[dimension] = arr[index];
+			});
+			tupleList.push(new _Tuple2.default(item));
+			return item;
+		});
+	}
+
+	return tupleList;
+}
+/**
+ * @private
+ * Get facts from cube
+ * */
+function denormalize() {
+	var _this5 = this;
+
+	var cells = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getCells();
+	var forSave = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+	var data = _SnowflakeBuilder2.default.denormalize(cells, getDimensionTrees.call(this));
+	if (forSave) {
+		data.forEach(function (data, index) {
+			if (cells[index] instanceof _EmptyCell2.default) {
+				delete data[_this5.cellTable.primaryKey];
+			}
+		});
+	}
+	return data;
+}
+/**
+ * @public
+ * Residuals - list of tuples, according to which there is more than one member
+ * @return {Tuple[]}
+ * */
+function residuals(cube) {
+	var tuples = cartesian(cube);
+	var totalTuples = [];
+	tuples.forEach(function (tuple) {
+		var partFacts = cube.dice(tuple).getFacts();
+		if (partFacts.length > 1) {
+			totalTuples.push(tuple);
+		}
+	});
+	return totalTuples;
+}
+/**
+ * Unfilled - list of tuples, in accordance with which there is not a single member
+ * @this {Cube}
+ * */
+function unfilled() {
+	var _this6 = this;
+
+	var tuples = this.cartesian();
+	var unfilled = [];
+	tuples.forEach(function (tuple) {
+		var members = _this6.dice(tuple).getFacts(tuple);
+		if (members.length === 0) {
+			unfilled.push(tuple);
+		}
+	});
+	return unfilled;
+}
 
 exports.default = Cube;
 
@@ -2476,6 +2294,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 /**
  * The elements of a dimension can be organized as a hierarchy
+ * Hierarchy is a dimension hierarchy of a cube
  * */
 var DimensionHierarchy = function () {
 	function DimensionHierarchy(_ref) {
@@ -2882,93 +2701,6 @@ exports.default = SnowflakeBuilder;
 
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _Tuple = __webpack_require__(16);
-
-var _Tuple2 = _interopRequireDefault(_Tuple);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _extendableBuiltin(cls) {
-	function ExtendableBuiltin() {
-		var instance = Reflect.construct(cls, Array.from(arguments));
-		Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
-		return instance;
-	}
-
-	ExtendableBuiltin.prototype = Object.create(cls.prototype, {
-		constructor: {
-			value: cls,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		}
-	});
-
-	if (Object.setPrototypeOf) {
-		Object.setPrototypeOf(ExtendableBuiltin, cls);
-	} else {
-		ExtendableBuiltin.__proto__ = cls;
-	}
-
-	return ExtendableBuiltin;
-}
-
-var TupleTable = function (_extendableBuiltin2) {
-	_inherits(TupleTable, _extendableBuiltin2);
-
-	function TupleTable(array) {
-		_classCallCheck(this, TupleTable);
-
-		var _this = _possibleConstructorReturn(this, (TupleTable.__proto__ || Object.getPrototypeOf(TupleTable)).call(this));
-
-		if (Array.isArray(array)) {
-			_extends(_this, array.map(function (item) {
-				return new _Tuple2.default(item);
-			}));
-		}
-		return _this;
-	}
-
-	_createClass(TupleTable, [{
-		key: 'addTuple',
-		value: function addTuple(data) {
-			this.push(new _Tuple2.default(data));
-		}
-	}, {
-		key: 'forEach',
-		value: function forEach() {
-			return _get(TupleTable.prototype.__proto__ || Object.getPrototypeOf(TupleTable.prototype), 'forEach', this).apply(this, arguments);
-		}
-	}]);
-
-	return TupleTable;
-}(_extendableBuiltin(Array));
-
-exports.default = TupleTable;
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -2979,7 +2711,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * The cell is identified by a tuple
  * tuples can uniquely identify every cell in the cube
- * tuple - the set of members of each of the dimensions
+ * Tuple is an ordered collection of one or more members from different dimensions
  * */
 var Tuple = function Tuple(options) {
   _classCallCheck(this, Tuple);
@@ -2990,7 +2722,7 @@ var Tuple = function Tuple(options) {
 exports.default = Tuple;
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
