@@ -51,16 +51,31 @@ describe('class DimensionTree', function() {
 		dimensionTreeData = cloneDeep(exportedDimensionTreeData);
 	});
 
-	xit('should create dimensionTree', () => {
+	it('should create dimensionTree', () => {
 		expect(() => {
 			const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		}).not.toThrow();
 	});
 
-	xit('should create copy', () => {
+	it('should create copy dimensionTree', () => {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
 		const dimensionTreeCopy = DimensionTree.createDimensionTree(dimensionTree);
 		recursiveObjectsNotHaveCommonLinks(dimensionTree, dimensionTreeCopy)
+	});
+	
+	it('should create proxy dimensionTree', () => {
+		const dimensionTree = DimensionTree.createDimensionTree(dimensionTreeData);
+		const dimensionTreeProxy = DimensionTree.createProxyDimensionTree(dimensionTree);
+		dimensionTreeProxy.tracePostOrder(tracedTreeValue => {
+			const {dimension: tracedDimension} = tracedTreeValue;
+			const originalDimensionTreeValue = dimensionTree.getDimensionTreeByDimension(tracedDimension).getTreeValue();
+			// arrays not common
+			expect(originalDimensionTreeValue.members !== tracedTreeValue).toBe(true);
+			// but members all common
+			originalDimensionTreeValue.members.forEach((member, index) => {
+				expect(member === tracedTreeValue.members[index]).toBe(true);
+			})
+		})
 	});
 
 	describe('throws when trying to create bad DimensionTree with duplicate names for dimension', () => {
@@ -79,7 +94,7 @@ describe('class DimensionTree', function() {
 			]
 		};
 
-		xit('should throw', () => {
+		it('should throw', () => {
 			expect(() => {
 				try {
 					DimensionTree.createDimensionTree(dimensionTreeData);
@@ -89,14 +104,13 @@ describe('class DimensionTree', function() {
 			}).toThrow();
 		});
 
-		xit('should specific throw', () => {
+		it('should specific throw', () => {
 			let catchError;
 			try {
 				DimensionTree.createDimensionTree(dimensionTreeData);
 			} catch (error) {
 				catchError = error;
 			}
-			expect(catchError instanceof Error).toBe(true);
 			expect(catchError instanceof DimensionException).toBe(true);
 		});
 	});

@@ -10,7 +10,7 @@ export default class DimensionTree extends Tree {
 		super();
 
 		const {dimensionTable, level = [], parentNode = null} = dimensionTree;
-
+		
 		Object.defineProperties(this, {
 			dimensionTable: {
 				/**
@@ -42,9 +42,33 @@ export default class DimensionTree extends Tree {
 				editable: false
 			}
 		});
+		this.validate();
+	}
+	validate(){
+		const dimensions = [];
+		this.tracePostOrder((tracedDimensionTreeValue) => {
+			const {dimension} = tracedDimensionTreeValue;
+			if (dimensions.indexOf(dimension) === -1){
+				dimensions.push(dimension)
+			} else {
+				throw new DimensionException();
+			}
+		})
 	}
 	static createDimensionTree(dimensionTreeData) {
 		return new DimensionTree(dimensionTreeData);
+	}
+	static createProxyDimensionTree(dimensionTree){
+		const newDimensionTree = dimensionTree.cloneDimensionTreeWithoutMembers();
+		dimensionTree.tracePostOrder((tracedTreeValue) => {
+			const { dimension: tracedDimension, members } = tracedTreeValue;
+			
+			newDimensionTree
+				.getDimensionTreeByDimension(tracedDimension)
+				.getTreeValue()
+				.setMemberList(members);
+		});
+		return newDimensionTree;
 	}
 	/**
 	 * @public
@@ -136,6 +160,7 @@ export default class DimensionTree extends Tree {
 		})
 	}
 	cloneDimensionTreeWithoutMembers(){
+		// todo new members must be not created here
 		const clone = new DimensionTree(this.getRoot());
 		clone.tracePostOrder((dimensionTreeValue, dimensionTree) => {
 			const dimensionTable = dimensionTree.getTreeValue();

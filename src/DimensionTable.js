@@ -26,11 +26,7 @@ export default class DimensionTable {
 		this.otherProps = [].concat(otherProps);
 		/** member list */
 		this.members = members.map(memberData => {
-			if (memberData instanceof Member && memberData.hasOwnProperty(this.primaryKey)) {
-				return memberData;
-			} else {
-				return new Member(memberData, this.primaryKey)
-			}
+			return new Member(memberData, this.primaryKey)
 		});
 		/** member default property options */
 		this.defaultMemberOptions = {...defaultMemberOptions};
@@ -105,7 +101,7 @@ export default class DimensionTable {
 	 *
 	 * */
 	removeMember(member) {
-		var index = this.members.indexOf(member);
+		const index = this.members.indexOf(member);
 		if (index === -1) {
 			throw new Error('represented member was not found', member);
 		}

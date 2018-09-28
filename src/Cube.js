@@ -120,16 +120,18 @@ class Cube {
 	 * */
 	dice(set) {
 		// 1 make one projection on to member
-		const cellTable = this.getCells();
 		const fixSpace = {};
 		Object.keys(set).forEach(dimension => {
+			// work with arrays
 			fixSpace[dimension] = Array.isArray(set[dimension])
 				? set[dimension]
 				: [set[dimension]];
 
-			// todo замена на оригинальные члены измерений
 			const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+			
+			// discard non-existent dimensions
 			if (!dimensionTree) {
+				console.warn(`Not existed dimension: ${dimension}`);
 				return;
 			}
 			const dimensionTable = dimensionTree.getTreeValue();
@@ -138,19 +140,19 @@ class Cube {
 				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
 				fixSpace[dimension][index] = member;
 				if (!memberData) {
-					console.warn(`not founded member by id ${dimensionTable.getMemberId(member)}`)
+					console.warn(`Not found member by id ${dimensionTable.getMemberId(member)}`)
 				}
 			})
 		});
 
 		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
 		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
-			throw `set must have length: ${dimensionHierarchiesLength}`
+			throw Error(`Set must have a size not more than ${dimensionHierarchiesLength} dimensions`)
 		}
 
 		const projectionDimensionHierarchies = [];
 
-		// для каждого измерения
+		// for every dimension in set
 		const totalSpaces = Object.keys(fixSpace).map(dimension => {
 
 			let dimensionTreeProjection;
@@ -188,7 +190,7 @@ class Cube {
 		});
 
 		// фильтрация продолжается
-		let filteredCellTable = cellTable;
+		let filteredCellTable = this.getCells();
 
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
@@ -221,7 +223,7 @@ class Cube {
 			});
 			if (!finded) {
 				const { members, dimension } = originalDimensionHierarchy.getTreeValue();
-				const projectionDimensionHierarchy = new DimensionTree(originalDimensionHierarchy);
+				const projectionDimensionHierarchy = DimensionTree.createProxyDimensionTree(originalDimensionHierarchy);
 				members.forEach(member => {
 					let memberBelongToCells = false;
 					filteredCellTable.forEach(filteredCell => {
@@ -312,7 +314,7 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * @return {CellTable}
+	 * @return {Cell[]}
 	 * */
 	getCells() {
 		return this.cellTable.cells;
@@ -331,12 +333,6 @@ class Cube {
 	 * */
 	getDimensionMembers(dimension) {
 		return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
-	}
-	/**
-	 * @public
-	 * */
-	getCells() {
-		return this.cellTable.cells;
 	}
 	/**
 	 * @public

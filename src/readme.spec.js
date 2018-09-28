@@ -87,138 +87,155 @@ describe('readme', () => {
 		debug = isEqualObjects(date, cube.getDimensionMembers('date'));
 		debug = isEqualObjects(products, cube.getDimensionMembers('products'));
 		debug = isEqualObjects(categories, cube.getDimensionMembers('categories'));
-	})
+	});
 
-	it('check getDimensionMembers', () => {
-		const result = cube.dice({ categories: [{ id: 1 }] });
-
+	it('check getDimensionMembers, test 1', () => {
+		const subCube = cube.dice({ categories: { id: 1 } });
 		debug = isEqualObjects(
 			[
 				{ id: 1, product: 'Product 1', categories_id: 1 },
 				{ id: 2, product: 'Product 2', categories_id: 1 },
 			],
-			cube.dice({ categories: { id: 1 } }).getDimensionMembers('products')
+			subCube.getDimensionMembers('products')
 		);
-
+	});
+	
+	it('check getDimensionMembers, test 2', () => {
+		const subCube = cube.dice({ categories: { id: 1 } });
+		debug = isEqualObjects(
+			[
+				{ id: 1, region: 'North' },
+				{ id: 2, region: 'South' },
+			],
+			subCube.getDimensionMembers('regions')
+		);
+	});
+	
+	it('check getDimensionMembers, test 3', () => {
+		const subCube = cube.dice({ regions: [{ id: 2 }, { id: 3 }] });
 		debug = isEqualObjects(
 			[
 				{ id: 2, product: 'Product 2', categories_id: 1 },
 				{ id: 3, product: 'Product 3', categories_id: 2 },
 				{ id: 4, product: 'Product 1', categories_id: 2 },
 			],
-			cube.dice({ regions: [{ id: 2 }, { id: 3 }] }).getDimensionMembers('products')
+			subCube.getDimensionMembers('products')
 		);
-
+	});
+	
+	it('check getCells, test 1', () => {
+		let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } };
 		debug = isEqualObjects(
 			[
-				{ id: 1, region: 'North' },
-				{ id: 2, region: 'South' },
+				{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
 			],
-			cube.dice({ categories: { id: 1 } }).getDimensionMembers('regions')
+			cube.dice(set).getCells()
 		);
-
-	})
-	it('check getCells/getFacts', () => {
-		{
-			let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } };
-			debug = isEqualObjects(
-				[
-					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
-				],
-				cube.dice(set).getCells()
-			);
-			debug = isEqualObjects(
-				[
-					{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
-				],
-				cube.dice(set).getFacts()
-			);
-		}
-
-		{
-			let subSet = { regions: { id: 3 } };
-			debug = isEqualObjects(
-				[
-					{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
-					{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
-				],
-				cube.dice(subSet).getCells()
-			);
-			debug = isEqualObjects(
-				[
-					{ id: 3, region: 'West', year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
-					{ id: 4, region: 'West', year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
-				],
-				cube.dice(subSet).getFacts()
-			);
-		}
-
-		{
-			let emptySet = {};
-			debug = isEqualObjects(
-				[
-					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
-					{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
-					{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
-					{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
-				],
-				cube.dice(emptySet).getCells()
-			);
-			debug = isEqualObjects(
-				facts,
-				cube.dice(emptySet).getFacts()
-			);
-		}
-
-		{
-			let set = { date: [{ id: 1 }, { id: 2 }] };
-			debug = isEqualObjects(
-				[
-					{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
-					{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
-				],
-				cube.dice(set).getCells()
-			);
-			debug = isEqualObjects(
-				[
-					{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-					{ id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
-				],
-				cube.dice(set).getFacts()
-			);
-		}
-	})
+	});
+	
+	it('check getFacts, test 1', () => {
+		let set = { regions: { id: 1 }, date: { id: 1 }, products: { id: 1 } };
+		debug = isEqualObjects(
+			[
+				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
+			],
+			cube.dice(set).getFacts()
+		);
+	});
+	
+	it('check getCells, test 2', () => {
+		let subSet = { regions: { id: 3 } };
+		debug = isEqualObjects(
+			[
+				{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+				{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+			],
+			cube.dice(subSet).getCells()
+		);
+	});
+	
+	it('check getFacts, test 2', () => {
+		let subSet = { regions: { id: 3 } };
+		debug = isEqualObjects(
+			[
+				{ id: 3, region: 'West', year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+				{ id: 4, region: 'West', year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
+			],
+			cube.dice(subSet).getFacts()
+		);
+	});
+	
+	it('check getCells, test 3', () => {
+		let emptySet = {};
+		debug = isEqualObjects(
+			[
+				{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+				{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+				{ id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+				{ id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+			],
+			cube.dice(emptySet).getCells()
+		);
+	});
+	
+	it('check getFacts, test 3', () => {
+		let emptySet = {};
+		debug = isEqualObjects(
+			facts,
+			cube.dice(emptySet).getFacts()
+		);
+	});
+	
+	it('check getCells, test 4', () => {
+		let set = { date: [{ id: 1 }, { id: 2 }] };
+		debug = isEqualObjects(
+			[
+				{ id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+				{ id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+			],
+			cube.dice(set).getCells()
+		);
+	});
+	
+	it('check getFacts, test 4', () => {
+		let set = { date: [{ id: 1 }, { id: 2 }] };
+		debug = isEqualObjects(
+			[
+				{ id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+				{ id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+			],
+			cube.dice(set).getFacts()
+		);
+	});
 
 	it('check addDimensionHierarchy', () => {
-		{
-			const facts = [
-				{ id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
-				{ id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
-			];
-			const cube = Cube.create(facts, []);
-			cube.addDimensionHierarchy({
-				dimensionTable: {
-					dimension: 'product',
-					keyProps: ['product']
-				},
-				level: [
-					{
-						dimensionTable: {
-							dimension: 'mark',
-							keyProps: ['mark']
-						},
-					}
-				]
-			});
-			debug = isEqualObjects(
-				cube.getCells(),
-				[
-					{ id: 1, product_id: 1, country: 'China', count: 2 },
-					{ id: 1, product_id: 2, country: 'Niderland', count: 3 }
-				]
-			)
-		}
-	})
+		const facts = [
+			{ id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
+			{ id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
+		];
+		const cube = Cube.create(facts, []);
+		cube.addDimensionHierarchy({
+			dimensionTable: {
+				dimension: 'product',
+				keyProps: ['product']
+			},
+			level: [
+				{
+					dimensionTable: {
+						dimension: 'mark',
+						keyProps: ['mark']
+					},
+				}
+			]
+		});
+		debug = isEqualObjects(
+			cube.getCells(),
+			[
+				{ id: 1, product_id: 1, country: 'China', count: 2 },
+				{ id: 1, product_id: 2, country: 'Niderland', count: 3 }
+			]
+		)
+	});
 
 	it('Custom members', () => {
 		let facts = [{ id: 1, nikname: 'Monkey', group: 'Administrators' }];
@@ -248,5 +265,5 @@ describe('readme', () => {
 		debug = isEqualObjects(userMember, { id: 1, nikname: 'Monkey', GROUP_ID: 1 });
 		debug = isEqualObjects(groupMember, { ID: 1, group: 'Administrators' });
 		debug = isEqualObjects(cell, { id: 1, USER_ID: 1 });
-	})
+	});
 });
