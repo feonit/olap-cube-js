@@ -28,7 +28,7 @@
     "port": "8080"
   },
   "scripts": {
-    "test": "jest && codecov",
+    "test": "jest ./spec/spec.js && codecov",
     "build": "node_modules/.bin/webpack --profile --progress --display-modules  --config config/webpack.config.app.js",
     "dev": "node node_modules/http-server/bin/http-server -p 8080"
   },
