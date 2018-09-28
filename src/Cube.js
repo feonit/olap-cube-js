@@ -525,10 +525,12 @@ class Cube {
  * SubCube is the target cube whose members are members of the source cube.
  * */
 export class SubCube extends Cube {
-	constructor({originalCube, ...rest}){
+	constructor({originalCube, previousCube, ...rest}){
 		super(rest);
 		/** link for chaining between operations */
 		this.originalCube = originalCube;
+		/** link for chaining between operations */
+		this.previousCube = previousCube;
 	}
 }
 
