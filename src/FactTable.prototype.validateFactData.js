@@ -1,7 +1,7 @@
 import FactTable from "./FactTable.js";
 import {NotFoundFactId} from "./errors.js";
 
-describe('method FactTable.prototype.validateFactData', () => {
+export default () => {
 	it('should define validateFactData', () => {
 		expect(FactTable.prototype.validateFactData).toBeDefined();
 	});
@@ -31,4 +31,4 @@ describe('method FactTable.prototype.validateFactData', () => {
 		}
 		expect(err instanceof NotFoundFactId).toBe(true)
 	})
-});
+};

@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.removeDimensionMember', () => {
+export default () => {
 
 	let cube;
 
@@ -122,4 +122,4 @@ describe('method Cube.prototype.removeDimensionMember', () => {
 		expect(debug = cube.getDimensionMembers('y').length).toBe(1);
 		expect(debug = cube.getDimensionMembers('yy').length).toBe(3);
 	})
-});
+};

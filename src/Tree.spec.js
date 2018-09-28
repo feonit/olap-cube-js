@@ -1,7 +1,7 @@
 import Tree from '../src/Tree.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('class Tree', () => {
+export default () => {
 
 	it('should define getTreeValue', () => { expect(Tree.prototype.getTreeValue).toBeDefined(); });
 	it('should define getParentTree', () => { expect(Tree.prototype.getParentTree).toBeDefined(); });
@@ -135,4 +135,4 @@ describe('class Tree', () => {
 		});
 		isEqualObjects(order, [100, 101, 10, 201, 20, 1])
 	})
-});
+};

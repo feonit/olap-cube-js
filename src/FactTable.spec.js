@@ -1,6 +1,6 @@
 import FactTable from './FactTable.js'
 
-describe('class FactTable', () => {
+export default () => {
 	let factTable;
 
 	beforeEach(() => {
@@ -10,4 +10,4 @@ describe('class FactTable', () => {
 	it('defaults', () => {
 		expect(factTable.primaryKey === 'id').toBe(true);
 	})
-});
+};

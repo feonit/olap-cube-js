@@ -1,7 +1,7 @@
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method addDimensionHierarchy must work', () => {
+export default () => {
 
 	it('should define addDimensionHierarchy', () => {
 		expect(Cube.prototype.addDimensionHierarchy).toBeDefined();
@@ -99,4 +99,4 @@ describe('method addDimensionHierarchy must work', () => {
 			]);
 		});
 	})
-});
+};

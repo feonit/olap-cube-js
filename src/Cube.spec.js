@@ -2,7 +2,7 @@ import Cube from '../src/Cube.js';
 import {CreateInstanceException} from '../src/errors.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('class Cube', function() {
+export default () => {
 	let debug;
 
 	describe(`[ API static ${Cube.name}]`,() => {
@@ -121,4 +121,4 @@ describe('class Cube', function() {
 		expect(error instanceof CreateInstanceException).toBe(true)
 	});
 
-});
+};

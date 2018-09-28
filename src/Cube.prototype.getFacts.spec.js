@@ -2,7 +2,7 @@ import {createProductCube, factTable} from './data/products.js'
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.getFacts', () => {
+export default () => {
 	let cube;
 	let debug;
 
@@ -18,4 +18,4 @@ describe('method Cube.prototype.getFacts', () => {
 		const facts = cube.getFacts();
 		debug = isEqualObjects(facts, factTable);
 	});
-});
+};

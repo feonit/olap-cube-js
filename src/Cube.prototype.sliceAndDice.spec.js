@@ -1,7 +1,7 @@
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('methods slice and dice must work', () => {
+export default () => {
 	let facts;
 	let dimensionHierarchies;
 	let cube;
@@ -62,4 +62,4 @@ describe('methods slice and dice must work', () => {
 		expect(debug = subCube.getDimensionMembers('y')[0] === cube.getDimensionMembers('y')[0]).toBe(true);
 		expect(debug = subCube.getDimensionMembers('x')[0] === cube.getDimensionMembers('x')[0]).toBe(true);
 	});
-});
+};

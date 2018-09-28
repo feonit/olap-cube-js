@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.addFacts', () => {
+export default () => {
 	let debug;
 
 	it('should define addFacts', () => {
@@ -105,4 +105,4 @@ describe('method Cube.prototype.addFacts', () => {
 		// second level
 		debug = isEqualObjects(cube.dimensionHierarchies[1].level[0].dimensionTable.members, [{ id: 1, yy: 0.1 }, { id: 2, yy: 0.9 }, { id: 3, yy: 2.8 }]);
 	})
-});
+};

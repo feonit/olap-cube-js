@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test property otherProps', () => {
+export default () => {
 	let debug;
 	let cube;
 	let facts;
@@ -35,4 +35,4 @@ describe('test property otherProps', () => {
 		const newUserMemberExpected = { id: 2, name: 'Sasha', nickname: 'Monkey' };
 		debug = isEqualObjects(newUserMember, newUserMemberExpected);
 	});
-});
+};

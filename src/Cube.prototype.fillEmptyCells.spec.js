@@ -1,7 +1,7 @@
 import Cube, {cartesian} from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.fillEmptyCells', function() {
+export default () => {
 	let debug;
 
 	const factTable = [
@@ -143,4 +143,4 @@ describe('method Cube.prototype.fillEmptyCells', function() {
 			{ x: 1, y: 1, xy: false }
 		]);
 	})
-});
+};

@@ -1,8 +1,7 @@
 import Fact from '../src/Fact.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
-import {NotFoundFactId} from '../src/errors.js'
 
-describe('class Fact', () => {
+export default () => {
 	let debug;
 	it('must assign properties with only simple values', () => {
 		class Data {
@@ -31,4 +30,4 @@ describe('class Fact', () => {
 		const fact = new Fact(data);
 		debug = isEqualObjects({ id: 1, prop1: 'prop1', prop2: 100, prop4: null }, fact);
 	});
-});
+};

@@ -1,6 +1,6 @@
 import Cube from './Cube.js'
 
-describe('test DimensionHierarchy', () => {
+export default () => {
 	it('', () => {
 		const dimensionHierarchies = [
 			{
@@ -73,4 +73,4 @@ describe('test DimensionHierarchy', () => {
 
 		expect(cube.dimensionHierarchies.length === 2).toBe(true)
 	})
-});
+};

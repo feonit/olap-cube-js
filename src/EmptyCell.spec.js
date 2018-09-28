@@ -1,6 +1,6 @@
 import EmptyCell from './EmptyCell.js'
 
-describe('class EmptyCell', () => {
+export default () => {
 	it('static method should define createEmptyCell', () => {
 		expect(EmptyCell.createEmptyCell).toBeDefined();
 	});
@@ -23,4 +23,4 @@ describe('class EmptyCell', () => {
 		expect(EmptyCell.isEmptyCell(cellData)).toBe(false);
 		expect(EmptyCell.isEmptyCell({ id: EmptyCell.generateId() })).toBe(true)
 	})
-});
+};

@@ -1,7 +1,7 @@
 import Cube from './Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test primaryKey', () => {
+export default () => {
 	it('fact table can have custom primaryKey', () => {
 		const factTable = {
 			facts: [
@@ -30,4 +30,4 @@ describe('test primaryKey', () => {
 		expect(cube.getCells()[0]["factId"]).toBeDefined();
 		isEqualObjects(cube.getFacts(), factTable.facts);
 	})
-});
+};

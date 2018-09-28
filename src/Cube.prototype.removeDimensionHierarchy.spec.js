@@ -1,7 +1,7 @@
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method removeDimensionHierarchy must work', () => {
+export default () => {
 
 	it('should define removeDimensionHierarchy', () => {
 		expect(Cube.prototype.removeDimensionHierarchy).toBeDefined();
@@ -48,4 +48,4 @@ describe('method removeDimensionHierarchy must work', () => {
 			cube.getDimensionMembers('x')
 		}).toThrow();
 	});
-});
+};

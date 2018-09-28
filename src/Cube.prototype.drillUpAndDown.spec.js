@@ -1,6 +1,6 @@
 import Cube from './Cube.js'
 
-describe('test drill', () => {
+export default () => {
 	let dimensionHierarchies;
 	let facts;
 	let cube;
@@ -31,6 +31,15 @@ describe('test drill', () => {
 			{ id: 1, name: 'foo', group: 'customer' },
 		];
 	});
+	
+	it('should define drillUp', () =>  {
+		expect(Cube.prototype.drillUp).toBeDefined();
+	});
+	
+	it('should define drillDown', () =>  {
+		expect(Cube.prototype.drillDown).toBeDefined();
+	});
+	
 	it('drillUp ', () => {
 		cube = Cube.create(facts, dimensionHierarchies);
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'name');
@@ -44,4 +53,4 @@ describe('test drill', () => {
 		cube.drillDown('humans', 'name');
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'name').toBe(true)
 	});
-});
+};

@@ -1,7 +1,7 @@
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test defaultMemberOptions', () => {
+export default () => {
 	let debug;
 	it('defaultMemberOptions must work with method addDimensionMember, level 1', () => {
 		let factTable = {
@@ -170,4 +170,4 @@ describe('test defaultMemberOptions', () => {
 		let members = cube.getDimensionMembers('region');
 		debug = isEqualObjects({ id: 2, region: 'North', description: 'Our region' }, members[1])
 	})
-});
+};

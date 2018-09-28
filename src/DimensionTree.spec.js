@@ -42,7 +42,7 @@ export const exportedDimensionTreeData = {
 	]
 };
 
-describe('class DimensionTree', function() {
+export default () => {
 
 	let dimensionTreeData;
 	let debug;
@@ -158,4 +158,4 @@ describe('class DimensionTree', function() {
 	// 	isEqualObjects(newDimensionTree.getDimensionTreeByDimension('xx').getTreeValue().members, [{ id: 2, xx: 0.87, x_id: 2 }])
 	// 	isEqualObjects(newDimensionTree.getDimensionTreeByDimension('x').getTreeValue().members, [{ id: 2, x: 0.9 }])
 	// })
-});
+};

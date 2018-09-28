@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test property primaryKey', () => {
+export default () => {
 	let debug;
 	it('members must have special prop name as id', () => {
 		let facts = [
@@ -33,4 +33,4 @@ describe('test property primaryKey', () => {
 			{ ID_Y: 1, y: 0 }
 		);
 	})
-});
+};

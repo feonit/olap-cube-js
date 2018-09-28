@@ -3,7 +3,7 @@ import DimensionTree from '../src/DimensionTree.js'
 import Cell from '../src/Cell.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('class SnowflakeBuilder', () => {
+export default () => {
 	let debug;
 	describe('common', () => {
 		let dimensionHierarchies;
@@ -114,4 +114,4 @@ describe('class SnowflakeBuilder', () => {
 			debug = isEqualObjects(cellTable, expectedMeasure)
 		});
 	});
-});
+};

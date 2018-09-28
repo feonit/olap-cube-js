@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test property foreignKey', () => {
+export default () => {
 	let debug;
 	it('foreignKey of dimension table can be any string', () => {
 		let facts = [
@@ -36,4 +36,4 @@ describe('test property foreignKey', () => {
 			{ id: 1, x: 0, my_foreign_key_xx: 1 }
 		);
 	});
-});
+};

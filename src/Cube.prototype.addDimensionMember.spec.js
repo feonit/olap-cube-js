@@ -2,9 +2,13 @@ import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 import { InsufficientRollupData } from '../src/errors.js';
 
-describe('method Cube.prototype.addDimensionMember', () => {
+export default () => {
 	let debug;
-
+	
+	it('should define addDimensionMember', () =>  {
+		expect(Cube.prototype.addDimensionMember).toBeDefined();
+	});
+	
 	describe('[ validation data to add ]', () => {
 
 		let cube;
@@ -49,11 +53,7 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			cube = Cube.create(factTable, dimensionHierarchies);
 
 		});
-
-		it('should define addDimensionMember', () =>  {
-			expect(Cube.prototype.addDimensionMember).toBeDefined();
-		});
-
+		
 		it('should throw when defined not completely space for added member level 1', () => {
 			expect(() => {
 				cube.addDimensionMember('xxx', { xxx: 1 })
@@ -369,4 +369,4 @@ describe('method Cube.prototype.addDimensionMember', () => {
 			]));
 		});
 	})
-});
+};

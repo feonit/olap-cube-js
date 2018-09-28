@@ -2,7 +2,7 @@ import {createProductCube} from './data/products.js'
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.getDimensionMembers', () => {
+export default () => {
 	let cube;
 
 	beforeEach(() => {
@@ -31,4 +31,4 @@ describe('method Cube.prototype.getDimensionMembers', () => {
 		expect(cube.getDimensionMembers('year').length).toBe(4);
 		expect(cube.getDimensionMembers('qr').length).toBe(11);
 	});
-});
+};

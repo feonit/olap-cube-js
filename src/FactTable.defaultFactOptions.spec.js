@@ -1,7 +1,7 @@
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('test defaultFactOptions', () => {
+export default () => {
 	let debug;
 	it('method fillEmptyCells must use data from defaultFactOptions as default', () => {
 		let factTable = {
@@ -66,4 +66,4 @@ describe('test defaultFactOptions', () => {
 			{ x: 2, y: 1, isOpen: false },
 		])
 	})
-});
+};

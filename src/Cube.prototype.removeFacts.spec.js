@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('method Cube.prototype.removeFacts must work', () => {
+export default () => {
 	let debug;
 	it('should define removeFacts', () => {
 		expect(Cube.prototype.addFacts).toBeDefined();
@@ -122,4 +122,4 @@ describe('method Cube.prototype.removeFacts must work', () => {
 			{ id: 2, x: 200 }
 		]);
 	});
-});
+};

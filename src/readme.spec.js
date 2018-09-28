@@ -1,7 +1,7 @@
 import Cube from '../src/Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
-describe('readme', () => {
+export default () => {
 	let debug;
 	let facts;
 	let dimensionHierarchies;
@@ -266,4 +266,4 @@ describe('readme', () => {
 		debug = isEqualObjects(groupMember, { ID: 1, group: 'Administrators' });
 		debug = isEqualObjects(cell, { id: 1, USER_ID: 1 });
 	});
-});
+};
