@@ -456,7 +456,7 @@ class Cube {
 	 * */
 	createEmptyCells(cellOptions) {
 		const emptyCells = [];
-		const tuples = cartesian(this);
+		const tuples = Cube.cartesian(this);
 		tuples.forEach(combination => {
 			const unique = this.dice(combination).getCells();
 			if (!unique.length) {
@@ -519,12 +519,62 @@ class Cube {
 			}
 		});
 	}
+	/**
+	 *
+	 * */
+	isSubCube(){
+		return this instanceof SubCube;
+	}
+	/**
+	 * Cartesian product - list of all possible tuples
+	 * @param {Cube} cube
+	 * @return {Tuple[]}
+	 * */
+	static cartesian(cube) {
+		const f = (a, b) => [].concat(...a.map(d => {
+			return b.map(e => {
+				return [].concat(d, e)
+			})
+		}));
+		
+		const cartesian = (a, b, ...c) => {
+			return b ? cartesian(f(a, b), ...c) : a
+		};
+		
+		const dimensionsOrder = [];
+		
+		const set = cube.dimensionHierarchies.map(dimensionTree => dimensionTree.getTreeValue()).map(dimensionTable => {
+			dimensionsOrder.push(dimensionTable.dimension);
+			return dimensionTable.members;
+		});
+		
+		const tupleList = [];
+		
+		let res;
+		if (set.length) {
+			if (set.length > 1) {
+				res = cartesian.apply(null, set);
+			} else {
+				res = set[0].map(i => [i])
+			}
+			res.forEach(arr => {
+				const item = {};
+				dimensionsOrder.forEach((dimension, index) => {
+					item[dimension] = arr[index]
+				});
+				tupleList.push(new Tuple(item));
+				return item;
+			});
+		}
+		
+		return tupleList;
+	}
 }
 
 /**
  * SubCube is the target cube whose members are members of the source cube.
  * */
-export class SubCube extends Cube {
+class SubCube extends Cube {
 	constructor({originalCube, previousCube, ...rest}){
 		super(rest);
 		/** link for chaining between operations */
@@ -569,50 +619,6 @@ function getDimensionTrees() {
 	})
 }
 /**
- * Cartesian product - list of all possible tuples
- * @param {Cube} cube
- * @return {Tuple[]}
- * */
-export function cartesian(cube) {
-	const f = (a, b) => [].concat(...a.map(d => {
-		return b.map(e => {
-			return [].concat(d, e)
-		})
-	}));
-
-	const cartesian = (a, b, ...c) => {
-		return b ? cartesian(f(a, b), ...c) : a
-	};
-
-	const dimensionsOrder = [];
-
-	const set = cube.dimensionHierarchies.map(dimensionTree => dimensionTree.getTreeValue()).map(dimensionTable => {
-		dimensionsOrder.push(dimensionTable.dimension);
-		return dimensionTable.members;
-	});
-
-	const tupleList = [];
-
-	let res;
-	if (set.length) {
-		if (set.length > 1) {
-			res = cartesian.apply(null, set);
-		} else {
-			res = set[0].map(i => [i])
-		}
-		res.forEach(arr => {
-			const item = {};
-			dimensionsOrder.forEach((dimension, index) => {
-				item[dimension] = arr[index]
-			});
-			tupleList.push(new Tuple(item));
-			return item;
-		});
-	}
-
-	return tupleList;
-}
-/**
  * @private
  * Get facts from cube
  * */
@@ -633,7 +639,7 @@ function denormalize(cells = this.getCells(), forSave = true) {
  * @return {Tuple[]}
  * */
 function residuals(cube) {
-	const tuples = cartesian(cube);
+	const tuples = Cube.cartesian(cube);
 	const totalTuples = [];
 	tuples.forEach(tuple => {
 		const partFacts = cube.dice(tuple).getFacts();
@@ -645,10 +651,10 @@ function residuals(cube) {
 }
 /**
  * Unfilled - list of tuples, in accordance with which there is not a single member
- * @this {Cube}
+ * @@param {Cube} cube
  * */
-function unfilled() {
-	const tuples = this.cartesian();
+function unfilled(cube) {
+	const tuples = Cube.cartesian(cube);
 	const unfilled = [];
 	tuples.forEach(tuple => {
 		const members = this.dice(tuple).getFacts(tuple);

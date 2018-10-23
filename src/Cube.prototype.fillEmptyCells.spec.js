@@ -1,4 +1,4 @@
-import Cube, {cartesian} from '../src/Cube.js';
+import Cube from '../src/Cube.js';
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 export default () => {
@@ -27,10 +27,10 @@ export default () => {
 
 	it('should normalize count of cells for non-normalized data', () => {
 		let cube = Cube.create(factTable, dimensionHierarchies);
-		expect(debug = cartesian(cube).length).toBe(8);
+		expect(debug = Cube.cartesian(cube).length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(5);
 		cube.fillEmptyCells({ is: false });
-		expect(debug = cartesian(cube).length).toBe(8);
+		expect(debug = Cube.cartesian(cube).length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(8);
 	});
 
@@ -91,11 +91,11 @@ export default () => {
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug = cartesian(cube).length).toBe(4);
-			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(2);
+			expect(debug = Cube.cartesian(cube).length).toBe(4);
+			expect(debug = Cube.cartesian(cube).length - cube.getFacts().length).toBe(2);
 			cube.fillEmptyCells({ humans: 0 });
-			expect(debug = cartesian(cube).length).toBe(4);
-			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(0);
+			expect(debug = Cube.cartesian(cube).length).toBe(4);
+			expect(debug = Cube.cartesian(cube).length - cube.getFacts().length).toBe(0);
 		});
 
 		it('should work level 3', () => {
@@ -106,11 +106,11 @@ export default () => {
 			];
 
 			const cube = Cube.create(factTable, dimensionHierarchies);
-			expect(debug = cartesian(cube).length).toBe(6);
-			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(3);
+			expect(debug = Cube.cartesian(cube).length).toBe(6);
+			expect(debug = Cube.cartesian(cube).length - cube.getFacts().length).toBe(3);
 			cube.fillEmptyCells({ humans: 0 });
-			expect(debug = cartesian(cube).length).toBe(6);
-			expect(debug = cartesian(cube).length - cube.getFacts().length).toBe(0);
+			expect(debug = Cube.cartesian(cube).length).toBe(6);
+			expect(debug = Cube.cartesian(cube).length - cube.getFacts().length).toBe(0);
 		})
 
 	});
