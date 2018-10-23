@@ -1,4 +1,7 @@
 ## Change Log
+*0.15.2*
+- Added umd/esm builds, jump from webpack to rollup
+
 *0.15.1*
 - Remove private methods from cube
 - Remove deprecated methods

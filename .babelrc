@@ -1,10 +1,12 @@
 {
-  "presets": ["es2015"],
-  "plugins": [
-    ["babel-plugin-transform-builtin-extend", {
-      "globals": ["Error", "Array"]
-    }],
-    "transform-object-rest-spread",
-    "transform-object-assign"
-  ]
+  "presets": [
+    ["@babel/env", {
+      "modules": false
+    }]
+  ],
+  "env": {
+    "test": {
+      "presets": [["@babel/env"]]
+    }
+  }
 }

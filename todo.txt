@@ -16,13 +16,12 @@ API
 
 Code quality
 - Update code with JsDoc
-- Add amd/umd/common/ES6 builds
 - Security protection for the key values
 - Add validation for all public methods
 - Remove responsibility for "id" prop at facts (residuals)
 - in factTable move uuid generator
 - update fact table instead remove/add?
-- remove extends Error and Reflect api, custom errors
+- add custom errors
 - do todos
 
 Example

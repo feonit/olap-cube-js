@@ -707,6 +707,14 @@ We use <a href="https://semver.org/">SemVer</a> for versioning.
 Until olap-cube-js reaches a 1.0 release, breaking changes will be released with a new minor version. For example 0.10.0, and 0.10.1 will have the same API, but 0.11.0 will have breaking changes.
 The project is on stage of developing API.
 
+## Explanation of Build Files
+
+|      | UMD             | ES Module           |
+|------|-----------------|---------------------|
+| prod | cube.js         | cube.esm.js         |
+| dev  | cube.min.js     | cube.esm.min.js     |
+
+
 ## Todo
 In future versions:
 
