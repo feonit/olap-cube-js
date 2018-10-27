@@ -4,5 +4,39 @@ export default () => {
 	it('should define getEmptyCells', () =>  {
 		expect(Cube.prototype.getEmptyCells).toBeDefined();
 	});
-	xit('must filter cellTable and return only empty cells', () => {});
+	
+	let factTable;
+	let dimensionHierarchies;
+	let cube;
+	
+	beforeEach(() => {
+		factTable = [
+			{ id: 1, x: 1, y: 1, count: 5 },
+			{ id: 2, x: 2, y: 2, count: 10 },
+		];
+		dimensionHierarchies = [
+			{
+				dimensionTable: {
+					dimension: 'x',
+					keyProps: ['x']
+				}
+			},
+			{
+				dimensionTable: {
+					dimension: 'y',
+					keyProps: ['y']
+				}
+			}
+		];
+		cube = Cube.create(factTable, dimensionHierarchies);
+	});
+	
+	it('must filter cellTable and return only empty cells', () => {
+		cube.fillEmptyCells();
+		const emptyCells = cube.getEmptyCells();
+		expect(emptyCells.length).toBe(2);
+		emptyCells.forEach(emptyCell => {
+			expect(cube.isEmptyCell(emptyCell)).toBe(true)
+		})
+	});
 };

@@ -14,6 +14,7 @@ import Tuple from './Tuple.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
+import isPlainObject from "./../node_modules/lodash-es/isPlainObject.js"
 
 class CellTable {
 	constructor({ cells, primaryKey, defaultFactOptions = {} }) {
@@ -290,9 +291,13 @@ class Cube {
 	/**
 	 * @public
 	 * @param {Object[]} facts
+	 * @throw {TypeError}
 	 * @return {Cube}
 	 * */
 	addFacts(facts) {
+		if (!Array.isArray(facts)){
+			throw TypeError('The argument must be instance of Array')
+		}
 		const newFactTable = new FactTable({facts, primaryKey: this.cellTable.primaryKey});
 		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
 		[].push.apply(this.getCells(), cells);
@@ -303,8 +308,12 @@ class Cube {
 	/**
 	 * @public
 	 * @param {Object[]} facts
+	 * @throw {TypeError}
 	 * */
 	removeFacts(facts) {
+		if (!Array.isArray(facts)){
+			throw TypeError('The argument must be instance of Array')
+		}
 		const cellTable = this.getCells();
 		const primaryKey = this.cellTable.primaryKey;
 		const removedCells = facts.map(fact => {
@@ -322,16 +331,29 @@ class Cube {
 	/**
 	 * @public
 	 * @param {Cell[]} cells
+	 * @throw {TypeError}
 	 * */
 	removeCells(cells) {
+		if (!Array.isArray(cells)){
+			throw TypeError('The argument must be instance of Array')
+		}
+		cells.forEach((cell) => {
+			if (!(cell instanceof Cell)){
+				throw TypeError('The list of cells must contain only instances of Cell and EmptyCell')
+			}
+		});
 		SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
 	}
 	/**
 	 * @public
 	 * @param {string} dimension - dimension from which the member will be found
 	 * @return {Member[]} returns members
+	 * @throw {TypeError}
 	 * */
 	getDimensionMembers(dimension) {
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be instance of string')
+		}
 		return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
 	}
 	/**
@@ -343,11 +365,20 @@ class Cube {
 	 * @param {object?} cellData
 	 * @throw {InsufficientRollupData}
 	 * */
-	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
-		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
-		if (typeof dimension !== 'string') {
-			throw TypeError(`parameter dimension expects as string: ${dimension}`)
+	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData = {}) {
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be instance of string')
 		}
+		if (!(
+			isPlainObject(customMemberOptions)
+			&& isPlainObject(rollupCoordinatesData)
+			&& isPlainObject(drillDownCoordinatesOptions)
+			&& isPlainObject(cellData)
+		)){
+			throw TypeError('The arguments after the first must be plain objects')
+		}
+		
+		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
 		const rollupCoordinates = {};
 		Object.keys(rollupCoordinatesData).forEach(dimension => {
 			const memberData = rollupCoordinatesData[dimension];
@@ -399,8 +430,15 @@ class Cube {
 	 * @public
 	 * @param {string} dimension - dimension from which the member will be removed
 	 * @param {Member} member - the member will be removed
+	 * throw {TypeError}
 	 * */
 	removeDimensionMember(dimension, member) {
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be instance of string')
+		}
+		if (!(member instanceof Member)){
+			throw TypeError('The second argument must be instance of Member')
+		}
 		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
 		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 		const cellTable = this.getCells();
@@ -432,6 +470,7 @@ class Cube {
 	/**
 	 * @public
 	 * @param {object|DimensionTree} dimensionHierarchy
+	 * @throw {TypeError}
 	 * */
 	addDimensionHierarchy(dimensionHierarchy) {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy);
@@ -445,6 +484,9 @@ class Cube {
 	 * @param {DimensionTree} dimensionHierarchy
 	 * */
 	removeDimensionHierarchy(dimensionHierarchy) {
+		if (!(dimensionHierarchy instanceof DimensionTree)){
+			throw TypeError('The argument must be instance of DimensionTree')
+		}
 		// first remove members
 		SnowflakeBuilder.destroyDimensionTree(this.getCells(), this.getCells(), dimensionHierarchy, this);
 		// then target dimension hierarchy
@@ -453,21 +495,31 @@ class Cube {
 	/**
 	 * @public
 	 * @return {EmptyCell[]}
+	 * @throw {TypeError}
 	 * */
-	createEmptyCells(cellOptions) {
+	createEmptyCells(cellOptions = {}) {
+		if (!isPlainObject(cellOptions)){
+			throw TypeError('Cell option argument must be a pure object')
+		}
 		const emptyCells = [];
 		const tuples = Cube.cartesian(this);
-		tuples.forEach(combination => {
-			const unique = this.dice(combination).getCells();
+		const {defaultFactOptions} = this.cellTable;
+		tuples.forEach(tuple => {
+			const unique = this.dice(tuple).getCells();
 			if (!unique.length) {
-				let foreignKeysCellData = {};
-				Object.keys(combination).forEach(dimension => {
-					const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+				const foreignKeysCellData = {};
+				Object.keys(tuple).forEach(dimension => {
+					const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+					const dimensionTable = dimensionTree.getTreeValue();
 					const { foreignKey } = dimensionTable;
-					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension])
+					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(tuple[dimension])
 				});
-				const cellData = {...foreignKeysCellData, ...cellOptions};
-				// todo нужна правеврка на то, что все свойства присутствуют
+				const cellData = {
+					...defaultFactOptions,
+					...cellOptions,
+					...foreignKeysCellData,
+				};
+				// todo нужна правеврка на то, что все свойства присутствуют, для этого нужна инф-ия о именах таких полей в схеме
 				const cell = EmptyCell.createEmptyCell(cellData);
 				emptyCells.push(cell);
 			}
@@ -483,6 +535,7 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @param {Cell} cell
 	 * @return {boolean}
 	 * */
 	isEmptyCell(cell) {
@@ -490,37 +543,35 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @param {EmptyCell[]} emptyCells
 	 * @throw {TypeError}
 	 * */
 	addEmptyCells(emptyCells) {
-		Cube.validateInstance(emptyCells);
+		if (!Array.isArray(emptyCells)){
+			throw TypeError('The argument must be instance of Array')
+		}
+		emptyCells.forEach((emptyCell, index) => {
+			if (!this.isEmptyCell(emptyCell)) {
+				throw TypeError(`Some item in list of argument is not instances of EmptyCell, index: ${index}`)
+			}
+		});
 		[].push.apply(this.getCells(), emptyCells);
 	}
 	/**
 	 * @public
 	 * Filling method for full size of cube
-	 * @param {object?} customCellOptions - properties for empty cells
+	 * @param {object?} cellOptions - properties for empty cells
 	 * */
-	fillEmptyCells(customCellOptions = {}) {
-		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
+	fillEmptyCells(cellOptions) {
+		// todo why here residuals? add test for that
 		if (!residuals(this).length) {
 			const emptyCells = this.createEmptyCells(cellOptions);
 			this.addEmptyCells(emptyCells);
 		}
 	}
 	/**
-	 * @param {EmptyCell[]} emptyCells
-	 * @throw {TypeError}
-	 * */
-	static validateInstance(emptyCells) {
-		emptyCells.forEach(emptyCell => {
-			if (!(emptyCell instanceof EmptyCell)) {
-				throw new TypeError('some item in list of argument is not instances of EmptyCell')
-			}
-		});
-	}
-	/**
-	 *
+	 * Check that the argument is an instance of SubCube
+	 * @return {boolean}
 	 * */
 	isSubCube(){
 		return this instanceof SubCube;
@@ -531,6 +582,9 @@ class Cube {
 	 * @return {Tuple[]}
 	 * */
 	static cartesian(cube) {
+		if (!(cube instanceof Cube)){
+			throw TypeError('The argument must be instance of Cube')
+		}
 		const f = (a, b) => [].concat(...a.map(d => {
 			return b.map(e => {
 				return [].concat(d, e)

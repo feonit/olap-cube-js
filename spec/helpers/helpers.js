@@ -1,10 +1,4 @@
-export let isEqual;
-
-try {
-	isEqual = _.isEqual
-} catch (error) {
-	isEqual = require('../../node_modules/lodash/isEqual.js')
-}
+import isEqual from './../../node_modules/lodash-es/isEqual.js'
 
 export const jsonParseStringify = (data)=>{
 	return JSON.parse(JSON.stringify(data))

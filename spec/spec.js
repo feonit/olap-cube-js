@@ -69,16 +69,16 @@ describe('Cube', () => {
 	describe('.prototype.getCells', getCellsTest);
 	describe('.prototype.getFacts', getFactsTest);
 	describe('.prototype.getDimensionMembers', getDimensionMembersTest);
+	describe('.prototype.sliceAndDice', sliceAndDiceTest);
+	describe('.prototype.createEmptyCells', createEmptyCells);
+	describe('.prototype.addEmptyCells', addEmptyCellsTest);
 	describe('.prototype.fillEmptyCells', fillEmptyCellsTest);
+	describe('.prototype.getEmptyCells', getEmptyCellsTest);
 	describe('.prototype.addDimensionMember', addDimensionMemberTest);
 	describe('.prototype.removeDimensionMember', removeDimensionMemberTest);
 	describe('.prototype.addDimensionHierarchy', addDimensionHierarchyTest);
 	describe('.prototype.removeDimensionHierarchy', removeDimensionHierarchyTest);
 	describe('.prototype.drillUpAndDown', drillUpAndDownTest);
-	describe('.prototype.sliceAndDice', sliceAndDiceTest);
-	describe('.prototype.createEmptyCells', createEmptyCells);
-	describe('.prototype.addEmptyCells', addEmptyCellsTest);
-	describe('.prototype.getEmptyCells', getEmptyCellsTest);
 });
 
 describe('DimensionTable', () => {

@@ -42,9 +42,9 @@ export default class DimensionTree extends Tree {
 				editable: false
 			}
 		});
-		this.validate();
+		this.validateDimensions();
 	}
-	validate(){
+	validateDimensions(){
 		const dimensions = [];
 		this.tracePostOrder((tracedDimensionTreeValue) => {
 			const {dimension} = tracedDimensionTreeValue;
@@ -56,6 +56,7 @@ export default class DimensionTree extends Tree {
 		})
 	}
 	static createDimensionTree(dimensionTreeData) {
+		// todo add validation
 		return new DimensionTree(dimensionTreeData);
 	}
 	static createProxyDimensionTree(dimensionTree){

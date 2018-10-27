@@ -4,15 +4,12 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 export default () => {
 	let debug;
-
-	describe(`[ API static ${Cube.name}]`,() => {
-
-		it('should define create', () => {
-			expect(Cube.create).toBeDefined();
-		});
+	
+	it('should define create static method', () => {
+		expect(Cube.create).toBeDefined();
 	});
 
-	describe('[ Copy ]', () => {
+	describe('', () => {
 		let cube;
 		let cubeCopy;
 

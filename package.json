@@ -68,5 +68,8 @@
     "url": "git+https://github.com/feonit/olap-cube-js.git"
   },
   "license": "ISC",
-  "homepage": "https://github.com/feonit/olap-cube-js#readme"
+  "homepage": "https://github.com/feonit/olap-cube-js#readme",
+  "dependencies": {
+    "lodash-es": "^4.17.11"
+  }
 }
