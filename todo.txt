@@ -53,7 +53,7 @@ DimensionHierarchy is determined by by one parameters: dimension which it contai
 
 
 =====================================================================================================================
-My books
+Information sources
 
 http://www.ykud.ru/articles/olap_lattices/olap_lattices.pdf
 http://media.ls.urfu.ru/632/1734/4218/5290/

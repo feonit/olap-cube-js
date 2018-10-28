@@ -24,13 +24,9 @@
     "port": "8080"
   },
   "scripts": {
-    "test": "jest ./spec/spec.js && codecov",
-    "build": "rollup --config config/rollup.config.lib.js",
+    "test": "jest --config config/jest.config.js ./spec/spec.js && codecov",
+    "build": "rollup --config config/rollup.config.js",
     "dev": "node node_modules/http-server/bin/http-server -p 8080"
-  },
-  "jest": {
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true
   },
   "author": {
     "name": "Orlov Leonid",
