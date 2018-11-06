@@ -18,7 +18,8 @@ import removeDimensionMemberTest from '../src/Cube.prototype.removeDimensionMemb
 import addDimensionHierarchyTest from '../src/Cube.prototype.addDimensionHierarchy.spec.js'
 import removeDimensionHierarchyTest from '../src/Cube.prototype.removeDimensionHierarchy.spec.js'
 import drillUpAndDownTest from '../src/Cube.prototype.drillUpAndDown.spec.js'
-import sliceAndDiceTest from '../src/Cube.prototype.sliceAndDice.spec.js'
+import sliceTest from '../src/Cube.prototype.slice.spec.js'
+import diceTest from '../src/Cube.prototype.dice.spec.js'
 import createEmptyCells from '../src/Cube.prototype.createEmptyCells.spec.js'
 import addEmptyCellsTest from '../src/Cube.prototype.addEmptyCells.spec.js'
 import getEmptyCellsTest from '../src/Cube.prototype.getEmptyCells.spec.js'
@@ -69,7 +70,8 @@ describe('Cube', () => {
 	describe('.prototype.getCells', getCellsTest);
 	describe('.prototype.getFacts', getFactsTest);
 	describe('.prototype.getDimensionMembers', getDimensionMembersTest);
-	describe('.prototype.sliceAndDice', sliceAndDiceTest);
+	describe('.prototype.dice', diceTest);
+	describe('.prototype.slice', sliceTest);
 	describe('.prototype.createEmptyCells', createEmptyCells);
 	describe('.prototype.addEmptyCells', addEmptyCellsTest);
 	describe('.prototype.fillEmptyCells', fillEmptyCellsTest);
