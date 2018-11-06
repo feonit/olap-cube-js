@@ -6,5 +6,8 @@ module.exports = {
 		"/node_modules/(?!lodash-es).+\\.js$"
 	],
 	"coverageDirectory": "./coverage/",
-	"collectCoverage": true
+	"collectCoverage": true,
+	"collectCoverageFrom": [
+		"src/**/*.{js}"
+	]
 };
