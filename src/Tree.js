@@ -58,31 +58,16 @@ export default class Tree {
 	}
 	/**
 	 * @public
-	 * Search method
-	 * @return {Tree|undefined}
-	 * */
-	searchTreeByTreeValue(callback) {
-		let search = void 0;
-		this.tracePostOrder((treeValue, tree) => {
-			if (callback(tree)) {
-				search = tree
-			}
-		});
-		return search;
-	}
-	/**
-	 * @public
 	 * A walk to root from current Tree, the current Tree and root entered to the chain
 	 * @param {function} callback
 	 * */
 	traceUpOrder(callback) {
-		(function reqursively(tree) {
-			const parentNode = tree.getParentTree();
-			callback(tree);
-			if (parentNode !== null) {
-				reqursively(parentNode);
-			}
-		}(this));
+		const tree = this;
+		const parentNode = tree.getParentTree();
+		callback(tree);
+		if (parentNode !== null) {
+			parentNode.traceUpOrder(callback);
+		}
 	}
 	/**
 	 * @public
@@ -90,59 +75,29 @@ export default class Tree {
 	 * @param {function} callback
 	 * */
 	tracePostOrder(callback) {
-		(function reqursively(tree) {
-			const childTrees = tree.getChildTrees();
-			const treeValue = tree.getTreeValue();
-			if (childTrees.length) {
-				childTrees.forEach(childTree => {
-					reqursively(childTree);
-				});
-			}
-			callback(treeValue, tree);
-		}(this));
+		const tree = this;
+		const childTrees = tree.getChildTrees();
+		const treeValue = tree.getTreeValue();
+		if (childTrees.length) {
+			childTrees.forEach(childTree => {
+				childTree.tracePostOrder(callback);
+			});
+		}
+		callback(treeValue, tree);
 	}
 	/**
 	 * @public
 	 *  A walk in which each parent tree is traversed before its children is called a pre-order walk
 	 * */
 	tracePreOrder(callback) {
-		(function reqursively(tree) {
-			const childTrees = tree.getChildTrees();
-			const treeValue = tree.getTreeValue();
-			callback(treeValue, tree);
-			if (childTrees.length) {
-				childTrees.forEach(childTree => {
-					reqursively(childTree);
-				});
-			}
-		}(this));
-	}
-	/**
-	 * Check if some thee is present in childs of some level
-	 * @param {Tree}
-	 * @return {boolean}
-	 * */
-	hasChild(tree) {
-		let has = false;
-		this.tracePreOrder((tracedTreeValue, tracedTree) => {
-			if (tracedTree === tree) {
-				has = true;
-			}
-		});
-		return has;
-	}
-	/**
-	 * Check if some thee is present in parents of some level
-	 * @param {Tree}
-	 * @return {boolean}
-	 * */
-	hasParent(tree) {
-		let has = false;
-		this.traceUpOrder((tracedTree) => {
-			if (tracedTree === tree) {
-				has = true;
-			}
-		});
-		return has;
+		const tree = this;
+		const childTrees = tree.getChildTrees();
+		const treeValue = tree.getTreeValue();
+		callback(treeValue, tree);
+		if (childTrees.length) {
+			childTrees.forEach(childTree => {
+				childTree.tracePreOrder(callback);
+			});
+		}
 	}
 }

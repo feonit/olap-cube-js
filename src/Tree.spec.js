@@ -9,7 +9,6 @@ export default () => {
 	it('should define isExternal', () => { expect(Tree.prototype.isExternal).toBeDefined(); });
 	it('should define isRoot', () => { expect(Tree.prototype.isRoot).toBeDefined(); });
 	it('should define getRoot', () => { expect(Tree.prototype.getRoot).toBeDefined(); });
-	it('should define searchTreeByTreeValue', () => { expect(Tree.prototype.searchTreeByTreeValue).toBeDefined(); });
 	it('should define traceUpOrder', () => { expect(Tree.prototype.traceUpOrder).toBeDefined(); });
 	it('should define tracePostOrder', () => { expect(Tree.prototype.tracePostOrder).toBeDefined(); });
 
@@ -130,7 +129,7 @@ export default () => {
 
 	it('should correctly work method tracePostOrder (A walk in which the children are traversed before their respective parents are traversed)',() => {
 		const order = [];
-		tree.tracePostOrder((treeValue, tree) => {
+		tree.tracePostOrder(treeValue => {
 			order.push(treeValue)
 		});
 		isEqualObjects(order, [100, 101, 10, 201, 20, 1])
