@@ -1,5 +1,6 @@
 
 API
+- Add tests for full readme cases
 - Add support for single keyProp in schema and single level
 - Update method addMember without rollup options (then more than one member will be added)
 - think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
@@ -21,7 +22,6 @@ Code quality
 - Remove responsibility for "id" prop at facts (residuals)
 - in factTable move uuid generator
 - update fact table instead remove/add?
-- add custom errors
 - do todos
 
 Example

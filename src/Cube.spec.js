@@ -9,6 +9,75 @@ export default () => {
 		expect(Cube.create).toBeDefined();
 	});
 
+	it('should create empty cube with no errors', () => {
+		expect(() => {
+			new Cube();
+		}).not.toThrow();
+
+		expect(() => {
+			new Cube(new Cube());
+		}).not.toThrow();
+
+		expect(() => {
+			class ProductCube extends Cube {}
+			new Cube(new ProductCube());
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create();
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create([]);
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create({});
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create({}, []);
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create([], []);
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create(void 0, []);
+		}).not.toThrow();
+	});
+
+	it('should throw error with no plain object or instance of cube as argument', () => {
+		expect(() => {
+			const cube = new Cube(null);
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube("");
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(function(){});
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(123);
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(new class A {});
+		}).toThrow();
+
+		expect(() => {
+			Cube.create(123);
+		}).toThrow();
+
+		expect(() => {
+			Cube.create([], "");
+		}).toThrow();
+	});
+
 	describe('', () => {
 		let cube;
 		let cubeCopy;

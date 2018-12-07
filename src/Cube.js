@@ -39,7 +39,14 @@ class CellTable {
  * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 class Cube {
-	constructor(cube) {
+	/**
+	 * @param {object | Cube} cube
+	 * @throw {TypeError}
+	 * */
+	constructor(cube = {}) {
+		if (!(isPlainObject(cube) || cube instanceof Cube)){
+			throw TypeError('The argument must be plain object or instance of Cube')
+		}
 		let { dimensionHierarchies = [], cellTable = {} } = cube;
 		if (Array.isArray(cellTable)) {
 			cellTable = { cells: cellTable };
@@ -82,11 +89,17 @@ class Cube {
 	 * @param {object} factTable
 	 * @param {object} dimensionHierarchies
 	 * @return {Cube}
+	 * @throw {TypeError}
 	 * */
-	static create(factTable, dimensionHierarchies = []) {
+	static create(factTable = {}, dimensionHierarchies = []) {
+		if (!Array.isArray(dimensionHierarchies)){
+			throw TypeError("The second argument must be an array")
+		}
 		if (Array.isArray(factTable)) {
 			factTable = { facts: factTable };
 			console.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table')
+		} else if (!isPlainObject(factTable)){
+			throw TypeError("The first argument must be a plain object")
 		}
 		const { facts = [], primaryKey, defaultFactOptions = {} } = factTable;
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
@@ -118,49 +131,65 @@ class Cube {
 	 * @public
 	 * @param {object} set
 	 * @return {Cube}
+	 * @throw {TypeError}
+	 * @throw {RangeError}
 	 * */
 	dice(set) {
-		// 1 make one projection on to member
-		const fixSpace = {};
-		Object.keys(set).forEach(dimension => {
-			// work with arrays
-			fixSpace[dimension] = Array.isArray(set[dimension])
-				? set[dimension]
-				: [set[dimension]];
-
-			const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
-			
-			// discard non-existent dimensions
-			if (!dimensionTree) {
-				console.warn(`Not existed dimension: ${dimension}`);
-				return;
-			}
+		if (!(isPlainObject(set) || set instanceof Tuple)){
+			throw TypeError("The argument must be a plain object")
+		}
+		
+		// always work with arrays as value
+		const toMultiset = (value) => {
+			return Array.isArray(value) ? value : [value];
+		};
+		
+		// change member data to original member objects
+		const toOriginal = (membersData, dimension) => {
+			const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 			const dimensionTable = dimensionTree.getTreeValue();
-			fixSpace[dimension].forEach((memberData, index) => {
-				const members = this.getDimensionMembers(dimension);
-				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
-				fixSpace[dimension][index] = member;
-				if (!memberData) {
-					console.warn(`Not found member by id ${dimensionTable.getMemberId(member)}`)
+			const members = dimensionTable.members;
+			//replace memberData with original members
+			membersData.forEach((memberData, index) => {
+				let member = members.find(member => dimensionTable.getMemberPrimaryKey(member) === dimensionTable.getMemberPrimaryKey(memberData));
+				if (!member) {
+					throw RangeError(`Not found member by id ${dimensionTable.getMemberPrimaryKey(member)}`)
 				}
-			})
+				if (membersData instanceof Member){
+					return;
+				}
+				membersData[index] = member;
+			});
+			return membersData;
+		};
+		
+		const originalMultiset = {};
+		Object.keys(set).forEach((dimension) => {
+			let value = set[dimension];
+			value = toMultiset(value);
+			value = toOriginal(value, dimension);
+			originalMultiset[dimension] = value;
 		});
-
+		
+		const dimensions = Object.keys(originalMultiset);
+		
+		// 1 make one projection on to member
 		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
-		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
+		if (dimensions.length > dimensionHierarchiesLength) {
 			throw Error(`Set must have a size not more than ${dimensionHierarchiesLength} dimensions`)
 		}
 
 		const projectionDimensionHierarchies = [];
 
 		// for every dimension in set
-		const totalSpaces = Object.keys(fixSpace).map(dimension => {
+		const totalSpaces = dimensions.map(dimension => {
 
 			let dimensionTreeProjection;
+			const members = originalMultiset[dimension];
 			// ищется его расширенная версия для каждого члена
-			const spacesForCells = fixSpace[dimension].map(member => {
+			const spacesForCells = members.map(member => {
 
-				let searchedInTree = findDimensionTreeByDimension.call(this, dimension);
+				let searchedInTree = getDimensionTreeByDimension.call(this, dimension);
 
 				const current = searchedInTree.cloneDimensionTreeWithoutMembers();
 
@@ -196,7 +225,7 @@ class Cube {
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
 				const members = space[dimension];
-				const { foreignKey, primaryKey } = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+				const { foreignKey, primaryKey } = getDimensionTreeByDimension.call(this, dimension).getTreeValue();
 				const finded = members.find(member => {
 					return member[primaryKey] === cell[foreignKey]
 				});
@@ -352,9 +381,10 @@ class Cube {
 	 * */
 	getDimensionMembers(dimension) {
 		if (!(typeof dimension === 'string')){
-			throw TypeError('The first argument must be instance of string')
+			throw TypeError('The first argument must be string')
 		}
-		return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
+		return dimensionTree.getTreeValue().members;
 	}
 	/**
 	 * @public
@@ -383,11 +413,11 @@ class Cube {
 		Object.keys(rollupCoordinatesData).forEach(dimension => {
 			const memberData = rollupCoordinatesData[dimension];
 			const memberList = this.getDimensionMembers(dimension);
-			const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+			const dimensionTable = getDimensionTreeByDimension.call(this, dimension).getTreeValue();
 			const { primaryKey } = dimensionTable;
 			const id = memberData[primaryKey];
 			const find = memberList.find(member => {
-				return id === dimensionTable.getMemberId(member)
+				return id === dimensionTable.getMemberPrimaryKey(member)
 			});
 			if (!find) {
 				throw new InsufficientRollupData(dimension, id)
@@ -395,7 +425,7 @@ class Cube {
 				rollupCoordinates[dimension] = find;
 			}
 		});
-		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 		const childDimensionTrees = dimensionTree.getChildTrees();
 		const dimensionTable = dimensionTree.getTreeValue();
 		const { foreignKey } = dimensionTable;
@@ -415,10 +445,10 @@ class Cube {
 
 		let saveMember = dimensionTree.createMember(memberOptions);
 		let saveIdAttribute = foreignKey;
-		dimensionTree.traceUpOrder(tracedDimensionTree => {
+		dimensionTree.traceUpOrder((tracedDimensionTable, tracedDimensionTree) => {
 			if (dimensionTree !== tracedDimensionTree) {
-				const { dimension: parentDimension, foreignKey: parentIdAttribute } = tracedDimensionTree.getTreeValue();
-				const drillDownCoordinatesData = { [ saveIdAttribute]: dimensionTable.getMemberId(saveMember) };
+				const { dimension: parentDimension, foreignKey: parentIdAttribute } = tracedDimensionTable;
+				const drillDownCoordinatesData = { [ saveIdAttribute]: dimensionTable.getMemberPrimaryKey(saveMember) };
 				Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
 				saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
 				saveIdAttribute = parentIdAttribute;
@@ -439,7 +469,7 @@ class Cube {
 		if (!(member instanceof Member)){
 			throw TypeError('The second argument must be instance of Member')
 		}
-		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 		const cellTable = this.getCells();
 		const getRemoveMeasures = (dimension, members) => {
@@ -450,7 +480,7 @@ class Cube {
 			// todo mapFilter похоже
 			cellTable.forEach(cell => {
 				members.forEach(member => {
-					if (cell[foreignKey] == dimensionTable.getMemberId(member)) {
+					if (cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member)) {
 						removedCells.push(cell)
 					}
 				})
@@ -509,10 +539,10 @@ class Cube {
 			if (!unique.length) {
 				const foreignKeysCellData = {};
 				Object.keys(tuple).forEach(dimension => {
-					const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+					const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 					const dimensionTable = dimensionTree.getTreeValue();
 					const { foreignKey } = dimensionTable;
-					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(tuple[dimension])
+					foreignKeysCellData[foreignKey] = dimensionTable.getMemberPrimaryKey(tuple[dimension])
 				});
 				const cellData = {
 					...defaultFactOptions,
@@ -651,7 +681,7 @@ function getHierarchy(hierarchy) {
  * @this {Cube}
  * @return {DimensionTree}
  * */
-function findDimensionTreeByDimension(dimension) {
+function getDimensionTreeByDimension(dimension) {
 	let findDimensionTree;
 	this.dimensionHierarchies.forEach(dimensionTree => {
 		const searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
@@ -659,6 +689,9 @@ function findDimensionTreeByDimension(dimension) {
 			findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
 		}
 	});
+	if (!findDimensionTree) {
+		throw RangeError(`Not existed dimension: ${dimension}`);
+	}
 	return findDimensionTree;
 }
 /**

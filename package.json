@@ -66,6 +66,7 @@
   "license": "ISC",
   "homepage": "https://github.com/feonit/olap-cube-js#readme",
   "dependencies": {
+    "jasmine": "^2.4.1",
     "lodash-es": "^4.17.11"
   }
 }
