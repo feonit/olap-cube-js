@@ -43,8 +43,11 @@ export default class DimensionTable {
 	clearMemberList() {
 		this.members = [];
 	}
-	getMemberId(member) {
+	getMemberPrimaryKey(member) {
 		return member[this.primaryKey]
+	}
+	getMemberForeignKey(member) {
+		return member[this.foreignKey]
 	}
 	/**
 	 * @param {Member} member

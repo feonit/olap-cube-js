@@ -49,7 +49,7 @@ export default class Tree {
 	 * */
 	getRoot() {
 		let root = this;
-		this.traceUpOrder(tracedTree => {
+		this.traceUpOrder((tracedTreeValue, tracedTree) => {
 			if (tracedTree.isRoot()) {
 				root = tracedTree;
 			}
@@ -63,10 +63,11 @@ export default class Tree {
 	 * */
 	traceUpOrder(callback) {
 		const tree = this;
-		const parentNode = tree.getParentTree();
-		callback(tree);
-		if (parentNode !== null) {
-			parentNode.traceUpOrder(callback);
+		const parentTree = tree.getParentTree();
+		const treeValue = tree.getTreeValue();
+		callback(treeValue, tree);
+		if (parentTree !== null) {
+			parentTree.traceUpOrder(callback);
 		}
 	}
 	/**
