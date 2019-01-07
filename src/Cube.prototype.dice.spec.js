@@ -33,7 +33,8 @@ export default () => {
 				},
 			}
 		];
-		cube = Cube.create(dimensionHierarchies, facts)
+		cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(facts);
 	});
 	it('should define dice', () => {
 		expect(Cube.prototype.dice).toBeDefined();

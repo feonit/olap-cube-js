@@ -30,10 +30,6 @@ export default () => {
 		expect(() => {
 			Cube.create([]);
 		}).not.toThrow();
-
-		expect(() => {
-			Cube.create([], []);
-		}).not.toThrow();
 	});
 
 	it('should create empty cube with no errors via create', () => {
@@ -43,10 +39,6 @@ export default () => {
 
 		expect(() => {
 			Cube.create([]);
-		}).not.toThrow();
-
-		expect(() => {
-			Cube.create([], []);
 		}).not.toThrow();
 	});
 
@@ -78,10 +70,6 @@ export default () => {
 		}).toThrow();
 
 		expect(() => {
-			Cube.create([], "");
-		}).toThrow();
-
-		expect(() => {
 			Cube.create({});
 		}).toThrow();
 	});
@@ -109,7 +97,8 @@ export default () => {
 					}
 				}
 			];
-			cube = Cube.create(dimensionHierarchies, factTable);
+			cube = Cube.create(dimensionHierarchies);
+			cube.addFacts(factTable);
 		});
 
 		it('the ability to create a copy cube must work', () => {
@@ -155,7 +144,8 @@ export default () => {
 				Function.prototype.apply.apply(Cube, arguments)
 			} catch (error) {
 				if (error instanceof TypeError) {
-					const cube = Cube.create(dimensionHierarchies, factTable);
+					const cube = Cube.create(dimensionHierarchies);
+					cube.addFacts(factTable);
 					Object.assign(this, cube)
 				}
 			}

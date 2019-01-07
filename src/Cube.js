@@ -86,17 +86,15 @@ class Cube {
 	 *      (new Cube(dimensionHierarchiesData)).addFacts(factTable)
 	 *
 	 * @param {Object[]} dimensionHierarchies
-	 * @param {Object[]} factTable
+	 * @param {Object} options
 	 * @return {Cube}
 	 * @throw {TypeError}
 	 * */
-	static create(dimensionHierarchies = [], factTable = [], options) {
+	static create(dimensionHierarchies = [], options) {
 		if (!Array.isArray(dimensionHierarchies)){
 			throw TypeError("The first argument must be an array")
 		}
-		if (!Array.isArray(factTable)) {
-			throw TypeError("The second argument must be an array")
-		}
+
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
@@ -105,8 +103,6 @@ class Cube {
 			...options,
 			dimensionHierarchies: dimensionHierarchies,
 		});
-
-		cube.addFacts(factTable);
 
 		return cube;
 	}

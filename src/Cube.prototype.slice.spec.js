@@ -34,7 +34,8 @@ export default () => {
 				},
 			}
 		];
-		cube = Cube.create(dimensionHierarchies, facts)
+		cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(facts);
 	});
 	it('should define slice', () => {
 		expect(Cube.prototype.slice).toBeDefined();

@@ -29,7 +29,8 @@ export default () => {
 					keyProps: ['x']
 				}
 			}
-		], facts);
+		]);
+		cube.addFacts(facts);
 		removeDimensionHierarchy = () => {
 			cube.removeDimensionHierarchy(cube.dimensionHierarchies[0]);
 		}

@@ -26,7 +26,8 @@ export default () => {
 				]
 			}
 		];
-		let cube = Cube.create(dimensionHierarchies, facts);
+		let cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(facts);
 		debug = isEqualObjects(
 			cube.getCells()[0],
 			{ id: 1, my_foreign_key_x: 1 }

@@ -56,5 +56,7 @@ const dimensionHierarchies = [
 ];
 
 export function createProductCube() {
-	return Cube.create(dimensionHierarchies, factTable);
+	const cube = Cube.create(dimensionHierarchies);
+	cube.addFacts(factTable);
+	return cube;
 }

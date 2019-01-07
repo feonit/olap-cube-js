@@ -28,7 +28,8 @@ export default () => {
 				}
 			}
 		];
-		cube = Cube.create(dimensionHierarchies, factTable);
+		cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(factTable);
 	});
 	
 	it('must add cells in cellTable', () => {

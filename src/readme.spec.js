@@ -51,7 +51,8 @@ export default () => {
 		];
 
 		// We send it all to the constructor
-		cube = Cube.create(dimensionHierarchies, facts);
+		cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(facts);
 
 		regions = [
 			{ id: 1, region: 'North' },
@@ -213,7 +214,8 @@ export default () => {
 			{ id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
 			{ id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 		];
-		const cube = Cube.create([], facts);
+		const cube = Cube.create([]);
+		cube.addFacts(facts);
 		cube.addDimensionHierarchy({
 			dimensionTable: {
 				dimension: 'product',
@@ -258,7 +260,8 @@ export default () => {
 				]
 			}
 		];
-		let cube = Cube.create(dimensionHierarchies, facts);
+		let cube = Cube.create(dimensionHierarchies);
+		cube.addFacts(facts);
 		let userMember = cube.getDimensionMembers('user')[0];
 		let groupMember = cube.getDimensionMembers('group')[0];
 		let cell = cube.getCells()[0];
