@@ -34,10 +34,6 @@ export default () => {
 		expect(() => {
 			Cube.create([], []);
 		}).not.toThrow();
-
-		expect(() => {
-			Cube.create([], {});
-		}).not.toThrow();
 	});
 
 	it('should create empty cube with no errors via create', () => {
@@ -51,10 +47,6 @@ export default () => {
 
 		expect(() => {
 			Cube.create([], []);
-		}).not.toThrow();
-
-		expect(() => {
-			Cube.create([], {});
 		}).not.toThrow();
 	});
 
@@ -157,7 +149,7 @@ export default () => {
 	];
 
 	it('inheritance of cube must work ES5', () => {
-		function CustomCube(factTable, dimensionHierarchies) {
+		function CustomCube(dimensionHierarchies, factTable) {
 			// if Cube.js not esm module
 			try {
 				Function.prototype.apply.apply(Cube, arguments)
@@ -171,7 +163,7 @@ export default () => {
 		CustomCube.prototype = Object.create(Cube.prototype);
 		Object.setPrototypeOf(CustomCube, Cube);
 
-		const cube = new CustomCube(factTable, dimensionHierarchies);
+		const cube = new CustomCube(dimensionHierarchies, factTable);
 		expect(debug = (cube instanceof CustomCube)).toBe(true);
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});

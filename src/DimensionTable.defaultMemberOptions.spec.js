@@ -4,11 +4,9 @@ import {isEqualObjects} from '../spec/helpers/helpers.js'
 export default () => {
 	let debug;
 	it('defaultMemberOptions must work with method addDimensionMember, level 1', () => {
-		let factTable = {
-			facts: [
-				{ id: 1, latitude: 30}
-			]
-		};
+		let factTable = [
+			{ id: 1, latitude: 30}
+		];
 		let dimensionHierarchies = [
 			{
 				dimensionTable: {
@@ -26,11 +24,9 @@ export default () => {
 		debug = isEqualObjects({ id: 2, latitude: 0 }, members[1])
 	});
 	it('defaultMemberOptions must work with method addDimensionMember, level 1, otherProps must work too', () => {
-		let factTable = {
-			facts: [
-				{ id: 1, latitude: 30, description: 'Central point'}
-			]
-		};
+		let factTable = [
+			{ id: 1, latitude: 30, description: 'Central point'}
+		];
 		let dimensionHierarchies = [
 			{
 				dimensionTable: {
@@ -78,11 +74,9 @@ export default () => {
 			];
 		});
 		it('test 1, new leveled member no need', () => {
-			let factTable = {
-				facts: [
-					{ id: 1, latitude: 30, region: 'South'}
-				]
-			};
+			let factTable = [
+				{ id: 1, latitude: 30, region: 'South'}
+			];
 			let cube = Cube.create(dimensionHierarchies, factTable);
 			let customMemberOptions = {};
 			let rollupCoordinatesData = cube.getDimensionMembers('region')[0];
@@ -96,11 +90,9 @@ export default () => {
 		});
 		it('test 2, new leveled member must been created, (but with warning?)', () => {
 			// todo №1 may be not need create new members here?
-			let factTable = {
-				facts: [
-					{ id: 1, latitude: 0, region: 'North'}
-				]
-			};
+			let factTable = [
+				{ id: 1, latitude: 0, region: 'North'}
+			];
 			let cube = Cube.create(dimensionHierarchies, factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
@@ -115,11 +107,9 @@ export default () => {
 			], regionMembers)
 		});
 		it('test 3, new leveled member must been created', () => {
-			let factTable = {
-				facts: [
-					{ id: 1, latitude: 30, region: 'South'}
-				]
-			};
+			let factTable = [
+				{ id: 1, latitude: 30, region: 'South'}
+			];
 			let cube = Cube.create(dimensionHierarchies, factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
@@ -136,11 +126,9 @@ export default () => {
 	});
 
 	it('defaultMemberOptions must work with method addDimensionMember, level 2, otherProps must work too', () => {
-		let factTable = {
-			facts: [
-				{ id: 1, region: 'South', description: 'Not our region'}
-			]
-		};
+		let factTable = [
+			{ id: 1, region: 'South', description: 'Not our region'}
+		];
 		let dimensionHierarchies = [
 			{
 				dimensionTable: {

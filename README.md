@@ -659,8 +659,7 @@ Like custom members, some times need make custom facts
 let factTable = {
     facts: [
         { saleId: 1, saleCount: 1 }
-    ],
-    factPrimaryKey: 'saleId'
+    ]
 };
 let dimensionHierarchies = [
     {
@@ -670,7 +669,10 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(dimensionHierarchies, factTable)
+let options = {
+    factPrimaryKey: 'saleId'
+}
+let cube = Cube.create(dimensionHierarchies, factTable, options)
 ```
 
 ### Default Fact Options
@@ -679,10 +681,7 @@ let factTable = {
     facts: [
         { id: 1, x: 1, y: 1, isOpen: true },
         { id: 1, x: 2, y: 2, isOpen: true },
-    ],
-    defaultFactOptions: {
-        isOpen: false
-    }
+    ]
 };
 let dimensionHierarchies = [
     {
@@ -698,7 +697,12 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(dimensionHierarchies, factTable);
+let options = {
+    defaultFactOptions: {
+        isOpen: false
+    }
+}
+let cube = Cube.create(dimensionHierarchies, factTable, options);
 cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })
 ```

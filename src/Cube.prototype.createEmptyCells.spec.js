@@ -67,15 +67,10 @@ export default () => {
 	describe('', () => {
 		it('cell data must contain default fact data', () => {
 			const expectedValue = false;
-			const factTable = {
-				defaultFactOptions: {
-					isOpen: expectedValue
-				},
-				facts: [
-					{ id: 1, x: 1, y: 1, isOpen: true },
-					{ id: 2, x: 2, y: 2, isOpen: true },
-				]
-			};
+			const factTable = [
+				{ id: 1, x: 1, y: 1, isOpen: true },
+				{ id: 2, x: 2, y: 2, isOpen: true },
+			];
 			const dimensionHierarchies = [
 				{
 					dimensionTable: {
@@ -90,7 +85,12 @@ export default () => {
 					}
 				}
 			];
-			const cube = Cube.create(dimensionHierarchies, factTable);
+			const options = {
+				defaultFactOptions: {
+					isOpen: expectedValue
+				}
+			};
+			const cube = Cube.create(dimensionHierarchies, factTable, options);
 			const emptyCells = cube.createEmptyCells();
 			
 			emptyCells.forEach(emptyCell => {
@@ -102,15 +102,10 @@ export default () => {
 	
 	it('cell options must rewrite default fact options', () => {
 		const countValue = 0;
-		const factTable = {
-			defaultFactOptions: {
-				count: countValue
-			},
-			facts: [
-				{ id: 1, x: 1, y: 1, count: 5 },
-				{ id: 2, x: 2, y: 2, count: 10 },
-			]
-		};
+		const factTable = [
+			{ id: 1, x: 1, y: 1, count: 5 },
+			{ id: 2, x: 2, y: 2, count: 10 },
+		];
 		const dimensionHierarchies = [
 			{
 				dimensionTable: {
@@ -125,8 +120,13 @@ export default () => {
 				}
 			}
 		];
+		const options = {
+			defaultFactOptions: {
+				count: countValue
+			}
+		};
 		const expectedCountValue = 100;
-		const cube = Cube.create(dimensionHierarchies, factTable);
+		const cube = Cube.create(dimensionHierarchies, factTable, options);
 		const emptyCells = cube.createEmptyCells({count: expectedCountValue});
 		emptyCells.forEach(emptyCell => {
 			const {count} = emptyCell;
@@ -137,15 +137,10 @@ export default () => {
 	// wrong case of use, but must be properly processed
 	it('foreign key props must rewrite cell options', () => {
 		const countValue = 0;
-		const factTable = {
-			defaultFactOptions: {
-				count: countValue
-			},
-			facts: [
-				{ id: 1, x: 1, y: 1, count: 5 },
-				{ id: 2, x: 2, y: 2, count: 10 },
-			]
-		};
+		const factTable = [
+			{ id: 1, x: 1, y: 1, count: 5 },
+			{ id: 2, x: 2, y: 2, count: 10 },
+		];
 		const dimensionHierarchies = [
 			{
 				dimensionTable: {
@@ -160,8 +155,13 @@ export default () => {
 				}
 			}
 		];
+		const options = {
+			defaultFactOptions: {
+				count: countValue
+			}
+		}
 		const expectedValue = 'some value';
-		const cube = Cube.create(dimensionHierarchies, factTable);
+		const cube = Cube.create(dimensionHierarchies, factTable, options);
 		const emptyCells = cube.createEmptyCells({ x_id: expectedValue });
 		emptyCells.forEach(emptyCell => {
 			const {x_id} = emptyCell;

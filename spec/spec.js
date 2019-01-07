@@ -1,7 +1,6 @@
 import TreeTest from '../src/Tree.spec.js'
 import FactTest from '../src/Fact.spec.js'
-import FactTableTest from '../src/FactTable.spec.js'
-import validateFactDataTest from '../src/FactTable.prototype.validateFactData.js'
+import factPrimaryKeyTest from '../src/Cube.factPrimaryKey.spec.js'
 import EmptyCellTest from '../src/EmptyCell.spec.js'
 import DimensionTableTest from '../src/DimensionTable.spec.js'
 import DimensionTreeTest from '../src/DimensionTree.spec.js'
@@ -29,8 +28,7 @@ import foreignKeyTest from '../src/DimensionTable.foreignKey.spec.js'
 import primaryKeyTest from '../src/DimensionTable.primaryKey.spec.js'
 import defaultMemberOptionsTest from '../src/DimensionTable.defaultMemberOptions.spec.js'
 
-import primaryKeyFactTableTest from '../src/FactTable.factPrimaryKey.spec.js'
-import defaultFactOptionsFactTableTest from '../src/FactTable.defaultFactOptions.spec.js'
+import defaultFactOptionsTest from '../src/Cube.defaultFactOptions.spec.js'
 import readmeTest from '../src/readme.spec.js'
 import DimensionHierarchyTest from '../src/DimensionHierarchy.spec.js'
 
@@ -40,11 +38,6 @@ describe('Tree', () => {
 
 describe('Fact', () => {
 	FactTest();
-});
-
-describe('FactTable', () => {
-	FactTableTest();
-	describe('.prototype.validateFactDataTest', validateFactDataTest);
 });
 
 describe('EmptyCell', () => {
@@ -65,6 +58,8 @@ describe('SnowflakeBuilder', () => {
 
 describe('Cube', () => {
 	CubeTest();
+	describe('.factPrimaryKey', factPrimaryKeyTest);
+	describe('.defaultFactOptions', defaultFactOptionsTest);
 	describe('.prototype.addFacts', addFactsTest);
 	describe('.prototype.removeFacts', removeFactsTest);
 	describe('.prototype.getCells', getCellsTest);
@@ -88,11 +83,6 @@ describe('DimensionTable', () => {
 	describe('.primaryKey', primaryKeyTest);
 	describe('.foreignKey', foreignKeyTest);
 	describe('.defaultMemberOptions', defaultMemberOptionsTest);
-});
-
-describe('FactTable', () => {
-	describe('.primaryKey', primaryKeyFactTableTest);
-	describe('.defaultFactOptions', defaultFactOptionsFactTableTest);
 });
 
 describe('DimensionHierarchy', () => {

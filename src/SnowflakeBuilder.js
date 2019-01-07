@@ -1,4 +1,3 @@
-import FactTable from './FactTable.js'
 import Member from './Member.js'
 
 /**
@@ -46,10 +45,18 @@ export default class SnowflakeBuilder {
 			members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
 		}
 
+		function deleteProps(fact, props, factPrimaryKey) {
+			props.forEach(prop => {
+				if (prop !== factPrimaryKey) {
+					delete fact[prop];
+				}
+			});
+		}
+
 		// только после того как список сформирован, удалаять данные из ячеек
 		cells.forEach(cell => {
-			FactTable.deleteProps(cell, keyProps, factPrimaryKey);
-			FactTable.deleteProps(cell, otherProps, factPrimaryKey);
+			deleteProps(cell, keyProps, factPrimaryKey);
+			deleteProps(cell, otherProps, factPrimaryKey);
 		});
 
 		members.forEach(member => {
