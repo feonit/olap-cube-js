@@ -712,8 +712,8 @@ The project is on stage of developing API.
 
 |      | UMD             | ES Module           |
 |------|-----------------|---------------------|
-| prod | cube.js         | cube.esm.js         |
-| dev  | cube.min.js     | cube.esm.min.js     |
+| dev  | cube.js         | cube.esm.js         |
+| prod | cube.min.js     | cube.esm.min.js     |
 
 
 ## Todo
