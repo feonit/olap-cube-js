@@ -5,7 +5,6 @@ import DimensionHierarchy from './DimensionHierarchy.js'
 import DimensionTable from './DimensionTable.js'
 import {
 	InsufficientRollupData,
-	CreateInstanceException
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
 import console from './console.js'
@@ -78,33 +77,6 @@ class Cube {
 		// if (count > 0) {
 		// 	console.warn('Fact table has residuals', residuals)
 		// }
-	}
-	/**
-	 * @public
-	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
-	 * analogy to the construction of such a call:
-	 *      (new Cube(dimensionHierarchiesData)).addFacts(factTable)
-	 *
-	 * @param {Object[]} dimensionHierarchies
-	 * @param {Object} options
-	 * @return {Cube}
-	 * @throw {TypeError}
-	 * */
-	static create(dimensionHierarchies = [], options) {
-		if (!Array.isArray(dimensionHierarchies)){
-			throw TypeError("The first argument must be an array")
-		}
-
-		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
-			throw new CreateInstanceException()
-		}
-
-		const cube = new this({
-			...options,
-			dimensionHierarchies: dimensionHierarchies,
-		});
-
-		return cube;
 	}
 	/**
 	 * is the act of picking a rectangular subset of a cube by choosing a single value

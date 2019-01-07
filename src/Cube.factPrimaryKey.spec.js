@@ -29,7 +29,7 @@ export default () => {
 			{ id: 1, direction: 'left', date: '01' },
 			{ id: 2, direction: 'right', date: '02' },
 		];
-		cube = Cube.create(dimensionHierarchies, options);
+		cube = new Cube({dimensionHierarchies, ...options});
 		cube.addFacts(factTable);
 		expect(cube.factPrimaryKey === 'id').toBe(true);
 	});
@@ -40,7 +40,7 @@ export default () => {
 				{ direction: 'left', date: '01' },
 				{ direction: 'right', date: '02' },
 			];
-			cube = Cube.create(dimensionHierarchies);
+			cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 		}).toThrow();
 	});
@@ -52,7 +52,7 @@ export default () => {
 			{ direction: 'right', date: '02' },
 		];
 		try {
-			cube = Cube.create(dimensionHierarchies);
+			cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 		} catch (error) {
 			err = error
@@ -68,7 +68,7 @@ export default () => {
 		options = {
 			factPrimaryKey: 'factId'
 		};
-		cube = Cube.create(dimensionHierarchies, options);
+		cube = new Cube({dimensionHierarchies, ...options});
 		cube.addFacts(factTable);
 		expect(cube.getCells()[0]["factId"]).toBeDefined();
 		isEqualObjects(cube.getFacts(), factTable);

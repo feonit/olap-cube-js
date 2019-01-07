@@ -18,7 +18,7 @@ export default () => {
 				}
 			}
 		];
-		let cube = Cube.create(dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 		cube.addDimensionMember('latitude');
 		let members = cube.getDimensionMembers('latitude');
@@ -41,7 +41,7 @@ export default () => {
 				}
 			}
 		];
-		let cube = Cube.create(dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 		cube.addDimensionMember('latitude');
 		let members = cube.getDimensionMembers('latitude');
@@ -79,7 +79,7 @@ export default () => {
 			let factTable = [
 				{ id: 1, latitude: 30, region: 'South'}
 			];
-			let cube = Cube.create(dimensionHierarchies);
+			let cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 			let customMemberOptions = {};
 			let rollupCoordinatesData = cube.getDimensionMembers('region')[0];
@@ -96,7 +96,7 @@ export default () => {
 			let factTable = [
 				{ id: 1, latitude: 0, region: 'North'}
 			];
-			let cube = Cube.create(dimensionHierarchies);
+			let cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
@@ -114,7 +114,7 @@ export default () => {
 			let factTable = [
 				{ id: 1, latitude: 30, region: 'South'}
 			];
-			let cube = Cube.create(dimensionHierarchies);
+			let cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
@@ -158,7 +158,7 @@ export default () => {
 				]
 			}
 		];
-		let cube = Cube.create(dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 		cube.addDimensionMember('region');
 		let members = cube.getDimensionMembers('region');

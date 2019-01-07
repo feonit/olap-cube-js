@@ -28,7 +28,7 @@ export default () => {
 				{ dimensionTable: { dimension: 'y', keyProps: ['y'] }},
 				{ dimensionTable: { dimension: 'z', keyProps: ['z'] }}
 			];
-			cube = Cube.create(dimensionHierarchies);
+			cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 		});
 		
@@ -91,7 +91,7 @@ export default () => {
 					isOpen: expectedValue
 				}
 			};
-			const cube = Cube.create(dimensionHierarchies, options);
+			const cube = new Cube({dimensionHierarchies, ...options});
 			cube.addFacts(factTable);
 			const emptyCells = cube.createEmptyCells();
 			
@@ -128,7 +128,7 @@ export default () => {
 			}
 		};
 		const expectedCountValue = 100;
-		const cube = Cube.create(dimensionHierarchies, options);
+		const cube = new Cube({dimensionHierarchies, ...options});
 		cube.addFacts(factTable);
 		const emptyCells = cube.createEmptyCells({count: expectedCountValue});
 		emptyCells.forEach(emptyCell => {
@@ -164,7 +164,7 @@ export default () => {
 			}
 		}
 		const expectedValue = 'some value';
-		const cube = Cube.create(dimensionHierarchies, options);
+		const cube = new Cube({dimensionHierarchies, ...options});
 		cube.addFacts(factTable);
 		const emptyCells = cube.createEmptyCells({ x_id: expectedValue });
 		emptyCells.forEach(emptyCell => {

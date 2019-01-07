@@ -41,7 +41,7 @@ export default () => {
 	});
 	
 	it('drillUp ', () => {
-		cube = Cube.create(dimensionHierarchies);
+		cube = new Cube({dimensionHierarchies});
 		cube.addFacts(facts);
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'name');
 		cube.drillUp('humans', 'group');
@@ -49,7 +49,7 @@ export default () => {
 	});
 	it('drillDown', () => {
 		dimensionHierarchies[0].activeDimension = 'group';
-		cube = Cube.create(dimensionHierarchies);
+		cube = new Cube({dimensionHierarchies});
 		cube.addFacts(facts);
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'group');
 		cube.drillDown('humans', 'name');

@@ -8,5 +8,7 @@ export default () => {
 			&& typeof cube.defaultFactOptions === 'object'
 		).toBe(true)
 	});
-	xit('add inevitability of defaultFactOptions property')
+	xit('add inevitability for defaultFactOptions property', () => {
+
+	})
 };

@@ -23,7 +23,7 @@ export default () => {
 				{ id: 1, x_id: 1 },
 				{ id: 2, x_id: 2 }
 			];
-			cube = Cube.create();
+			cube = new Cube();
 			cube.addFacts(facts);
 
 			addDimensionHierarchy = () => {
@@ -58,7 +58,7 @@ export default () => {
 				{ id: 1, x_id: 1 },
 				{ id: 2, x_id: 2 }
 			];
-			cube = Cube.create();
+			cube = new Cube();
 			cube.addFacts(facts);
 
 			addDimensionHierarchy = () => {

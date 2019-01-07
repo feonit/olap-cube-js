@@ -22,14 +22,15 @@ export default () => {
 			{ id: 1, x_id: 1 },
 			{ id: 2, x_id: 2 }
 		];
-		cube = Cube.create([
+		const dimensionHierarchies = [
 			{
 				dimensionTable: {
 					dimension: 'x',
 					keyProps: ['x']
 				}
 			}
-		]);
+		];
+		cube = new Cube({dimensionHierarchies});
 		cube.addFacts(facts);
 		removeDimensionHierarchy = () => {
 			cube.removeDimensionHierarchy(cube.dimensionHierarchies[0]);

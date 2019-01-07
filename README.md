@@ -127,7 +127,7 @@ let dimensionHierarchies = [
 ];
 
 // We send it all to the constructor
-let cube = Cube.create(dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
 
 ```
@@ -457,7 +457,7 @@ let facts = [
     { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
     { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 ];
-let cube = Cube.create();
+let cube = new Cube();
 cube.addFacts(facts);
 cube.addDimensionHierarchy({
     dimensionTable: {
@@ -507,7 +507,7 @@ let facts = [
     { id: 1, region: 'North', product: 'Product 1', value: 10 },
     { id: 2, region: 'South', product: 'Product 2', value: 20 }
 ];
-let cube = Cube.create(dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
 
 ```
@@ -582,7 +582,7 @@ let dimensionHierarchies = [
        }
    }
 ]
-let cube = Cube.create(dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies})
 cube.addFacts(facts);
 let members = cube.getDimensionMembers('user')
 ```
@@ -615,7 +615,7 @@ let dimensionHierarchies = [
         ]
     }
 ];
-let cube = Cube.create(dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
 
 ```
@@ -657,7 +657,7 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies})
 cube.addDimensionMember('user')
 ```
 ### Custom facts
@@ -679,7 +679,7 @@ let dimensionHierarchies = [
 let options = {
     factPrimaryKey: 'saleId'
 }
-let cube = Cube.create(dimensionHierarchies, options)
+let cube = new Cube({dimensionHierarchies, ...options})
 cube.addFacts(facts);
 
 ```
@@ -711,7 +711,7 @@ let options = {
         isOpen: false
     }
 }
-let cube = Cube.create(dimensionHierarchies, options);
+let cube = new Cube({dimensionHierarchies, ...options});
 cube.addFacts(facts);
 cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })

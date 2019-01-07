@@ -26,7 +26,7 @@ export default () => {
 	});
 
 	it('should normalize count of cells for non-normalized data', () => {
-		let cube = Cube.create(dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 		expect(debug = Cube.cartesian(cube).length).toBe(8);
 		expect(debug = cube.getFacts().length).toBe(5);
@@ -36,7 +36,7 @@ export default () => {
 	});
 
 	it('should normalize count of cells for non-normalized data with default props', () => {
-		let cube = Cube.create(dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 
 		cube.fillEmptyCells({ is: false });
@@ -92,7 +92,7 @@ export default () => {
 				{ id: 2, humans: 5, city: 'Paris', nationality: 'French', country: 'France', planet: 'Earth' },
 			];
 
-			const cube = Cube.create(dimensionHierarchies);
+			const cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 
 			expect(debug = Cube.cartesian(cube).length).toBe(4);
@@ -109,7 +109,7 @@ export default () => {
 				{ id: 3, humans: 1, city: 'Paris', nationality: 'French', country: 'France', planet: 'Mars' },
 			];
 
-			const cube = Cube.create(dimensionHierarchies);
+			const cube = new Cube({dimensionHierarchies});
 			cube.addFacts(factTable);
 
 			expect(debug = Cube.cartesian(cube).length).toBe(6);
@@ -139,7 +139,7 @@ export default () => {
 			{ id: 1, x: 0, y: 1, xy: true },
 			{ id: 2, x: 1, y: 0, xy: true }
 		];
-		const cube = Cube.create(dimensionHierarchies);
+		const cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 
 		cube.fillEmptyCells({ xy: false });

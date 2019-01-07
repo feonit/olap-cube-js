@@ -28,7 +28,7 @@ export default () => {
 				}
 			}
 		];
-		cube = Cube.create(dimensionHierarchies);
+		cube = new Cube({dimensionHierarchies});
 		cube.addFacts(factTable);
 	});
 	
