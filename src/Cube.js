@@ -86,12 +86,12 @@ class Cube {
 	/**
 	 * @public
 	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
-	 * @param {object} factTable
 	 * @param {object} dimensionHierarchies
+	 * @param {object} factTable
 	 * @return {Cube}
 	 * @throw {TypeError}
 	 * */
-	static create(factTable = {}, dimensionHierarchies = []) {
+	static create(dimensionHierarchies = [], factTable = {}) {
 		if (!Array.isArray(dimensionHierarchies)){
 			throw TypeError("The second argument must be an array")
 		}

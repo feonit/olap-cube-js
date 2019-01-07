@@ -26,7 +26,7 @@ export default () => {
 				]
 			}
 		];
-		const cube = Cube.create(factTable, dimensionHierarchies);
+		const cube = Cube.create(dimensionHierarchies, factTable);
 		expect(cube.getCells()[0]["factId"]).toBeDefined();
 		isEqualObjects(cube.getFacts(), factTable.facts);
 	})

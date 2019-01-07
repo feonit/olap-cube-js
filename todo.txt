@@ -4,7 +4,7 @@ API
 - Add support for single keyProp in schema and single level
 - Update method addMember without rollup options (then more than one member will be added)
 - think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
-- Cube.create replace arguments order. Or remove
+- Cube.create remove?
 - members must have refs to categories data (in createMember method?)
 - try make for hierarchy: {Year, Qr, Month, Day}, {Год, Weak, Day}.
 - remove from addDimensionMember fill method, check and write test that all is correct

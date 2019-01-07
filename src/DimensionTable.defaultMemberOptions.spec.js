@@ -20,7 +20,7 @@ export default () => {
 				}
 			}
 		];
-		let cube = Cube.create(factTable, dimensionHierarchies);
+		let cube = Cube.create(dimensionHierarchies, factTable);
 		cube.addDimensionMember('latitude');
 		let members = cube.getDimensionMembers('latitude');
 		debug = isEqualObjects({ id: 2, latitude: 0 }, members[1])
@@ -44,7 +44,7 @@ export default () => {
 				}
 			}
 		];
-		let cube = Cube.create(factTable, dimensionHierarchies);
+		let cube = Cube.create(dimensionHierarchies, factTable);
 		cube.addDimensionMember('latitude');
 		let members = cube.getDimensionMembers('latitude');
 		debug = isEqualObjects({ id: 2, latitude: 0, description: 'Initial point' }, members[1])
@@ -83,7 +83,7 @@ export default () => {
 					{ id: 1, latitude: 30, region: 'South'}
 				]
 			};
-			let cube = Cube.create(factTable, dimensionHierarchies);
+			let cube = Cube.create(dimensionHierarchies, factTable);
 			let customMemberOptions = {};
 			let rollupCoordinatesData = cube.getDimensionMembers('region')[0];
 			cube.addDimensionMember('latitude', customMemberOptions, { region: rollupCoordinatesData });
@@ -101,7 +101,7 @@ export default () => {
 					{ id: 1, latitude: 0, region: 'North'}
 				]
 			};
-			let cube = Cube.create(factTable, dimensionHierarchies);
+			let cube = Cube.create(dimensionHierarchies, factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
 			debug = isEqualObjects([
@@ -120,7 +120,7 @@ export default () => {
 					{ id: 1, latitude: 30, region: 'South'}
 				]
 			};
-			let cube = Cube.create(factTable, dimensionHierarchies);
+			let cube = Cube.create(dimensionHierarchies, factTable);
 			cube.addDimensionMember('region');
 			let latitudeMembers = cube.getDimensionMembers('latitude');
 			debug = isEqualObjects([
@@ -165,7 +165,7 @@ export default () => {
 				]
 			}
 		];
-		let cube = Cube.create(factTable, dimensionHierarchies);
+		let cube = Cube.create(dimensionHierarchies, factTable);
 		cube.addDimensionMember('region');
 		let members = cube.getDimensionMembers('region');
 		debug = isEqualObjects({ id: 2, region: 'North', description: 'Our region' }, members[1])

@@ -56,7 +56,7 @@ export default () => {
 				]
 			}
 		];
-		cube = Cube.create(factTable, dimensionHierarchies);
+		cube = Cube.create(dimensionHierarchies, factTable);
 	});
 
 	let debug;

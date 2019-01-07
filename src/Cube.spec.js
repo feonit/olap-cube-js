@@ -32,11 +32,21 @@ export default () => {
 		}).not.toThrow();
 
 		expect(() => {
-			Cube.create({});
+			Cube.create([], []);
 		}).not.toThrow();
 
 		expect(() => {
-			Cube.create({}, []);
+			Cube.create([], {});
+		}).not.toThrow();
+	});
+
+	it('should create empty cube with no errors via create', () => {
+		expect(() => {
+			Cube.create();
+		}).not.toThrow();
+
+		expect(() => {
+			Cube.create([]);
 		}).not.toThrow();
 
 		expect(() => {
@@ -44,7 +54,7 @@ export default () => {
 		}).not.toThrow();
 
 		expect(() => {
-			Cube.create(void 0, []);
+			Cube.create([], {});
 		}).not.toThrow();
 	});
 
@@ -68,13 +78,19 @@ export default () => {
 		expect(() => {
 			const cube = new Cube(new class A {});
 		}).toThrow();
+	});
 
+	it('should throw error with no plain object or instance of cube as argument via create', () => {
 		expect(() => {
 			Cube.create(123);
 		}).toThrow();
 
 		expect(() => {
 			Cube.create([], "");
+		}).toThrow();
+
+		expect(() => {
+			Cube.create({});
 		}).toThrow();
 	});
 
@@ -101,7 +117,7 @@ export default () => {
 					}
 				}
 			];
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = Cube.create(dimensionHierarchies, factTable);
 		});
 
 		it('the ability to create a copy cube must work', () => {
@@ -147,7 +163,7 @@ export default () => {
 				Function.prototype.apply.apply(Cube, arguments)
 			} catch (error) {
 				if (error instanceof TypeError) {
-					const cube = Cube.create(factTable, dimensionHierarchies);
+					const cube = Cube.create(dimensionHierarchies, factTable);
 					Object.assign(this, cube)
 				}
 			}
@@ -162,7 +178,7 @@ export default () => {
 
 	it('inheritance of cube must work ES6', () => {
 		class CustomCube extends Cube {}
-		const cube = CustomCube.create(factTable, dimensionHierarchies);
+		const cube = CustomCube.create(dimensionHierarchies, factTable);
 		expect(debug = (cube instanceof CustomCube)).toBe(true)
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
@@ -171,7 +187,7 @@ export default () => {
 		class CustomCube extends Cube {}
 		const createCube = CustomCube.create;
 		expect(() => {
-			createCube(factTable, dimensionHierarchies)
+			createCube(dimensionHierarchies, factTable)
 		}).toThrow()
 	});
 
@@ -180,7 +196,7 @@ export default () => {
 		const createCube = CustomCube.create;
 		let error;
 		try {
-			const cube = createCube(factTable, dimensionHierarchies);
+			const cube = createCube(dimensionHierarchies, factTable);
 		} catch (e) {
 			error = e;
 		}

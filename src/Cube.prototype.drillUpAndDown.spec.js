@@ -41,14 +41,14 @@ export default () => {
 	});
 	
 	it('drillUp ', () => {
-		cube = Cube.create(facts, dimensionHierarchies);
+		cube = Cube.create(dimensionHierarchies, facts);
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'name');
 		cube.drillUp('humans', 'group');
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'group').toBe(true)
 	});
 	it('drillDown', () => {
 		dimensionHierarchies[0].activeDimension = 'group';
-		cube = Cube.create(facts, dimensionHierarchies);
+		cube = Cube.create(dimensionHierarchies, facts);
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'group');
 		cube.drillDown('humans', 'name');
 		expect(debug = cube.dimensionHierarchies[0].activeDimension === 'name').toBe(true)

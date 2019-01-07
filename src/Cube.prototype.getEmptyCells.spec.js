@@ -28,7 +28,7 @@ export default () => {
 				}
 			}
 		];
-		cube = Cube.create(factTable, dimensionHierarchies);
+		cube = Cube.create(dimensionHierarchies, factTable);
 	});
 	
 	it('must filter cellTable and return only empty cells', () => {

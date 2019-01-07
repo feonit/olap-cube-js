@@ -50,7 +50,7 @@ export default () => {
 				{ id: 1, x: 0, xx: 0, xxx: 0 , xxxx: 0, z: 0 },
 			];
 
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = Cube.create(dimensionHierarchies, factTable);
 
 		});
 		
@@ -136,7 +136,7 @@ export default () => {
 				}
 			];
 
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = Cube.create(dimensionHierarchies, factTable);
 		});
 
 		it('target dimension must be changed', () => {
@@ -242,7 +242,7 @@ export default () => {
 				{ id: 4, product: 'telephone', category: 'electronic', money: '15$', year: '2018', month: 'january', day: 3 }
 			];
 
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = Cube.create(dimensionHierarchies, factTable);
 			// todo need fill before add, because actually getFacts method invoke fill method inside, need some to do with this
 			cube.fillEmptyCells();
 		});

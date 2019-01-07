@@ -28,7 +28,7 @@ export default () => {
 				{ dimensionTable: { dimension: 'y', keyProps: ['y'] }},
 				{ dimensionTable: { dimension: 'z', keyProps: ['z'] }}
 			];
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = Cube.create(dimensionHierarchies, factTable);
 		});
 		
 		it('creation should not cause errors', () => {
@@ -90,7 +90,7 @@ export default () => {
 					}
 				}
 			];
-			const cube = Cube.create(factTable, dimensionHierarchies);
+			const cube = Cube.create(dimensionHierarchies, factTable);
 			const emptyCells = cube.createEmptyCells();
 			
 			emptyCells.forEach(emptyCell => {
@@ -126,7 +126,7 @@ export default () => {
 			}
 		];
 		const expectedCountValue = 100;
-		const cube = Cube.create(factTable, dimensionHierarchies);
+		const cube = Cube.create(dimensionHierarchies, factTable);
 		const emptyCells = cube.createEmptyCells({count: expectedCountValue});
 		emptyCells.forEach(emptyCell => {
 			const {count} = emptyCell;
@@ -161,7 +161,7 @@ export default () => {
 			}
 		];
 		const expectedValue = 'some value';
-		const cube = Cube.create(factTable, dimensionHierarchies);
+		const cube = Cube.create(dimensionHierarchies, factTable);
 		const emptyCells = cube.createEmptyCells({ x_id: expectedValue });
 		emptyCells.forEach(emptyCell => {
 			const {x_id} = emptyCell;
