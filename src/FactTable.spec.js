@@ -8,6 +8,6 @@ export default () => {
 	});
 
 	it('defaults', () => {
-		expect(factTable.primaryKey === 'id').toBe(true);
+		expect(factTable.factPrimaryKey === 'id').toBe(true);
 	})
 };

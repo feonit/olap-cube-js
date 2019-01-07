@@ -210,8 +210,7 @@ export default class SnowflakeBuilder {
 	 * Method allows to generate fact tables from cells
 	 * */
 	static denormalize(cellTable, dimensionTrees) {
-		const factTable = new FactTable();
-		const facts = factTable.getFacts();
+		const facts = [];
 		cellTable.forEach(cell => {
 			facts.push({...cell})
 		});

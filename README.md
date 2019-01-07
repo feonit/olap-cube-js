@@ -660,7 +660,7 @@ let factTable = {
     facts: [
         { saleId: 1, saleCount: 1 }
     ],
-    primaryKey: 'saleId'
+    factPrimaryKey: 'saleId'
 };
 let dimensionHierarchies = [
     {

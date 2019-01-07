@@ -29,7 +29,7 @@ import foreignKeyTest from '../src/DimensionTable.foreignKey.spec.js'
 import primaryKeyTest from '../src/DimensionTable.primaryKey.spec.js'
 import defaultMemberOptionsTest from '../src/DimensionTable.defaultMemberOptions.spec.js'
 
-import primaryKeyFactTableTest from '../src/FactTable.primaryKey.spec.js'
+import primaryKeyFactTableTest from '../src/FactTable.factPrimaryKey.spec.js'
 import defaultFactOptionsFactTableTest from '../src/FactTable.defaultFactOptions.spec.js'
 import readmeTest from '../src/readme.spec.js'
 import DimensionHierarchyTest from '../src/DimensionHierarchy.spec.js'

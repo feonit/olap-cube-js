@@ -17,7 +17,7 @@ import { DEFAULT_FACT_ID_PROP } from './const.js'
 import isPlainObject from "./../node_modules/lodash-es/isPlainObject.js"
 
 class CellTable {
-	constructor({ cells, primaryKey, defaultFactOptions = {} }) {
+	constructor({ cells, factPrimaryKey, defaultFactOptions = {} }) {
 		this.cells = cells.map(cellData => {
 			if (cellData instanceof Cell) {
 				return cellData
@@ -25,7 +25,7 @@ class CellTable {
 				return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData)
 			}
 		});
-		this.primaryKey = primaryKey;
+		this.factPrimaryKey = factPrimaryKey;
 		this.defaultFactOptions = defaultFactOptions;
 	}
 }
@@ -52,7 +52,7 @@ class Cube {
 			cellTable = { cells: cellTable };
 			console.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table')
 		}
-		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
+		const { cells = [], factPrimaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
 
 		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => {
 			// duck
@@ -76,7 +76,7 @@ class Cube {
 				}
 			}
 		});
-		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
+		this.cellTable = new CellTable({ cells, factPrimaryKey, defaultFactOptions: {...defaultFactOptions} });
 		// const residuals = residuals(this);
 		// const count = residuals.length;
 		// if (count > 0) {
@@ -101,13 +101,13 @@ class Cube {
 		} else if (!isPlainObject(factTable)){
 			throw TypeError("The first argument must be a plain object")
 		}
-		const { facts = [], primaryKey, defaultFactOptions = {} } = factTable;
+		const { facts = [], ...rest } = factTable;
 		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
 			throw new CreateInstanceException()
 		}
 
 		const cube = new this({
-			cellTable: { primaryKey, defaultFactOptions },
+			cellTable: rest,
 			dimensionHierarchies: dimensionHierarchies,
 		});
 
@@ -327,11 +327,12 @@ class Cube {
 		if (!Array.isArray(facts)){
 			throw TypeError('The argument must be instance of Array')
 		}
-		const newFactTable = new FactTable({facts, primaryKey: this.cellTable.primaryKey});
-		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
+		// const newFactTable = new FactTable({facts, factPrimaryKey: this.cellTable.factPrimaryKey});
+		facts.forEach(FactTable.prototype.validateFactData.bind(null, this.cellTable.factPrimaryKey));
+		const cells = facts.map(fact => new Cell(fact));
 		[].push.apply(this.getCells(), cells);
 		const factTable = this.getFacts();
-		SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.factPrimaryKey);
 		return this;
 	}
 	/**
@@ -344,9 +345,9 @@ class Cube {
 			throw TypeError('The argument must be instance of Array')
 		}
 		const cellTable = this.getCells();
-		const primaryKey = this.cellTable.primaryKey;
+		const factPrimaryKey = this.cellTable.factPrimaryKey;
 		const removedCells = facts.map(fact => {
-			return cellTable.find(cell => cell[primaryKey] === fact[primaryKey])
+			return cellTable.find(cell => cell[factPrimaryKey] === fact[factPrimaryKey])
 		});
 		this.removeCells(removedCells);
 	}
@@ -507,7 +508,7 @@ class Cube {
 		this.dimensionHierarchies.push(
 			dimensionTree
 		);
-		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.factPrimaryKey);
 	}
 	/**
 	 * @public
@@ -714,7 +715,7 @@ function denormalize(cells = this.getCells(), forSave = true) {
 	if (forSave) {
 		data.forEach((data, index) => {
 			if (cells[index] instanceof EmptyCell) {
-				delete data[this.cellTable.primaryKey];
+				delete data[this.cellTable.factPrimaryKey];
 			}
 		})
 	}

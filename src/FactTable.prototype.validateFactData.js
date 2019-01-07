@@ -12,7 +12,7 @@ export default () => {
 				facts: [
 					{ name: 'Gagarin' }
 				],
-				primaryKey: 'id'
+				factPrimaryKey: 'id'
 			});
 		}).toThrow();
 	});
@@ -24,7 +24,7 @@ export default () => {
 				facts: [
 					{ name: 'Gagarin' }
 				],
-				primaryKey: 'id'
+				factPrimaryKey: 'id'
 			});
 		} catch (error) {
 			err = error

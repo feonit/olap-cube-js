@@ -6,23 +6,23 @@ import {NotFoundFactId} from './errors.js'
  * @throw {NotFoundFactId}
  * */
 export default class FactTable {
-	constructor({ facts = [], primaryKey = DEFAULT_FACT_ID_PROP } = {}, defaultFactOptions = {}) {
-		this.primaryKey = primaryKey;
+	constructor({ facts = [], factPrimaryKey = DEFAULT_FACT_ID_PROP } = {}, defaultFactOptions = {}) {
+		this.factPrimaryKey = factPrimaryKey;
 		this.facts = facts.map(factData => new Fact(factData));
 		this.defaultFactOptions = defaultFactOptions;
-		this.facts.forEach(this.validateFactData.bind(this))
+		this.facts.forEach(this.validateFactData.bind(this, factPrimaryKey))
 	}
 	getFacts() {
 		return this.facts;
 	}
-	validateFactData(factData) {
-		if (!factData.hasOwnProperty(this.primaryKey)) {
-			throw new NotFoundFactId(this.primaryKey)
+	validateFactData(factPrimaryKey, factData) {
+		if (!factData.hasOwnProperty(factPrimaryKey)) {
+			throw new NotFoundFactId(factPrimaryKey)
 		}
 	}
-	static deleteProps(fact, props, primaryKey) {
+	static deleteProps(fact, props, factPrimaryKey) {
 		props.forEach(prop => {
-			if (prop !== primaryKey) {
+			if (prop !== factPrimaryKey) {
 				delete fact[prop];
 			}
 		});
