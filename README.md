@@ -58,6 +58,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - [Demo][6]
 - [Specification][5]
 - [Changelog][10]
+- [Motivation](#motivation)
 
 ## Features:
 - Multidimensional conceptual data representation
@@ -738,3 +739,10 @@ Perhaps
 - Add calculated members
 - Add MDX query language
 - Add Speed tests
+
+
+## Motivation
+As a frontend developer, I am not very familiar with the subject area of cubic data,
+but in my work I was faced with cubic data of a hierarchical type, so I wanted to make a small tool
+to solve my problems. The task turned out to be difficult, but interesting in terms of creating a public API,
+the results of which are presented above.
