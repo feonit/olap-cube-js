@@ -1,5 +1,5 @@
 /*!
- * Version: "0.15.2"
+ * Version: "0.16.0"
  * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
  *
  */
@@ -221,11 +221,6 @@
     _classCallCheck(this, NotFoundFactId);
 
     this.message = "In fact data, no property was found with the name: ".concat(name);
-  };
-  var CreateInstanceException = function CreateInstanceException() {
-    _classCallCheck(this, CreateInstanceException);
-
-    this.message = 'this must have prototype of Cube';
   };
   var DimensionException = function DimensionException(dimension) {
     _classCallCheck(this, DimensionException);
@@ -520,9 +515,14 @@
         this.members = [];
       }
     }, {
-      key: "getMemberId",
-      value: function getMemberId(member) {
+      key: "getMemberPrimaryKey",
+      value: function getMemberPrimaryKey(member) {
         return member[this.primaryKey];
+      }
+    }, {
+      key: "getMemberForeignKey",
+      value: function getMemberForeignKey(member) {
+        return member[this.foreignKey];
       }
       /**
        * @param {Member} member
@@ -698,29 +698,12 @@
       key: "getRoot",
       value: function getRoot() {
         var root = this;
-        this.traceUpOrder(function (tracedTree) {
+        this.traceUpOrder(function (tracedTreeValue, tracedTree) {
           if (tracedTree.isRoot()) {
             root = tracedTree;
           }
         });
         return root;
-      }
-      /**
-       * @public
-       * Search method
-       * @return {Tree|undefined}
-       * */
-
-    }, {
-      key: "searchTreeByTreeValue",
-      value: function searchTreeByTreeValue(callback) {
-        var search = void 0;
-        this.tracePostOrder(function (treeValue, tree) {
-          if (callback(tree)) {
-            search = tree;
-          }
-        });
-        return search;
       }
       /**
        * @public
@@ -731,14 +714,14 @@
     }, {
       key: "traceUpOrder",
       value: function traceUpOrder(callback) {
-        (function reqursively(tree) {
-          var parentNode = tree.getParentTree();
-          callback(tree);
+        var tree = this;
+        var parentTree = tree.getParentTree();
+        var treeValue = tree.getTreeValue();
+        callback(treeValue, tree);
 
-          if (parentNode !== null) {
-            reqursively(parentNode);
-          }
-        })(this);
+        if (parentTree !== null) {
+          parentTree.traceUpOrder(callback);
+        }
       }
       /**
        * @public
@@ -749,18 +732,17 @@
     }, {
       key: "tracePostOrder",
       value: function tracePostOrder(callback) {
-        (function reqursively(tree) {
-          var childTrees = tree.getChildTrees();
-          var treeValue = tree.getTreeValue();
+        var tree = this;
+        var childTrees = tree.getChildTrees();
+        var treeValue = tree.getTreeValue();
 
-          if (childTrees.length) {
-            childTrees.forEach(function (childTree) {
-              reqursively(childTree);
-            });
-          }
+        if (childTrees.length) {
+          childTrees.forEach(function (childTree) {
+            childTree.tracePostOrder(callback);
+          });
+        }
 
-          callback(treeValue, tree);
-        })(this);
+        callback(treeValue, tree);
       }
       /**
        * @public
@@ -770,51 +752,16 @@
     }, {
       key: "tracePreOrder",
       value: function tracePreOrder(callback) {
-        (function reqursively(tree) {
-          var childTrees = tree.getChildTrees();
-          var treeValue = tree.getTreeValue();
-          callback(treeValue, tree);
+        var tree = this;
+        var childTrees = tree.getChildTrees();
+        var treeValue = tree.getTreeValue();
+        callback(treeValue, tree);
 
-          if (childTrees.length) {
-            childTrees.forEach(function (childTree) {
-              reqursively(childTree);
-            });
-          }
-        })(this);
-      }
-      /**
-       * Check if some thee is present in childs of some level
-       * @param {Tree}
-       * @return {boolean}
-       * */
-
-    }, {
-      key: "hasChild",
-      value: function hasChild(tree) {
-        var has = false;
-        this.tracePreOrder(function (tracedTreeValue, tracedTree) {
-          if (tracedTree === tree) {
-            has = true;
-          }
-        });
-        return has;
-      }
-      /**
-       * Check if some thee is present in parents of some level
-       * @param {Tree}
-       * @return {boolean}
-       * */
-
-    }, {
-      key: "hasParent",
-      value: function hasParent(tree) {
-        var has = false;
-        this.traceUpOrder(function (tracedTree) {
-          if (tracedTree === tree) {
-            has = true;
-          }
-        });
-        return has;
+        if (childTrees.length) {
+          childTrees.forEach(function (childTree) {
+            childTree.tracePreOrder(callback);
+          });
+        }
       }
     }]);
 
@@ -876,14 +823,14 @@
         }
       });
 
-      _this.validate();
+      _this.validateDimensions();
 
       return _this;
     }
 
     _createClass(DimensionTree, [{
-      key: "validate",
-      value: function validate() {
+      key: "validateDimensions",
+      value: function validateDimensions() {
         var dimensions = [];
         this.tracePostOrder(function (tracedDimensionTreeValue) {
           var dimension = tracedDimensionTreeValue.dimension;
@@ -934,10 +881,14 @@
     }, {
       key: "getDimensionTreeByDimension",
       value: function getDimensionTreeByDimension(dimension) {
-        return this.getRoot().searchTreeByTreeValue(function (dimensionTree) {
-          var dimensionTreeValue = dimensionTree.getTreeValue();
-          return dimensionTreeValue.dimension === dimension;
+        var root = this.getRoot();
+        var search = void 0;
+        root.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
+          if (dimensionTreeValue.dimension === dimension) {
+            search = dimensionTree;
+          }
         });
+        return search;
       }
       /**
        * @public
@@ -953,45 +904,30 @@
         this.projectDrillDown(newDimensionTreeByMember, member);
         this.projectDrillUp(newDimensionTreeByMember, member);
         return newDimensionTreeByMember;
-      } // насытить связными данными снизу
-
+      }
     }, {
       key: "projectDrillDown",
       value: function projectDrillDown(dimensionTree, member) {
-        var _this2 = this;
-
-        var lastTracedMembers;
-        var lastTracedDimensionTree; // 2 trace up
-
-        this.traceUpOrder(function (tracedTree) {
-          var _tracedTree$getTreeVa = tracedTree.getTreeValue(),
-              tracedDimension = _tracedTree$getTreeVa.dimension; // 3 get drill down of last members
-
-
-          var drillDownedMembers = tracedTree == _this2 ? [member] : lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers); // 4 set members
-
-          dimensionTree.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillDownedMembers); // 5 save current dimension and drill downed members
-
-          lastTracedMembers = drillDownedMembers;
-          lastTracedDimensionTree = tracedTree;
-        });
-      } // насытить связными данными сверху
-
+        this.projectDrill(dimensionTree, member, "traceUpOrder", "drillDownDimensionMembers");
+      }
     }, {
       key: "projectDrillUp",
       value: function projectDrillUp(dimensionTree, member) {
-        var _this3 = this;
+        this.projectDrill(dimensionTree, member, "tracePreOrder", "drillUpDimensionMembers");
+      }
+    }, {
+      key: "projectDrill",
+      value: function projectDrill(dimensionTree, member, traceMethodName, method) {
+        var _this2 = this;
 
-        var lastTracedMembers2;
-        var lastTracedDimensionTree2;
-        this.tracePreOrder(function (b, tracedTree) {
-          var _tracedTree$getTreeVa2 = tracedTree.getTreeValue(),
-              tracedDimension = _tracedTree$getTreeVa2.dimension;
-
-          var drillUppedMembers = tracedTree == _this3 ? [member] : lastTracedDimensionTree2.drillUpDimensionMembers(lastTracedMembers2);
-          dimensionTree.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillUppedMembers);
-          lastTracedMembers2 = drillUppedMembers;
-          lastTracedDimensionTree2 = tracedTree;
+        var lastTracedMembers;
+        var lastTracedDimensionTree;
+        this[traceMethodName](function (tracedDimensionTreeValue, tracedDimensionTree) {
+          var tracedDimension = tracedDimensionTreeValue.dimension;
+          var drillMembers = tracedDimensionTree == _this2 ? [member] : lastTracedDimensionTree[method](lastTracedMembers);
+          dimensionTree.getDimensionTreeByDimension(tracedDimension).getTreeValue().setMemberList(drillMembers);
+          lastTracedMembers = drillMembers;
+          lastTracedDimensionTree = tracedDimensionTree;
         });
       }
     }, {
@@ -999,9 +935,8 @@
       value: function cloneDimensionTreeWithoutMembers() {
         // todo new members must be not created here
         var clone = new DimensionTree(this.getRoot());
-        clone.tracePostOrder(function (dimensionTreeValue, dimensionTree) {
-          var dimensionTable = dimensionTree.getTreeValue();
-          dimensionTable.clearMemberList();
+        clone.tracePostOrder(function (dimensionTreeValue) {
+          dimensionTreeValue.clearMemberList();
         });
         return clone;
       }
@@ -1036,7 +971,7 @@
     }, {
       key: "subtractDimensionTree",
       value: function subtractDimensionTree(dimensionTree) {
-        var _this4 = this;
+        var _this3 = this;
 
         // remove intersection
         var toBeRemovedSpace = {};
@@ -1048,16 +983,16 @@
         var memberList = this.getTreeValue().members; // travers down
 
         if (memberList.length === 1) {
-          this.tracePreOrder(function (dimensionTable, tracedDimensionTree) {
-            var childMembers = dimensionTable.members,
-                childDimension = dimensionTable.dimension;
+          this.tracePreOrder(function (tracedDimensionTable, tracedDimensionTree) {
+            var childMembers = tracedDimensionTable.members,
+                childDimension = tracedDimensionTable.dimension;
             toBeRemovedSpace[childDimension] = childMembers;
           });
         } // remove removal space
 
 
         Object.keys(toBeRemovedSpace).forEach(function (dimension) {
-          var currentDimensionTree = _this4.getDimensionTreeByDimension(dimension);
+          var currentDimensionTree = _this3.getDimensionTreeByDimension(dimension);
 
           var dimensionTable = currentDimensionTree.getTreeValue();
           toBeRemovedSpace[dimension].forEach(function (member) {
@@ -1068,7 +1003,7 @@
     }, {
       key: "unionDimensionTree",
       value: function unionDimensionTree(dimensionTree) {
-        var _this5 = this;
+        var _this4 = this;
 
         var toBeAddedSpace = {};
         dimensionTree.tracePostOrder(function (dimensionTreeValue) {
@@ -1076,15 +1011,8 @@
               members = dimensionTreeValue.members;
           toBeAddedSpace[dimension] = members;
         });
-        var memberList = this.getTreeValue().members; // if (memberList.length === 1){
-        // 	this.tracePreOrder((dimensionTable, tracedDimensionTree) => {
-        // 		const {members: childMembers, dimension: childDimension} = dimensionTable;
-        // 		toBeAddedSpace[childDimension] = childMembers;
-        // 	})
-        // }
-
         Object.keys(toBeAddedSpace).forEach(function (dimension) {
-          var currentDimensionTree = _this5.getDimensionTreeByDimension(dimension);
+          var currentDimensionTree = _this4.getDimensionTreeByDimension(dimension);
 
           var dimensionTable = currentDimensionTree.getTreeValue();
           toBeAddedSpace[dimension].forEach(function (member) {
@@ -1108,24 +1036,20 @@
         }
 
         var parentTree = this.getParentTree();
-
-        var _parentTree$getTreeVa = parentTree.getTreeValue(),
-            parentMembers = _parentTree$getTreeVa.members,
-            primaryKey = _parentTree$getTreeVa.primaryKey;
-
+        var parentDimensionTable = parentTree.getTreeValue();
         var dimensionTable = this.getTreeValue();
-        var foreignKey = dimensionTable.foreignKey;
-        var drillDownMembers = [];
+        var parentMembers = parentDimensionTable.members;
+        var drillMembers = [];
         members.forEach(function (member) {
           parentMembers.forEach(function (parentMember) {
-            if (parentMember[foreignKey] === member[primaryKey]) {
-              if (drillDownMembers.indexOf(parentMember) === -1) {
-                drillDownMembers.push(parentMember);
+            if (dimensionTable.getMemberForeignKey(parentMember) === parentDimensionTable.getMemberPrimaryKey(member)) {
+              if (drillMembers.indexOf(parentMember) === -1) {
+                drillMembers.push(parentMember);
               }
             }
           });
         });
-        return drillDownMembers;
+        return drillMembers;
       }
       /**
        * @public
@@ -1145,20 +1069,19 @@
 
         var childTree = this.getChildTrees()[0]; // for one child always
 
-        var dimensionTable = childTree.getTreeValue();
-        var childMembers = dimensionTable.members,
-            foreignKey = dimensionTable.foreignKey;
-        var rollUpMembers = [];
+        var childDimensionTable = childTree.getTreeValue();
+        var childMembers = childDimensionTable.members;
+        var drillMembers = [];
         members.forEach(function (member) {
           childMembers.forEach(function (childMember) {
-            if (member[foreignKey] === dimensionTable.getMemberId(childMember)) {
-              if (rollUpMembers.indexOf(childMember) === -1) {
-                rollUpMembers.push(childMember);
+            if (childDimensionTable.getMemberForeignKey(member) === childDimensionTable.getMemberPrimaryKey(childMember)) {
+              if (drillMembers.indexOf(childMember) === -1) {
+                drillMembers.push(childMember);
               }
             }
           });
         });
-        return rollUpMembers;
+        return drillMembers;
       }
       /**
        * @public
@@ -1182,6 +1105,7 @@
     }], [{
       key: "createDimensionTree",
       value: function createDimensionTree(dimensionTreeData) {
+        // todo add validation
         return new DimensionTree(dimensionTreeData);
       }
     }, {
@@ -1260,58 +1184,6 @@
   }();
 
   /**
-   * @throw {NotFoundFactId}
-   * */
-
-  var FactTable =
-  /*#__PURE__*/
-  function () {
-    function FactTable() {
-      var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref$facts = _ref.facts,
-          facts = _ref$facts === void 0 ? [] : _ref$facts,
-          _ref$primaryKey = _ref.primaryKey,
-          primaryKey = _ref$primaryKey === void 0 ? DEFAULT_FACT_ID_PROP : _ref$primaryKey;
-
-      var defaultFactOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      _classCallCheck(this, FactTable);
-
-      this.primaryKey = primaryKey;
-      this.facts = facts.map(function (factData) {
-        return new Fact(factData);
-      });
-      this.defaultFactOptions = defaultFactOptions;
-      this.facts.forEach(this.validateFactData.bind(this));
-    }
-
-    _createClass(FactTable, [{
-      key: "getFacts",
-      value: function getFacts() {
-        return this.facts;
-      }
-    }, {
-      key: "validateFactData",
-      value: function validateFactData(factData) {
-        if (!factData.hasOwnProperty(this.primaryKey)) {
-          throw new NotFoundFactId(this.primaryKey);
-        }
-      }
-    }], [{
-      key: "deleteProps",
-      value: function deleteProps(fact, props, primaryKey) {
-        props.forEach(function (prop) {
-          if (prop !== primaryKey) {
-            delete fact[prop];
-          }
-        });
-      }
-    }]);
-
-    return FactTable;
-  }();
-
-  /**
    * The main task is to parse the data array into tables
    *
    * is a special case of snowflake dimensionHierarchies
@@ -1375,12 +1247,20 @@
           var memberListForFilter = _dimensionTable.members;
           entitiesParts = SnowflakeBuilder.mapFilter(childIdAttributes[0], cells, memberListForFilter, _dimensionTable);
           members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
+        }
+
+        function deleteProps(fact, props, factPrimaryKey) {
+          props.forEach(function (prop) {
+            if (prop !== factPrimaryKey) {
+              delete fact[prop];
+            }
+          });
         } // только после того как список сформирован, удалаять данные из ячеек
 
 
         cells.forEach(function (cell) {
-          FactTable.deleteProps(cell, keyProps, factPrimaryKey);
-          FactTable.deleteProps(cell, otherProps, factPrimaryKey);
+          deleteProps(cell, keyProps, factPrimaryKey);
+          deleteProps(cell, otherProps, factPrimaryKey);
         });
         members.forEach(function (member) {
           dimensionTable.addMember(member);
@@ -1403,7 +1283,7 @@
 
         memberList.forEach(function (member) {
           var cellTableFiltered = cells.filter(function (cell) {
-            return cell[foreignKey] == dimensionTable.getMemberId(member);
+            return cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member);
           });
           cellTables.push(cellTableFiltered);
         });
@@ -1536,8 +1416,7 @@
     }, {
       key: "denormalize",
       value: function denormalize(cellTable, dimensionTrees) {
-        var factTable = new FactTable();
-        var facts = factTable.getFacts();
+        var facts = [];
         cellTable.forEach(function (cell) {
           facts.push(_objectSpread({}, cell));
         });
@@ -1572,14 +1451,13 @@
       value: function travers(cellTable, dimensionTree) {
         var handlers = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
 
-        var handleDimensionTree = function handleDimensionTree(dimensionTree, cell) {
-          var dimensionTable = dimensionTree.getTreeValue();
+        var handleDimensionTree = function handleDimensionTree(dimensionTable, cell) {
           var dimension = dimensionTable.dimension,
               memberList = dimensionTable.members,
               foreignKey = dimensionTable.foreignKey;
           var idValue = cell[foreignKey];
           var member = memberList.find(function (member) {
-            return dimensionTable.getMemberId(member) === idValue;
+            return dimensionTable.getMemberPrimaryKey(member) === idValue;
           });
           handlers.forEach(function (handler) {
             handler(member, memberList, dimension, cell, foreignKey, dimensionTable);
@@ -1587,8 +1465,8 @@
         };
 
         cellTable.forEach(function (cell) {
-          dimensionTree.tracePreOrder(function (value, tracedDimensionTree) {
-            handleDimensionTree(tracedDimensionTree, cell);
+          dimensionTree.tracePreOrder(function (tracedDimensionTable, tracedDimensionTree) {
+            handleDimensionTree(tracedDimensionTable, cell);
           });
         });
       }
@@ -1659,59 +1537,249 @@
     return Space;
   }();
 
-  var CellTable = function CellTable(_ref) {
-    var cells = _ref.cells,
-        primaryKey = _ref.primaryKey,
-        _ref$defaultFactOptio = _ref.defaultFactOptions,
-        defaultFactOptions = _ref$defaultFactOptio === void 0 ? {} : _ref$defaultFactOptio;
+  /** Detect free variable `global` from Node.js. */
+  var freeGlobal = (typeof global === "undefined" ? "undefined" : _typeof(global)) == 'object' && global && global.Object === Object && global;
 
-    _classCallCheck(this, CellTable);
+  /** Detect free variable `self`. */
 
-    this.cells = cells.map(function (cellData) {
-      if (cellData instanceof Cell) {
-        return cellData;
+  var freeSelf = (typeof self === "undefined" ? "undefined" : _typeof(self)) == 'object' && self && self.Object === Object && self;
+  /** Used as a reference to the global object. */
+
+  var root = freeGlobal || freeSelf || Function('return this')();
+
+  /** Built-in value references. */
+
+  var _Symbol = root.Symbol;
+
+  /** Used for built-in method references. */
+
+  var objectProto = Object.prototype;
+  /** Used to check objects for own properties. */
+
+  var hasOwnProperty = objectProto.hasOwnProperty;
+  /**
+   * Used to resolve the
+   * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+   * of values.
+   */
+
+  var nativeObjectToString = objectProto.toString;
+  /** Built-in value references. */
+
+  var symToStringTag = _Symbol ? _Symbol.toStringTag : undefined;
+  /**
+   * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
+   *
+   * @private
+   * @param {*} value The value to query.
+   * @returns {string} Returns the raw `toStringTag`.
+   */
+
+  function getRawTag(value) {
+    var isOwn = hasOwnProperty.call(value, symToStringTag),
+        tag = value[symToStringTag];
+
+    try {
+      value[symToStringTag] = undefined;
+    } catch (e) {}
+
+    var result = nativeObjectToString.call(value);
+
+    {
+      if (isOwn) {
+        value[symToStringTag] = tag;
       } else {
-        return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData);
+        delete value[symToStringTag];
       }
-    });
-    this.primaryKey = primaryKey;
-    this.defaultFactOptions = defaultFactOptions;
-  };
+    }
+
+    return result;
+  }
+
+  /** Used for built-in method references. */
+  var objectProto$1 = Object.prototype;
+  /**
+   * Used to resolve the
+   * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+   * of values.
+   */
+
+  var nativeObjectToString$1 = objectProto$1.toString;
+  /**
+   * Converts `value` to a string using `Object.prototype.toString`.
+   *
+   * @private
+   * @param {*} value The value to convert.
+   * @returns {string} Returns the converted string.
+   */
+
+  function objectToString(value) {
+    return nativeObjectToString$1.call(value);
+  }
+
+  /** `Object#toString` result references. */
+
+  var nullTag = '[object Null]',
+      undefinedTag = '[object Undefined]';
+  /** Built-in value references. */
+
+  var symToStringTag$1 = _Symbol ? _Symbol.toStringTag : undefined;
+  /**
+   * The base implementation of `getTag` without fallbacks for buggy environments.
+   *
+   * @private
+   * @param {*} value The value to query.
+   * @returns {string} Returns the `toStringTag`.
+   */
+
+  function baseGetTag(value) {
+    if (value == null) {
+      return value === undefined ? undefinedTag : nullTag;
+    }
+
+    return symToStringTag$1 && symToStringTag$1 in Object(value) ? getRawTag(value) : objectToString(value);
+  }
+
+  /**
+   * Creates a unary function that invokes `func` with its argument transformed.
+   *
+   * @private
+   * @param {Function} func The function to wrap.
+   * @param {Function} transform The argument transform.
+   * @returns {Function} Returns the new function.
+   */
+  function overArg(func, transform) {
+    return function (arg) {
+      return func(transform(arg));
+    };
+  }
+
+  /** Built-in value references. */
+
+  var getPrototype = overArg(Object.getPrototypeOf, Object);
+
+  /**
+   * Checks if `value` is object-like. A value is object-like if it's not `null`
+   * and has a `typeof` result of "object".
+   *
+   * @static
+   * @memberOf _
+   * @since 4.0.0
+   * @category Lang
+   * @param {*} value The value to check.
+   * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+   * @example
+   *
+   * _.isObjectLike({});
+   * // => true
+   *
+   * _.isObjectLike([1, 2, 3]);
+   * // => true
+   *
+   * _.isObjectLike(_.noop);
+   * // => false
+   *
+   * _.isObjectLike(null);
+   * // => false
+   */
+  function isObjectLike(value) {
+    return value != null && _typeof(value) == 'object';
+  }
+
+  /** `Object#toString` result references. */
+
+  var objectTag = '[object Object]';
+  /** Used for built-in method references. */
+
+  var funcProto = Function.prototype,
+      objectProto$2 = Object.prototype;
+  /** Used to resolve the decompiled source of functions. */
+
+  var funcToString = funcProto.toString;
+  /** Used to check objects for own properties. */
+
+  var hasOwnProperty$1 = objectProto$2.hasOwnProperty;
+  /** Used to infer the `Object` constructor. */
+
+  var objectCtorString = funcToString.call(Object);
+  /**
+   * Checks if `value` is a plain object, that is, an object created by the
+   * `Object` constructor or one with a `[[Prototype]]` of `null`.
+   *
+   * @static
+   * @memberOf _
+   * @since 0.8.0
+   * @category Lang
+   * @param {*} value The value to check.
+   * @returns {boolean} Returns `true` if `value` is a plain object, else `false`.
+   * @example
+   *
+   * function Foo() {
+   *   this.a = 1;
+   * }
+   *
+   * _.isPlainObject(new Foo);
+   * // => false
+   *
+   * _.isPlainObject([1, 2, 3]);
+   * // => false
+   *
+   * _.isPlainObject({ 'x': 0, 'y': 0 });
+   * // => true
+   *
+   * _.isPlainObject(Object.create(null));
+   * // => true
+   */
+
+  function isPlainObject(value) {
+    if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
+      return false;
+    }
+
+    var proto = getPrototype(value);
+
+    if (proto === null) {
+      return true;
+    }
+
+    var Ctor = hasOwnProperty$1.call(proto, 'constructor') && proto.constructor;
+    return typeof Ctor == 'function' && Ctor instanceof Ctor && funcToString.call(Ctor) == objectCtorString;
+  }
+
   /**
    * It a means to retrieve data
    *
    * Base class for normalizing a denormalized data array
    * and analyzing query according to a given scheme
    *
-   * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
    * */
-
 
   var Cube =
   /*#__PURE__*/
   function () {
-    function Cube(cube) {
+    /**
+     * @param {object | Cube} cube
+     * @throw {TypeError}
+     * */
+    function Cube() {
+      var cube = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
       _classCallCheck(this, Cube);
+
+      if (!(isPlainObject(cube) || cube instanceof Cube)) {
+        throw TypeError('The argument must be plain object or instance of Cube');
+      }
 
       var _cube$dimensionHierar = cube.dimensionHierarchies,
           dimensionHierarchies = _cube$dimensionHierar === void 0 ? [] : _cube$dimensionHierar,
           _cube$cellTable = cube.cellTable,
-          cellTable = _cube$cellTable === void 0 ? {} : _cube$cellTable;
-
-      if (Array.isArray(cellTable)) {
-        cellTable = {
-          cells: cellTable
-        };
-        customConsole.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table');
-      }
-
-      var _cellTable = cellTable,
-          _cellTable$cells = _cellTable.cells,
-          cells = _cellTable$cells === void 0 ? [] : _cellTable$cells,
-          _cellTable$primaryKey = _cellTable.primaryKey,
-          primaryKey = _cellTable$primaryKey === void 0 ? DEFAULT_FACT_ID_PROP : _cellTable$primaryKey,
-          _cellTable$defaultFac = _cellTable.defaultFactOptions,
-          defaultFactOptions = _cellTable$defaultFac === void 0 ? {} : _cellTable$defaultFac;
+          cellTable = _cube$cellTable === void 0 ? [] : _cube$cellTable,
+          _cube$defaultFactOpti = cube.defaultFactOptions,
+          defaultFactOptions = _cube$defaultFactOpti === void 0 ? {} : _cube$defaultFactOpti,
+          _cube$factPrimaryKey = cube.factPrimaryKey,
+          factPrimaryKey = _cube$factPrimaryKey === void 0 ? DEFAULT_FACT_ID_PROP : _cube$factPrimaryKey;
+      this.defaultFactOptions = defaultFactOptions;
+      this.factPrimaryKey = factPrimaryKey;
       this.dimensionHierarchies = dimensionHierarchies.map(function (dimensionHierarchy) {
         // duck
         if (dimensionHierarchy.hierarchy) {
@@ -1734,10 +1802,12 @@
           }
         }
       });
-      this.cellTable = new CellTable({
-        cells: cells,
-        primaryKey: primaryKey,
-        defaultFactOptions: _objectSpread({}, defaultFactOptions)
+      this.cellTable = cellTable.map(function (cellData) {
+        if (cellData instanceof Cell) {
+          return cellData;
+        } else {
+          return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData);
+        }
       }); // const residuals = residuals(this);
       // const count = residuals.length;
       // if (count > 0) {
@@ -1745,25 +1815,17 @@
       // }
     }
     /**
+     * is the act of picking a rectangular subset of a cube by choosing a single value
+     * for one of its dimensions, creating a new cube with one fewer dimension.
      * @public
-     * Fabric method for creating cube from facts and dimensionHierarchiesData data
-     * @param {object} factTable
-     * @param {object} dimensionHierarchies
+     * @param {string} dimension
+     * @param {Member} member
      * @return {Cube}
      * */
 
 
     _createClass(Cube, [{
       key: "slice",
-
-      /**
-       * is the act of picking a rectangular subset of a cube by choosing a single value
-       * for one of its dimensions, creating a new cube with one fewer dimension.
-       * @public
-       * @param {string} dimension
-       * @param {Member} member
-       * @return {Cube}
-       * */
       value: function slice(dimension, member) {
         return this.dice(_defineProperty({}, dimension, member));
       }
@@ -1771,6 +1833,8 @@
        * @public
        * @param {object} set
        * @return {Cube}
+       * @throw {TypeError}
+       * @throw {RangeError}
        * */
 
     }, {
@@ -1778,45 +1842,62 @@
       value: function dice(set) {
         var _this = this;
 
-        // 1 make one projection on to member
-        var fixSpace = {};
-        Object.keys(set).forEach(function (dimension) {
-          // work with arrays
-          fixSpace[dimension] = Array.isArray(set[dimension]) ? set[dimension] : [set[dimension]];
-          var dimensionTree = findDimensionTreeByDimension.call(_this, dimension); // discard non-existent dimensions
+        if (!(isPlainObject(set) || set instanceof Tuple)) {
+          throw TypeError("The argument must be a plain object");
+        } // always work with arrays as value
 
-          if (!dimensionTree) {
-            customConsole.warn("Not existed dimension: ".concat(dimension));
-            return;
-          }
 
+        var toMultiset = function toMultiset(value) {
+          return Array.isArray(value) ? value : [value];
+        }; // change member data to original member objects
+
+
+        var toOriginal = function toOriginal(membersData, dimension) {
+          var dimensionTree = getDimensionTreeByDimension.call(_this, dimension);
           var dimensionTable = dimensionTree.getTreeValue();
-          fixSpace[dimension].forEach(function (memberData, index) {
-            var members = _this.getDimensionMembers(dimension);
+          var members = dimensionTable.members; //replace memberData with original members
 
+          membersData.forEach(function (memberData, index) {
             var member = members.find(function (member) {
-              return dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData);
+              return dimensionTable.getMemberPrimaryKey(member) === dimensionTable.getMemberPrimaryKey(memberData);
             });
-            fixSpace[dimension][index] = member;
 
-            if (!memberData) {
-              customConsole.warn("Not found member by id ".concat(dimensionTable.getMemberId(member)));
+            if (!member) {
+              throw RangeError("Not found member by id ".concat(dimensionTable.getMemberPrimaryKey(member)));
             }
+
+            if (membersData instanceof Member) {
+              return;
+            }
+
+            membersData[index] = member;
           });
+          return membersData;
+        };
+
+        var originalMultiset = {};
+        Object.keys(set).forEach(function (dimension) {
+          var value = set[dimension];
+          value = toMultiset(value);
+          value = toOriginal(value, dimension);
+          originalMultiset[dimension] = value;
         });
+        var dimensions = Object.keys(originalMultiset); // 1 make one projection on to member
+
         var dimensionHierarchiesLength = this.dimensionHierarchies.length;
 
-        if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
+        if (dimensions.length > dimensionHierarchiesLength) {
           throw Error("Set must have a size not more than ".concat(dimensionHierarchiesLength, " dimensions"));
         }
 
         var projectionDimensionHierarchies = []; // for every dimension in set
 
-        var totalSpaces = Object.keys(fixSpace).map(function (dimension) {
-          var dimensionTreeProjection; // ищется его расширенная версия для каждого члена
+        var totalSpaces = dimensions.map(function (dimension) {
+          var dimensionTreeProjection;
+          var members = originalMultiset[dimension]; // ищется его расширенная версия для каждого члена
 
-          var spacesForCells = fixSpace[dimension].map(function (member) {
-            var searchedInTree = findDimensionTreeByDimension.call(_this, dimension);
+          var spacesForCells = members.map(function (member) {
+            var searchedInTree = getDimensionTreeByDimension.call(_this, dimension);
             var current = searchedInTree.cloneDimensionTreeWithoutMembers();
             searchedInTree.projectDrillDown(current, member);
             searchedInTree.projectDrillUp(current, member);
@@ -1849,9 +1930,9 @@
           var somePropOfCellNotBelongToSpace = Object.keys(space).some(function (dimension) {
             var members = space[dimension];
 
-            var _findDimensionTreeByD = findDimensionTreeByDimension.call(_this, dimension).getTreeValue(),
-                foreignKey = _findDimensionTreeByD.foreignKey,
-                primaryKey = _findDimensionTreeByD.primaryKey;
+            var _getDimensionTreeByDi = getDimensionTreeByDimension.call(_this, dimension).getTreeValue(),
+                foreignKey = _getDimensionTreeByDi.foreignKey,
+                primaryKey = _getDimensionTreeByDi.primaryKey;
 
             var finded = members.find(function (member) {
               return member[primaryKey] === cell[foreignKey];
@@ -1952,7 +2033,7 @@
       }
       /**
        * @public
-       * @return {FactTable} returns facts
+       * @return {Fact[]} returns facts
        * */
 
     }, {
@@ -1963,37 +2044,44 @@
       /**
        * @public
        * @param {Object[]} facts
+       * @throw {TypeError}
        * @return {Cube}
        * */
 
     }, {
       key: "addFacts",
       value: function addFacts(facts) {
-        var newFactTable = new FactTable({
-          facts: facts,
-          primaryKey: this.cellTable.primaryKey
-        });
-        var cells = newFactTable.getFacts().map(function (fact) {
+        if (!Array.isArray(facts)) {
+          throw TypeError('The argument must be instance of Array');
+        }
+
+        facts.forEach(validateFactData.bind(null, this.factPrimaryKey));
+        var cells = facts.map(function (fact) {
           return new Cell(fact);
         });
         [].push.apply(this.getCells(), cells);
         var factTable = this.getFacts();
-        SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.primaryKey);
+        SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.factPrimaryKey);
         return this;
       }
       /**
        * @public
        * @param {Object[]} facts
+       * @throw {TypeError}
        * */
 
     }, {
       key: "removeFacts",
       value: function removeFacts(facts) {
+        if (!Array.isArray(facts)) {
+          throw TypeError('The argument must be instance of Array');
+        }
+
         var cellTable = this.getCells();
-        var primaryKey = this.cellTable.primaryKey;
+        var factPrimaryKey = this.factPrimaryKey;
         var removedCells = facts.map(function (fact) {
           return cellTable.find(function (cell) {
-            return cell[primaryKey] === fact[primaryKey];
+            return cell[factPrimaryKey] === fact[factPrimaryKey];
           });
         });
         this.removeCells(removedCells);
@@ -2006,28 +2094,44 @@
     }, {
       key: "getCells",
       value: function getCells() {
-        return this.cellTable.cells;
+        return this.cellTable;
       }
       /**
        * @public
        * @param {Cell[]} cells
+       * @throw {TypeError}
        * */
 
     }, {
       key: "removeCells",
       value: function removeCells(cells) {
+        if (!Array.isArray(cells)) {
+          throw TypeError('The argument must be instance of Array');
+        }
+
+        cells.forEach(function (cell) {
+          if (!(cell instanceof Cell)) {
+            throw TypeError('The list of cells must contain only instances of Cell and EmptyCell');
+          }
+        });
         SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
       }
       /**
        * @public
        * @param {string} dimension - dimension from which the member will be found
        * @return {Member[]} returns members
+       * @throw {TypeError}
        * */
 
     }, {
       key: "getDimensionMembers",
       value: function getDimensionMembers(dimension) {
-        return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
+        if (!(typeof dimension === 'string')) {
+          throw TypeError('The first argument must be string');
+        }
+
+        var dimensionTree = getDimensionTreeByDimension.call(this, dimension);
+        return dimensionTree.getTreeValue().members;
       }
       /**
        * @public
@@ -2047,29 +2151,32 @@
         var customMemberOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var rollupCoordinatesData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         var drillDownCoordinatesOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-        var cellData = arguments.length > 4 ? arguments[4] : undefined;
+        var cellData = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
 
-        // todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
-        if (typeof dimension !== 'string') {
-          throw TypeError("parameter dimension expects as string: ".concat(dimension));
+        if (!(typeof dimension === 'string')) {
+          throw TypeError('The first argument must be instance of string');
         }
+
+        if (!(isPlainObject(customMemberOptions) && isPlainObject(rollupCoordinatesData) && isPlainObject(drillDownCoordinatesOptions) && isPlainObject(cellData))) {
+          throw TypeError('The arguments after the first must be plain objects');
+        } // todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
         Object.keys(rollupCoordinatesData).forEach(function (dimension) {
           var memberData = rollupCoordinatesData[dimension];
 
           var memberList = _this2.getDimensionMembers(dimension);
 
-          var dimensionTable = findDimensionTreeByDimension.call(_this2, dimension).getTreeValue();
+          var dimensionTable = getDimensionTreeByDimension.call(_this2, dimension).getTreeValue();
           var primaryKey = dimensionTable.primaryKey;
           var id = memberData[primaryKey];
           var find = memberList.find(function (member) {
-            return id === dimensionTable.getMemberId(member);
+            return id === dimensionTable.getMemberPrimaryKey(member);
           });
 
           if (!find) {
             throw new InsufficientRollupData(dimension, id);
           }
         });
-        var dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+        var dimensionTree = getDimensionTreeByDimension.call(this, dimension);
         var childDimensionTrees = dimensionTree.getChildTrees();
         var dimensionTable = dimensionTree.getTreeValue();
         var foreignKey = dimensionTable.foreignKey;
@@ -2091,13 +2198,12 @@
         var memberOptions = Object.assign({}, customMemberOptions, foreignKeysMemberData);
         var saveMember = dimensionTree.createMember(memberOptions);
         var saveIdAttribute = foreignKey;
-        dimensionTree.traceUpOrder(function (tracedDimensionTree) {
+        dimensionTree.traceUpOrder(function (tracedDimensionTable, tracedDimensionTree) {
           if (dimensionTree !== tracedDimensionTree) {
-            var _tracedDimensionTree$ = tracedDimensionTree.getTreeValue(),
-                parentDimension = _tracedDimensionTree$.dimension,
-                parentIdAttribute = _tracedDimensionTree$.foreignKey;
+            var parentDimension = tracedDimensionTable.dimension,
+                parentIdAttribute = tracedDimensionTable.foreignKey;
 
-            var drillDownCoordinatesData = _defineProperty({}, saveIdAttribute, dimensionTable.getMemberId(saveMember));
+            var drillDownCoordinatesData = _defineProperty({}, saveIdAttribute, dimensionTable.getMemberPrimaryKey(saveMember));
 
             Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
             saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
@@ -2110,12 +2216,21 @@
        * @public
        * @param {string} dimension - dimension from which the member will be removed
        * @param {Member} member - the member will be removed
+       * throw {TypeError}
        * */
 
     }, {
       key: "removeDimensionMember",
       value: function removeDimensionMember(dimension, member) {
-        var dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+        if (!(typeof dimension === 'string')) {
+          throw TypeError('The first argument must be instance of string');
+        }
+
+        if (!(member instanceof Member)) {
+          throw TypeError('The second argument must be instance of Member');
+        }
+
+        var dimensionTree = getDimensionTreeByDimension.call(this, dimension);
         var endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
         var cellTable = this.getCells();
 
@@ -2126,7 +2241,7 @@
 
           cellTable.forEach(function (cell) {
             members.forEach(function (member) {
-              if (cell[foreignKey] == dimensionTable.getMemberId(member)) {
+              if (cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member)) {
                 removedCells.push(cell);
               }
             });
@@ -2148,6 +2263,7 @@
       /**
        * @public
        * @param {object|DimensionTree} dimensionHierarchy
+       * @throw {TypeError}
        * */
 
     }, {
@@ -2155,7 +2271,7 @@
       value: function addDimensionHierarchy(dimensionHierarchy) {
         var dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy);
         this.dimensionHierarchies.push(dimensionTree);
-        SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
+        SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.factPrimaryKey);
       }
       /**
        * @public
@@ -2165,7 +2281,11 @@
     }, {
       key: "removeDimensionHierarchy",
       value: function removeDimensionHierarchy(dimensionHierarchy) {
-        // first remove members
+        if (!(dimensionHierarchy instanceof DimensionTree)) {
+          throw TypeError('The argument must be instance of DimensionTree');
+        } // first remove members
+
+
         SnowflakeBuilder.destroyDimensionTree(this.getCells(), this.getCells(), dimensionHierarchy, this); // then target dimension hierarchy
 
         this.dimensionHierarchies.splice(this.dimensionHierarchies.indexOf(dimensionHierarchy), 1);
@@ -2173,27 +2293,35 @@
       /**
        * @public
        * @return {EmptyCell[]}
+       * @throw {TypeError}
        * */
 
     }, {
       key: "createEmptyCells",
-      value: function createEmptyCells(cellOptions) {
+      value: function createEmptyCells() {
         var _this3 = this;
+
+        var cellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        if (!isPlainObject(cellOptions)) {
+          throw TypeError('Cell option argument must be a pure object');
+        }
 
         var emptyCells = [];
         var tuples = Cube.cartesian(this);
-        tuples.forEach(function (combination) {
-          var unique = _this3.dice(combination).getCells();
+        tuples.forEach(function (tuple) {
+          var unique = _this3.dice(tuple).getCells();
 
           if (!unique.length) {
             var foreignKeysCellData = {};
-            Object.keys(combination).forEach(function (dimension) {
-              var dimensionTable = findDimensionTreeByDimension.call(_this3, dimension).getTreeValue();
+            Object.keys(tuple).forEach(function (dimension) {
+              var dimensionTree = getDimensionTreeByDimension.call(_this3, dimension);
+              var dimensionTable = dimensionTree.getTreeValue();
               var foreignKey = dimensionTable.foreignKey;
-              foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension]);
+              foreignKeysCellData[foreignKey] = dimensionTable.getMemberPrimaryKey(tuple[dimension]);
             });
 
-            var cellData = _objectSpread({}, foreignKeysCellData, cellOptions); // todo нужна правеврка на то, что все свойства присутствуют
+            var cellData = _objectSpread({}, _this3.defaultFactOptions, cellOptions, foreignKeysCellData); // todo нужна правеврка на то, что все свойства присутствуют, для этого нужна инф-ия о именах таких полей в схеме
 
 
             var cell = EmptyCell.createEmptyCell(cellData);
@@ -2216,6 +2344,7 @@
       }
       /**
        * @public
+       * @param {Cell} cell
        * @return {boolean}
        * */
 
@@ -2226,44 +2355,48 @@
       }
       /**
        * @public
+       * @param {EmptyCell[]} emptyCells
        * @throw {TypeError}
        * */
 
     }, {
       key: "addEmptyCells",
       value: function addEmptyCells(emptyCells) {
-        Cube.validateInstance(emptyCells);
+        var _this4 = this;
+
+        if (!Array.isArray(emptyCells)) {
+          throw TypeError('The argument must be instance of Array');
+        }
+
+        emptyCells.forEach(function (emptyCell, index) {
+          if (!_this4.isEmptyCell(emptyCell)) {
+            throw TypeError("Some item in list of argument is not instances of EmptyCell, index: ".concat(index));
+          }
+        });
         [].push.apply(this.getCells(), emptyCells);
       }
       /**
        * @public
        * Filling method for full size of cube
-       * @param {object?} customCellOptions - properties for empty cells
+       * @param {object?} cellOptions - properties for empty cells
        * */
 
     }, {
       key: "fillEmptyCells",
-      value: function fillEmptyCells() {
-        var customCellOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-        var cellOptions = _objectSpread({}, this.cellTable.defaultFactOptions, customCellOptions);
-
+      value: function fillEmptyCells(cellOptions) {
+        // todo why here residuals? add test for that
         if (!residuals(this).length) {
           var emptyCells = this.createEmptyCells(cellOptions);
           this.addEmptyCells(emptyCells);
         }
       }
       /**
-       * @param {EmptyCell[]} emptyCells
-       * @throw {TypeError}
+       * Check that the argument is an instance of SubCube
+       * @return {boolean}
        * */
 
     }, {
       key: "isSubCube",
-
-      /**
-       *
-       * */
       value: function isSubCube() {
         return this instanceof SubCube;
       }
@@ -2274,55 +2407,16 @@
        * */
 
     }], [{
-      key: "create",
-      value: function create(factTable) {
-        var dimensionHierarchies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
-        if (Array.isArray(factTable)) {
-          factTable = {
-            facts: factTable
-          };
-          customConsole.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table');
-        }
-
-        var _factTable = factTable,
-            _factTable$facts = _factTable.facts,
-            facts = _factTable$facts === void 0 ? [] : _factTable$facts,
-            primaryKey = _factTable.primaryKey,
-            _factTable$defaultFac = _factTable.defaultFactOptions,
-            defaultFactOptions = _factTable$defaultFac === void 0 ? {} : _factTable$defaultFac;
-
-        if (!(Cube.isPrototypeOf(this) || Cube === this)) {
-          throw new CreateInstanceException();
-        }
-
-        var cube = new this({
-          cellTable: {
-            primaryKey: primaryKey,
-            defaultFactOptions: defaultFactOptions
-          },
-          dimensionHierarchies: dimensionHierarchies
-        }); // build 2: members
-
-        cube.addFacts(facts);
-        return cube;
-      }
-    }, {
-      key: "validateInstance",
-      value: function validateInstance(emptyCells) {
-        emptyCells.forEach(function (emptyCell) {
-          if (!(emptyCell instanceof EmptyCell)) {
-            throw new TypeError('some item in list of argument is not instances of EmptyCell');
-          }
-        });
-      }
-    }, {
       key: "cartesian",
       value: function cartesian(cube) {
-        var f = function f(a, b) {
-          var _ref3;
+        if (!(cube instanceof Cube)) {
+          throw TypeError('The argument must be instance of Cube');
+        }
 
-          return (_ref3 = []).concat.apply(_ref3, _toConsumableArray(a.map(function (d) {
+        var f = function f(a, b) {
+          var _ref2;
+
+          return (_ref2 = []).concat.apply(_ref2, _toConsumableArray(a.map(function (d) {
             return b.map(function (e) {
               return [].concat(d, e);
             });
@@ -2382,23 +2476,23 @@
   function (_Cube) {
     _inherits(SubCube, _Cube);
 
-    function SubCube(_ref4) {
-      var _this4;
+    function SubCube(_ref3) {
+      var _this5;
 
-      var originalCube = _ref4.originalCube,
-          previousCube = _ref4.previousCube,
-          rest = _objectWithoutProperties(_ref4, ["originalCube", "previousCube"]);
+      var originalCube = _ref3.originalCube,
+          previousCube = _ref3.previousCube,
+          rest = _objectWithoutProperties(_ref3, ["originalCube", "previousCube"]);
 
       _classCallCheck(this, SubCube);
 
-      _this4 = _possibleConstructorReturn(this, _getPrototypeOf(SubCube).call(this, rest));
+      _this5 = _possibleConstructorReturn(this, _getPrototypeOf(SubCube).call(this, rest));
       /** link for chaining between operations */
 
-      _this4.originalCube = originalCube;
+      _this5.originalCube = originalCube;
       /** link for chaining between operations */
 
-      _this4.previousCube = previousCube;
-      return _this4;
+      _this5.previousCube = previousCube;
+      return _this5;
     }
 
     return SubCube;
@@ -2420,7 +2514,7 @@
    * */
 
 
-  function findDimensionTreeByDimension(dimension) {
+  function getDimensionTreeByDimension(dimension) {
     var findDimensionTree;
     this.dimensionHierarchies.forEach(function (dimensionTree) {
       var searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
@@ -2429,6 +2523,11 @@
         findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
       }
     });
+
+    if (!findDimensionTree) {
+      throw RangeError("Not existed dimension: ".concat(dimension));
+    }
+
     return findDimensionTree;
   }
   /**
@@ -2449,7 +2548,7 @@
 
 
   function denormalize() {
-    var _this5 = this;
+    var _this6 = this;
 
     var cells = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getCells();
     var forSave = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
@@ -2458,7 +2557,7 @@
     if (forSave) {
       data.forEach(function (data, index) {
         if (cells[index] instanceof EmptyCell) {
-          delete data[_this5.cellTable.primaryKey];
+          delete data[_this6.factPrimaryKey];
         }
       });
     }
@@ -2483,6 +2582,12 @@
       }
     });
     return totalTuples;
+  }
+
+  function validateFactData(factPrimaryKey, factData) {
+    if (!factData.hasOwnProperty(factPrimaryKey)) {
+      throw new NotFoundFactId(factPrimaryKey);
+    }
   }
 
   return Cube;
