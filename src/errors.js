@@ -22,12 +22,6 @@ export class CantAddMemberRollupException {
 	}
 }
 
-export class CreateInstanceException {
-	constructor() {
-		this.message = 'this must have prototype of Cube'
-	}
-}
-
 export class DimensionException {
 	constructor(dimension) {
 		this.message = `For the name "${dimension}" the dimension is already set`;

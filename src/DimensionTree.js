@@ -42,11 +42,11 @@ export default class DimensionTree extends Tree {
 				editable: false
 			}
 		});
-		this.validate();
+		this.validateDimensions();
 	}
-	validate(){
+	validateDimensions(){
 		const dimensions = [];
-		this.tracePostOrder((tracedDimensionTreeValue) => {
+		this.tracePostOrder(tracedDimensionTreeValue => {
 			const {dimension} = tracedDimensionTreeValue;
 			if (dimensions.indexOf(dimension) === -1){
 				dimensions.push(dimension)
@@ -56,11 +56,12 @@ export default class DimensionTree extends Tree {
 		})
 	}
 	static createDimensionTree(dimensionTreeData) {
+		// todo add validation
 		return new DimensionTree(dimensionTreeData);
 	}
 	static createProxyDimensionTree(dimensionTree){
 		const newDimensionTree = dimensionTree.cloneDimensionTreeWithoutMembers();
-		dimensionTree.tracePostOrder((tracedTreeValue) => {
+		dimensionTree.tracePostOrder(tracedTreeValue => {
 			const { dimension: tracedDimension, members } = tracedTreeValue;
 			
 			newDimensionTree
@@ -97,10 +98,14 @@ export default class DimensionTree extends Tree {
 	 * @return {DimensionTree|undefined}
 	 * */
 	getDimensionTreeByDimension(dimension) {
-		return this.getRoot().searchTreeByTreeValue(dimensionTree => {
-			const dimensionTreeValue = dimensionTree.getTreeValue();
-			return dimensionTreeValue.dimension === dimension;
+		const root = this.getRoot();
+		let search = void 0;
+		root.tracePostOrder((dimensionTreeValue, dimensionTree) => {
+			if (dimensionTreeValue.dimension === dimension){
+				search = dimensionTree;
+			}
 		});
+		return search;
 	}
 	/**
 	 * @public
@@ -116,55 +121,36 @@ export default class DimensionTree extends Tree {
 
 		return newDimensionTreeByMember;
 	}
-	// насытить связными данными снизу
 	projectDrillDown(dimensionTree, member){
+		this.projectDrill(dimensionTree, member, "traceUpOrder", "drillDownDimensionMembers")
+	}
+	projectDrillUp(dimensionTree, member){
+		this.projectDrill(dimensionTree, member, "tracePreOrder", "drillUpDimensionMembers")
+	}
+	projectDrill(dimensionTree, member, traceMethodName, method){
 		let lastTracedMembers;
 		let lastTracedDimensionTree;
-		// 2 trace up
-		this.traceUpOrder(tracedTree => {
-			const { dimension: tracedDimension } = tracedTree.getTreeValue();
+		this[traceMethodName]((tracedDimensionTreeValue, tracedDimensionTree) => {
+			const { dimension: tracedDimension } = tracedDimensionTreeValue;
 
-			// 3 get drill down of last members
-			const drillDownedMembers = tracedTree == this
+			const drillMembers = tracedDimensionTree == this
 				? [member]
-				: lastTracedDimensionTree.drillDownDimensionMembers(lastTracedMembers);
+				: lastTracedDimensionTree[method](lastTracedMembers);
 
-			// 4 set members
 			dimensionTree
 				.getDimensionTreeByDimension(tracedDimension)
 				.getTreeValue()
-				.setMemberList(drillDownedMembers);
+				.setMemberList(drillMembers);
 
-			// 5 save current dimension and drill downed members
-			lastTracedMembers = drillDownedMembers;
-			lastTracedDimensionTree = tracedTree;
+			lastTracedMembers = drillMembers;
+			lastTracedDimensionTree = tracedDimensionTree;
 		});
-	}
-	// насытить связными данными сверху
-	projectDrillUp(dimensionTree, member){
-		let lastTracedMembers2;
-		let lastTracedDimensionTree2;
-		this.tracePreOrder((b, tracedTree) => {
-			const { dimension: tracedDimension } = tracedTree.getTreeValue();
-			const drillUppedMembers = tracedTree == this
-				? [member]
-				: lastTracedDimensionTree2.drillUpDimensionMembers(lastTracedMembers2);
-
-			dimensionTree
-				.getDimensionTreeByDimension(tracedDimension)
-				.getTreeValue()
-				.setMemberList(drillUppedMembers);
-
-			lastTracedMembers2 = drillUppedMembers;
-			lastTracedDimensionTree2 = tracedTree;
-		})
 	}
 	cloneDimensionTreeWithoutMembers(){
 		// todo new members must be not created here
 		const clone = new DimensionTree(this.getRoot());
-		clone.tracePostOrder((dimensionTreeValue, dimensionTree) => {
-			const dimensionTable = dimensionTree.getTreeValue();
-			dimensionTable.clearMemberList();
+		clone.tracePostOrder(dimensionTreeValue => {
+			dimensionTreeValue.clearMemberList();
 		});
 		return clone;
 	}
@@ -208,8 +194,8 @@ export default class DimensionTree extends Tree {
 
 		// travers down
 		if (memberList.length === 1) {
-			this.tracePreOrder((dimensionTable, tracedDimensionTree) => {
-				const {members: childMembers, dimension: childDimension} = dimensionTable;
+			this.tracePreOrder((tracedDimensionTable, tracedDimensionTree) => {
+				const {members: childMembers, dimension: childDimension} = tracedDimensionTable;
 				toBeRemovedSpace[childDimension] = childMembers;
 			})
 		}
@@ -229,14 +215,7 @@ export default class DimensionTree extends Tree {
 			const {dimension, members} = dimensionTreeValue;
 			toBeAddedSpace[dimension] = members;
 		});
-		const memberList = this.getTreeValue().members;
 
-		// if (memberList.length === 1){
-		// 	this.tracePreOrder((dimensionTable, tracedDimensionTree) => {
-		// 		const {members: childMembers, dimension: childDimension} = dimensionTable;
-		// 		toBeAddedSpace[childDimension] = childMembers;
-		// 	})
-		// }
 		Object.keys(toBeAddedSpace).forEach(dimension => {
 			const currentDimensionTree = this.getDimensionTreeByDimension(dimension);
 			const dimensionTable = currentDimensionTree.getTreeValue();
@@ -255,20 +234,20 @@ export default class DimensionTree extends Tree {
 			return members;
 		}
 		const parentTree = this.getParentTree();
-		const { members: parentMembers, primaryKey } = parentTree.getTreeValue();
+		const parentDimensionTable = parentTree.getTreeValue();
 		const dimensionTable = this.getTreeValue();
-		const { foreignKey } = dimensionTable;
-		const drillDownMembers = [];
+		const { members: parentMembers } = parentDimensionTable;
+		const drillMembers = [];
 		members.forEach(member => {
 			parentMembers.forEach(parentMember => {
-				if (parentMember[foreignKey] === member[primaryKey]) {
-					if (drillDownMembers.indexOf(parentMember) === -1) {
-						drillDownMembers.push(parentMember)
+				if (dimensionTable.getMemberForeignKey(parentMember) === parentDimensionTable.getMemberPrimaryKey(member)) {
+					if (drillMembers.indexOf(parentMember) === -1) {
+						drillMembers.push(parentMember)
 					}
 				}
 			})
 		});
-		return drillDownMembers;
+		return drillMembers;
 	}
 	/**
 	 * @public
@@ -281,19 +260,19 @@ export default class DimensionTree extends Tree {
 			return members;
 		}
 		const childTree = this.getChildTrees()[0]; // for one child always
-		const dimensionTable = childTree.getTreeValue();
-		const { members: childMembers, foreignKey } = dimensionTable;
-		const rollUpMembers = [];
+		const childDimensionTable = childTree.getTreeValue();
+		const { members: childMembers } = childDimensionTable;
+		const drillMembers = [];
 		members.forEach(member => {
 			childMembers.forEach(childMember => {
-				if (member[foreignKey] === dimensionTable.getMemberId(childMember)) {
-					if (rollUpMembers.indexOf(childMember) === -1) {
-						rollUpMembers.push(childMember)
+				if (childDimensionTable.getMemberForeignKey(member) === childDimensionTable.getMemberPrimaryKey(childMember)) {
+					if (drillMembers.indexOf(childMember) === -1) {
+						drillMembers.push(childMember)
 					}
 				}
 			})
 		});
-		return rollUpMembers;
+		return drillMembers;
 	}
 	/**
 	 * @public

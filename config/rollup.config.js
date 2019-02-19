@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import babel from 'rollup-plugin-babel';
+const babelConfig = require('./babel.config.js');
 import { uglify } from "rollup-plugin-uglify";
 import { terser } from "rollup-plugin-terser";
 const version = JSON.stringify(require('../package.json').version);
@@ -13,6 +14,11 @@ const banner = `/*!
  *
  */`;
 
+//https://github.com/rollup/rollup-plugin-babel/issues/249
+const babelOptions = {
+	babelrc: false,
+	...babelConfig
+};
 export default [
 	{
 		input,
@@ -33,7 +39,7 @@ export default [
 			sourcemap: true
 		},
 		plugins: [
-			babel()
+			babel(babelOptions)
 		]
 	},
 	{
@@ -58,7 +64,7 @@ export default [
 			sourcemap: true
 		},
 		plugins: [
-			babel(),
+			babel(babelOptions),
 			uglify()
 		]
 	}

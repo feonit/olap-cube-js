@@ -1,4 +1,3 @@
-import FactTable from './FactTable.js'
 import Member from './Member.js'
 
 /**
@@ -46,10 +45,18 @@ export default class SnowflakeBuilder {
 			members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
 		}
 
+		function deleteProps(fact, props, factPrimaryKey) {
+			props.forEach(prop => {
+				if (prop !== factPrimaryKey) {
+					delete fact[prop];
+				}
+			});
+		}
+
 		// только после того как список сформирован, удалаять данные из ячеек
 		cells.forEach(cell => {
-			FactTable.deleteProps(cell, keyProps, factPrimaryKey);
-			FactTable.deleteProps(cell, otherProps, factPrimaryKey);
+			deleteProps(cell, keyProps, factPrimaryKey);
+			deleteProps(cell, otherProps, factPrimaryKey);
 		});
 
 		members.forEach(member => {
@@ -70,7 +77,7 @@ export default class SnowflakeBuilder {
 		//todo оптимизировать поиск через хеш
 		memberList.forEach(member => {
 			const cellTableFiltered = cells.filter(cell => {
-				return cell[foreignKey] == dimensionTable.getMemberId(member);
+				return cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member);
 			});
 			cellTables.push(cellTableFiltered);
 		});
@@ -210,8 +217,7 @@ export default class SnowflakeBuilder {
 	 * Method allows to generate fact tables from cells
 	 * */
 	static denormalize(cellTable, dimensionTrees) {
-		const factTable = new FactTable();
-		const facts = factTable.getFacts();
+		const facts = [];
 		cellTable.forEach(cell => {
 			facts.push({...cell})
 		});
@@ -240,20 +246,19 @@ export default class SnowflakeBuilder {
 	}
 
 	static travers(cellTable, dimensionTree, handlers = () => {}) {
-		const handleDimensionTree = (dimensionTree, cell) => {
-			const dimensionTable = dimensionTree.getTreeValue();
+		const handleDimensionTree = (dimensionTable, cell) => {
 			const { dimension, members: memberList, foreignKey } = dimensionTable;
 			const idValue = cell[foreignKey];
 			const member = memberList.find(member => {
-				return dimensionTable.getMemberId(member) === idValue;
+				return dimensionTable.getMemberPrimaryKey(member) === idValue;
 			});
 			handlers.forEach(handler => {
 				handler(member, memberList, dimension, cell, foreignKey, dimensionTable);
 			})
 		};
 		cellTable.forEach(cell => {
-			dimensionTree.tracePreOrder((value, tracedDimensionTree) => {
-				handleDimensionTree(tracedDimensionTree, cell)
+			dimensionTree.tracePreOrder((tracedDimensionTable, tracedDimensionTree) => {
+				handleDimensionTree(tracedDimensionTable, cell)
 			})
 		});
 	}

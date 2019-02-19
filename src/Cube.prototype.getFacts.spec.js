@@ -1,4 +1,4 @@
-import {createProductCube, factTable} from './data/products.js'
+import {createProductCube, factTable} from '../spec/data/products.js'
 import Cube from './Cube.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 

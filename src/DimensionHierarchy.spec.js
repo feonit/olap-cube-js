@@ -42,8 +42,8 @@ export default () => {
 			{ id: 1, user: 'leo', apartment: 'star', floor: 4 },
 			{ id: 1, user: 'merlin', apartment: 'star', floor: 5 },
 		];
-		const cube = Cube.create(facts, dimensionHierarchies);
-
+		const cube = new Cube({dimensionHierarchies});
+		cube.addFacts(facts);
 		expect(cube.dimensionHierarchies.length === 2).toBe(true)
 	});
 
@@ -69,8 +69,8 @@ export default () => {
 			{ id: 1, user: 'leo', group: 1 },
 			{ id: 1, user: 'merlin', group: 2 },
 		];
-		const cube = Cube.create(facts, dimensionHierarchies);
-
+		const cube = new Cube({dimensionHierarchies});
+		cube.addFacts(facts);
 		expect(cube.dimensionHierarchies.length === 2).toBe(true)
 	})
 };

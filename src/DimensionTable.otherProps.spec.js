@@ -18,7 +18,8 @@ export default () => {
 				}
 			}
 		];
-		cube = Cube.create(facts, dimensionHierarchies);
+		cube = new Cube({dimensionHierarchies});
+		cube.addFacts(facts);
 	});
 	it('additional properties of dimension must be present in returned fact table', () => {
 		debug = isEqualObjects(cube.getFacts(), facts);

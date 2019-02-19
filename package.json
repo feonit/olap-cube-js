@@ -1,8 +1,12 @@
 {
   "name": "olap-cube-js",
-  "version": "0.15.2",
+  "version": "0.16.0",
   "description": "A package olap-cube-js for client OLAP cube",
   "main": "index.js",
+  "dependencies": {
+    "jasmine": "^2.4.1",
+    "lodash-es": "^4.17.11"
+  },
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
@@ -11,10 +15,8 @@
     "codecov": "^3.0.0",
     "eslint": "^4.19.1",
     "http-server": "^0.10.0",
-    "istanbul": "^0.4.5",
     "jest": "^23.6.0",
     "lodash": "^4.17.4",
-    "nyc": "^11.4.1",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-terser": "^3.0.0",
@@ -24,13 +26,9 @@
     "port": "8080"
   },
   "scripts": {
-    "test": "jest ./spec/spec.js && codecov",
-    "build": "rollup --config config/rollup.config.lib.js",
+    "test": "jest --config config/jest.config.js ./spec/spec.js && codecov",
+    "build": "rollup --config config/rollup.config.js",
     "dev": "node node_modules/http-server/bin/http-server -p 8080"
-  },
-  "jest": {
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true
   },
   "author": {
     "name": "Orlov Leonid",

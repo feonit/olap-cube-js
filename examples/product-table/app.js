@@ -1,7 +1,10 @@
 angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube', 'factTable', 'dimensionHierarchies', function($scope, ProductCube, factTable, dimensionHierarchies){
 	$scope.dimensionHierarchies = dimensionHierarchies;
 
-	$scope.cube = ProductCube.create(factTable, dimensionHierarchies);window.cube = $scope.cube;
+	var cube = new ProductCube({dimensionHierarchies});
+	cube.addFacts(factTable);
+	$scope.cube = cube;
+	window.cube = $scope.cube;
 	$scope.factTable = $scope.cube.getFactTable(factTable);
 
 	$scope.qr_selectedYear = '';

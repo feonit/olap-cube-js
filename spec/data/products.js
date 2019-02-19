@@ -1,4 +1,4 @@
-import Cube from '../Cube.js';
+import Cube from '../../src/Cube.js';
 
 export const factTable = [
 	{ id: 1, year: '2017', qr: 'QR1', month: 1, product: 'TV', mark: 'SONY', money: 100, cents: 99},
@@ -56,5 +56,7 @@ const dimensionHierarchies = [
 ];
 
 export function createProductCube() {
-	return Cube.create(factTable, dimensionHierarchies);
+	const cube = new Cube({dimensionHierarchies});
+	cube.addFacts(factTable);
+	return cube;
 }

@@ -1,18 +1,57 @@
 import Cube from '../src/Cube.js';
-import {CreateInstanceException} from '../src/errors.js'
 import {isEqualObjects} from '../spec/helpers/helpers.js'
 
 export default () => {
 	let debug;
 
-	describe(`[ API static ${Cube.name}]`,() => {
+	it('should create empty cube with no errors', () => {
+		expect(() => {
+			new Cube();
+		}).not.toThrow();
 
-		it('should define create', () => {
-			expect(Cube.create).toBeDefined();
-		});
+		expect(() => {
+			new Cube(new Cube());
+		}).not.toThrow();
+
+		expect(() => {
+			class ProductCube extends Cube {}
+			new Cube(new ProductCube());
+		}).not.toThrow();
+
+		expect(() => {
+			new Cube();
+		}).not.toThrow();
 	});
 
-	describe('[ Copy ]', () => {
+	it('should create empty cube with no errors via create', () => {
+		expect(() => {
+			new Cube();
+		}).not.toThrow();
+	});
+
+	it('should throw error with no plain object or instance of cube as argument', () => {
+		expect(() => {
+			const cube = new Cube(null);
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube("");
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(function(){});
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(123);
+		}).toThrow();
+
+		expect(() => {
+			const cube = new Cube(new class A {});
+		}).toThrow();
+	});
+
+	describe('', () => {
 		let cube;
 		let cubeCopy;
 
@@ -35,7 +74,8 @@ export default () => {
 					}
 				}
 			];
-			cube = Cube.create(factTable, dimensionHierarchies);
+			cube = new Cube({dimensionHierarchies});
+			cube.addFacts(factTable);
 		});
 
 		it('the ability to create a copy cube must work', () => {
@@ -75,13 +115,14 @@ export default () => {
 	];
 
 	it('inheritance of cube must work ES5', () => {
-		function CustomCube(factTable, dimensionHierarchies) {
+		function CustomCube(dimensionHierarchies, factTable) {
 			// if Cube.js not esm module
 			try {
 				Function.prototype.apply.apply(Cube, arguments)
 			} catch (error) {
 				if (error instanceof TypeError) {
-					const cube = Cube.create(factTable, dimensionHierarchies);
+					const cube = new Cube({dimensionHierarchies});
+					cube.addFacts(factTable);
 					Object.assign(this, cube)
 				}
 			}
@@ -89,36 +130,17 @@ export default () => {
 		CustomCube.prototype = Object.create(Cube.prototype);
 		Object.setPrototypeOf(CustomCube, Cube);
 
-		const cube = new CustomCube(factTable, dimensionHierarchies);
+		const cube = new CustomCube(dimensionHierarchies, factTable);
 		expect(debug = (cube instanceof CustomCube)).toBe(true);
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
 
 	it('inheritance of cube must work ES6', () => {
 		class CustomCube extends Cube {}
-		const cube = CustomCube.create(factTable, dimensionHierarchies);
+		const cube = new CustomCube({dimensionHierarchies});
+		cube.addFacts(factTable);
 		expect(debug = (cube instanceof CustomCube)).toBe(true)
 		expect(debug = (cube instanceof Cube)).toBe(true)
-	});
-
-	it('should throw when execute create static method without context of Cube constructor of its interface', () => {
-		class CustomCube extends Cube {}
-		const createCube = CustomCube.create;
-		expect(() => {
-			createCube(factTable, dimensionHierarchies)
-		}).toThrow()
-	});
-
-	it('should specific throw when execute create static method without context of Cube constructor of its interface', () => {
-		class CustomCube extends Cube {}
-		const createCube = CustomCube.create;
-		let error;
-		try {
-			const cube = createCube(factTable, dimensionHierarchies);
-		} catch (e) {
-			error = e;
-		}
-		expect(error instanceof CreateInstanceException).toBe(true)
 	});
 
 };

@@ -23,7 +23,8 @@ export default () => {
 				}
 			}
 		];
-		let cube = Cube.create(facts, dimensionHierarchies);
+		let cube = new Cube({dimensionHierarchies});
+		cube.addFacts(facts);
 		debug = isEqualObjects(
 			cube.getDimensionMembers('x')[0],
 			{ ID: 1, x: 0 }

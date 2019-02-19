@@ -1,7 +1,6 @@
 import TreeTest from '../src/Tree.spec.js'
 import FactTest from '../src/Fact.spec.js'
-import FactTableTest from '../src/FactTable.spec.js'
-import validateFactDataTest from '../src/FactTable.prototype.validateFactData.js'
+import factPrimaryKeyTest from '../src/Cube.factPrimaryKey.spec.js'
 import EmptyCellTest from '../src/EmptyCell.spec.js'
 import DimensionTableTest from '../src/DimensionTable.spec.js'
 import DimensionTreeTest from '../src/DimensionTree.spec.js'
@@ -18,7 +17,8 @@ import removeDimensionMemberTest from '../src/Cube.prototype.removeDimensionMemb
 import addDimensionHierarchyTest from '../src/Cube.prototype.addDimensionHierarchy.spec.js'
 import removeDimensionHierarchyTest from '../src/Cube.prototype.removeDimensionHierarchy.spec.js'
 import drillUpAndDownTest from '../src/Cube.prototype.drillUpAndDown.spec.js'
-import sliceAndDiceTest from '../src/Cube.prototype.sliceAndDice.spec.js'
+import sliceTest from '../src/Cube.prototype.slice.spec.js'
+import diceTest from '../src/Cube.prototype.dice.spec.js'
 import createEmptyCells from '../src/Cube.prototype.createEmptyCells.spec.js'
 import addEmptyCellsTest from '../src/Cube.prototype.addEmptyCells.spec.js'
 import getEmptyCellsTest from '../src/Cube.prototype.getEmptyCells.spec.js'
@@ -28,8 +28,7 @@ import foreignKeyTest from '../src/DimensionTable.foreignKey.spec.js'
 import primaryKeyTest from '../src/DimensionTable.primaryKey.spec.js'
 import defaultMemberOptionsTest from '../src/DimensionTable.defaultMemberOptions.spec.js'
 
-import primaryKeyFactTableTest from '../src/FactTable.primaryKey.spec.js'
-import defaultFactOptionsFactTableTest from '../src/FactTable.defaultFactOptions.spec.js'
+import defaultFactOptionsTest from '../src/Cube.defaultFactOptions.spec.js'
 import readmeTest from '../src/readme.spec.js'
 import DimensionHierarchyTest from '../src/DimensionHierarchy.spec.js'
 
@@ -39,11 +38,6 @@ describe('Tree', () => {
 
 describe('Fact', () => {
 	FactTest();
-});
-
-describe('FactTable', () => {
-	FactTableTest();
-	describe('.prototype.validateFactDataTest', validateFactDataTest);
 });
 
 describe('EmptyCell', () => {
@@ -64,21 +58,24 @@ describe('SnowflakeBuilder', () => {
 
 describe('Cube', () => {
 	CubeTest();
+	describe('.factPrimaryKey', factPrimaryKeyTest);
+	describe('.defaultFactOptions', defaultFactOptionsTest);
 	describe('.prototype.addFacts', addFactsTest);
 	describe('.prototype.removeFacts', removeFactsTest);
 	describe('.prototype.getCells', getCellsTest);
 	describe('.prototype.getFacts', getFactsTest);
 	describe('.prototype.getDimensionMembers', getDimensionMembersTest);
+	describe('.prototype.dice', diceTest);
+	describe('.prototype.slice', sliceTest);
+	describe('.prototype.createEmptyCells', createEmptyCells);
+	describe('.prototype.addEmptyCells', addEmptyCellsTest);
 	describe('.prototype.fillEmptyCells', fillEmptyCellsTest);
+	describe('.prototype.getEmptyCells', getEmptyCellsTest);
 	describe('.prototype.addDimensionMember', addDimensionMemberTest);
 	describe('.prototype.removeDimensionMember', removeDimensionMemberTest);
 	describe('.prototype.addDimensionHierarchy', addDimensionHierarchyTest);
 	describe('.prototype.removeDimensionHierarchy', removeDimensionHierarchyTest);
 	describe('.prototype.drillUpAndDown', drillUpAndDownTest);
-	describe('.prototype.sliceAndDice', sliceAndDiceTest);
-	describe('.prototype.createEmptyCells', createEmptyCells);
-	describe('.prototype.addEmptyCells', addEmptyCellsTest);
-	describe('.prototype.getEmptyCells', getEmptyCellsTest);
 });
 
 describe('DimensionTable', () => {
@@ -86,11 +83,6 @@ describe('DimensionTable', () => {
 	describe('.primaryKey', primaryKeyTest);
 	describe('.foreignKey', foreignKeyTest);
 	describe('.defaultMemberOptions', defaultMemberOptionsTest);
-});
-
-describe('FactTable', () => {
-	describe('.primaryKey', primaryKeyFactTableTest);
-	describe('.defaultFactOptions', defaultFactOptionsFactTableTest);
 });
 
 describe('DimensionHierarchy', () => {

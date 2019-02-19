@@ -58,6 +58,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - [Demo][6]
 - [Specification][5]
 - [Changelog][10]
+- [Motivation](#motivation)
 
 ## Features:
 - Multidimensional conceptual data representation
@@ -127,7 +128,8 @@ let dimensionHierarchies = [
 ];
 
 // We send it all to the constructor
-let cube = Cube.create(facts, dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies});
+cube.addFacts(facts);
 
 ```
 Now the cube will represent the structure below:
@@ -456,7 +458,8 @@ let facts = [
     { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
     { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 ];
-let cube = Cube.create(facts, [])
+let cube = new Cube();
+cube.addFacts(facts);
 cube.addDimensionHierarchy({
     dimensionTable: {
         dimension: 'product',
@@ -505,7 +508,9 @@ let facts = [
     { id: 1, region: 'North', product: 'Product 1', value: 10 },
     { id: 2, region: 'South', product: 'Product 2', value: 20 }
 ];
-let cube = Cube.create(facts, dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies});
+cube.addFacts(facts);
+
 ```
 
 Execute filling:
@@ -566,19 +571,22 @@ It may be that the dimension member may content additional properties from the f
 ```js
 let facts = [{ id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein', countryBirth: 'Germany' }]
 let dimensionHierarchies = [
-   {
-       dimensionTable: {
-           dimension: 'user',
-           keyProps: ['nikname'],
-           otherProps: ['name', 'surname']
-       },
-       dimensionTable: {
-           dimension: 'country',
-           keyProps: ['countryBirth'],
-       }
-   }
+    {
+        dimensionTable: {
+            dimension: 'country',
+            keyProps: ['countryBirth'],
+        }
+    },
+    {
+        dimensionTable: {
+            dimension: 'user',
+            keyProps: ['nikname'],
+            otherProps: ['name', 'surname']
+        }
+    }
 ]
-let cube = Cube.create(facts, dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies})
+cube.addFacts(facts);
 let members = cube.getDimensionMembers('user')
 ```
 return:
@@ -610,7 +618,9 @@ let dimensionHierarchies = [
         ]
     }
 ];
-let cube = Cube.create(facts, dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies});
+cube.addFacts(facts);
+
 ```
 execute:
 ```js
@@ -650,18 +660,13 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create([], dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies})
 cube.addDimensionMember('user')
 ```
 ### Custom facts
 Like custom members, some times need make custom facts
 ```js
-let factTable = {
-    facts: [
-        { saleId: 1, saleCount: 1 }
-    ],
-    primaryKey: 'saleId'
-};
+let facts = [{ saleId: 1, saleCount: 1 }];
 let dimensionHierarchies = [
     {
         dimensionTable: {
@@ -670,20 +675,17 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(factTable, dimensionHierarchies)
+let cube = new Cube({dimensionHierarchies, factPrimaryKey: 'saleId'})
+cube.addFacts(facts);
+
 ```
 
 ### Default Fact Options
 ```js
-let factTable = {
-    facts: [
-        { id: 1, x: 1, y: 1, isOpen: true },
-        { id: 1, x: 2, y: 2, isOpen: true },
-    ],
-    defaultFactOptions: {
-        isOpen: false
-    }
-};
+let facts = [
+    { id: 1, x: 1, y: 1, isOpen: true },
+    { id: 1, x: 2, y: 2, isOpen: true },
+];
 let dimensionHierarchies = [
     {
         dimensionTable: {
@@ -698,7 +700,8 @@ let dimensionHierarchies = [
         }
     }
 ];
-let cube = Cube.create(factTable, dimensionHierarchies);
+let cube = new Cube({dimensionHierarchies, defaultFactOptions: { isOpen: false }});
+cube.addFacts(facts);
 cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })
 ```
@@ -712,8 +715,8 @@ The project is on stage of developing API.
 
 |      | UMD             | ES Module           |
 |------|-----------------|---------------------|
-| prod | cube.js         | cube.esm.js         |
-| dev  | cube.min.js     | cube.esm.min.js     |
+| dev  | cube.js         | cube.esm.js         |
+| prod | cube.min.js     | cube.esm.min.js     |
 
 
 ## Todo
@@ -724,3 +727,10 @@ Perhaps
 - Add calculated members
 - Add MDX query language
 - Add Speed tests
+
+
+## Motivation
+As a frontend developer, I am not very familiar with the subject area of cubic data,
+but in my work I was faced with cubic data of a hierarchical type, so I wanted to make a small tool
+to solve my problems. The task turned out to be difficult, but interesting in terms of creating a public API,
+the results of which are presented above.

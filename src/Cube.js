@@ -3,10 +3,8 @@ import Member from './Member.js'
 import DimensionTree from './DimensionTree.js'
 import DimensionHierarchy from './DimensionHierarchy.js'
 import DimensionTable from './DimensionTable.js'
-import FactTable from './FactTable.js'
 import {
 	InsufficientRollupData,
-	CreateInstanceException
 } from './errors.js';
 import SnowflakeBuilder from './SnowflakeBuilder.js'
 import console from './console.js'
@@ -14,20 +12,8 @@ import Tuple from './Tuple.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
-
-class CellTable {
-	constructor({ cells, primaryKey, defaultFactOptions = {} }) {
-		this.cells = cells.map(cellData => {
-			if (cellData instanceof Cell) {
-				return cellData
-			} else {
-				return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData)
-			}
-		});
-		this.primaryKey = primaryKey;
-		this.defaultFactOptions = defaultFactOptions;
-	}
-}
+import isPlainObject from "./../node_modules/lodash-es/isPlainObject.js"
+import {NotFoundFactId} from "./errors.js";
 
 /**
  * It a means to retrieve data
@@ -35,16 +21,25 @@ class CellTable {
  * Base class for normalizing a denormalized data array
  * and analyzing query according to a given scheme
  *
- * @param {{snowflake, dimensionHierarchies}|Cube} factTable - facts which will be subject to analysis
  * */
 class Cube {
-	constructor(cube) {
-		let { dimensionHierarchies = [], cellTable = {} } = cube;
-		if (Array.isArray(cellTable)) {
-			cellTable = { cells: cellTable };
-			console.warnOnce('first argument \"cells\" as array type is deprecated now, use object for describe fact table')
+	/**
+	 * @param {object | Cube} cube
+	 * @throw {TypeError}
+	 * */
+	constructor(cube = {}) {
+		if (!(isPlainObject(cube) || cube instanceof Cube)){
+			throw TypeError('The argument must be plain object or instance of Cube')
 		}
-		const { cells = [], primaryKey = DEFAULT_FACT_ID_PROP, defaultFactOptions = {} } = cellTable;
+		let {
+			dimensionHierarchies = [],
+			cellTable = [],
+			defaultFactOptions = {},
+			factPrimaryKey = DEFAULT_FACT_ID_PROP
+		} = cube;
+
+		this.defaultFactOptions = defaultFactOptions;
+		this.factPrimaryKey = factPrimaryKey;
 
 		this.dimensionHierarchies = dimensionHierarchies.map(dimensionHierarchy => {
 			// duck
@@ -68,39 +63,20 @@ class Cube {
 				}
 			}
 		});
-		this.cellTable = new CellTable({ cells, primaryKey, defaultFactOptions: {...defaultFactOptions} });
+
+		this.cellTable = cellTable.map(cellData => {
+			if (cellData instanceof Cell) {
+				return cellData
+			} else {
+				return EmptyCell.isEmptyCell(cellData) ? new EmptyCell(cellData) : new Cell(cellData)
+			}
+		});
+
 		// const residuals = residuals(this);
 		// const count = residuals.length;
 		// if (count > 0) {
 		// 	console.warn('Fact table has residuals', residuals)
 		// }
-	}
-	/**
-	 * @public
-	 * Fabric method for creating cube from facts and dimensionHierarchiesData data
-	 * @param {object} factTable
-	 * @param {object} dimensionHierarchies
-	 * @return {Cube}
-	 * */
-	static create(factTable, dimensionHierarchies = []) {
-		if (Array.isArray(factTable)) {
-			factTable = { facts: factTable };
-			console.warnOnce('first argument \"facts\" as array type is deprecated now, use object for describe fact table')
-		}
-		const { facts = [], primaryKey, defaultFactOptions = {} } = factTable;
-		if (!(Cube.isPrototypeOf(this) || Cube === this)) {
-			throw new CreateInstanceException()
-		}
-
-		const cube = new this({
-			cellTable: { primaryKey, defaultFactOptions },
-			dimensionHierarchies: dimensionHierarchies,
-		});
-
-		// build 2: members
-		cube.addFacts(facts);
-
-		return cube;
 	}
 	/**
 	 * is the act of picking a rectangular subset of a cube by choosing a single value
@@ -117,49 +93,65 @@ class Cube {
 	 * @public
 	 * @param {object} set
 	 * @return {Cube}
+	 * @throw {TypeError}
+	 * @throw {RangeError}
 	 * */
 	dice(set) {
-		// 1 make one projection on to member
-		const fixSpace = {};
-		Object.keys(set).forEach(dimension => {
-			// work with arrays
-			fixSpace[dimension] = Array.isArray(set[dimension])
-				? set[dimension]
-				: [set[dimension]];
-
-			const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
-			
-			// discard non-existent dimensions
-			if (!dimensionTree) {
-				console.warn(`Not existed dimension: ${dimension}`);
-				return;
-			}
+		if (!(isPlainObject(set) || set instanceof Tuple)){
+			throw TypeError("The argument must be a plain object")
+		}
+		
+		// always work with arrays as value
+		const toMultiset = (value) => {
+			return Array.isArray(value) ? value : [value];
+		};
+		
+		// change member data to original member objects
+		const toOriginal = (membersData, dimension) => {
+			const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 			const dimensionTable = dimensionTree.getTreeValue();
-			fixSpace[dimension].forEach((memberData, index) => {
-				const members = this.getDimensionMembers(dimension);
-				let member = members.find(member => dimensionTable.getMemberId(member) === dimensionTable.getMemberId(memberData));
-				fixSpace[dimension][index] = member;
-				if (!memberData) {
-					console.warn(`Not found member by id ${dimensionTable.getMemberId(member)}`)
+			const members = dimensionTable.members;
+			//replace memberData with original members
+			membersData.forEach((memberData, index) => {
+				let member = members.find(member => dimensionTable.getMemberPrimaryKey(member) === dimensionTable.getMemberPrimaryKey(memberData));
+				if (!member) {
+					throw RangeError(`Not found member by id ${dimensionTable.getMemberPrimaryKey(member)}`)
 				}
-			})
+				if (membersData instanceof Member){
+					return;
+				}
+				membersData[index] = member;
+			});
+			return membersData;
+		};
+		
+		const originalMultiset = {};
+		Object.keys(set).forEach((dimension) => {
+			let value = set[dimension];
+			value = toMultiset(value);
+			value = toOriginal(value, dimension);
+			originalMultiset[dimension] = value;
 		});
-
+		
+		const dimensions = Object.keys(originalMultiset);
+		
+		// 1 make one projection on to member
 		const dimensionHierarchiesLength = this.dimensionHierarchies.length;
-		if (Object.keys(fixSpace).length > dimensionHierarchiesLength) {
+		if (dimensions.length > dimensionHierarchiesLength) {
 			throw Error(`Set must have a size not more than ${dimensionHierarchiesLength} dimensions`)
 		}
 
 		const projectionDimensionHierarchies = [];
 
 		// for every dimension in set
-		const totalSpaces = Object.keys(fixSpace).map(dimension => {
+		const totalSpaces = dimensions.map(dimension => {
 
 			let dimensionTreeProjection;
+			const members = originalMultiset[dimension];
 			// ищется его расширенная версия для каждого члена
-			const spacesForCells = fixSpace[dimension].map(member => {
+			const spacesForCells = members.map(member => {
 
-				let searchedInTree = findDimensionTreeByDimension.call(this, dimension);
+				let searchedInTree = getDimensionTreeByDimension.call(this, dimension);
 
 				const current = searchedInTree.cloneDimensionTreeWithoutMembers();
 
@@ -195,7 +187,7 @@ class Cube {
 		const cellBelongsToSpace = (cell, space) => {
 			const somePropOfCellNotBelongToSpace = Object.keys(space).some(dimension => {
 				const members = space[dimension];
-				const { foreignKey, primaryKey } = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+				const { foreignKey, primaryKey } = getDimensionTreeByDimension.call(this, dimension).getTreeValue();
 				const finded = members.find(member => {
 					return member[primaryKey] === cell[foreignKey]
 				});
@@ -282,7 +274,7 @@ class Cube {
 	}
 	/**
 	 * @public
-	 * @return {FactTable} returns facts
+	 * @return {Fact[]} returns facts
 	 * */
 	getFacts() {
 		return denormalize.call(this, this.getCells());
@@ -290,25 +282,33 @@ class Cube {
 	/**
 	 * @public
 	 * @param {Object[]} facts
+	 * @throw {TypeError}
 	 * @return {Cube}
 	 * */
 	addFacts(facts) {
-		const newFactTable = new FactTable({facts, primaryKey: this.cellTable.primaryKey});
-		const cells = newFactTable.getFacts().map(fact => new Cell(fact));
+		if (!Array.isArray(facts)){
+			throw TypeError('The argument must be instance of Array')
+		}
+		facts.forEach(validateFactData.bind(null, this.factPrimaryKey));
+		const cells = facts.map(fact => new Cell(fact));
 		[].push.apply(this.getCells(), cells);
 		const factTable = this.getFacts();
-		SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuild(factTable, cells, getDimensionTrees.call(this), this.getCells(), this.factPrimaryKey);
 		return this;
 	}
 	/**
 	 * @public
 	 * @param {Object[]} facts
+	 * @throw {TypeError}
 	 * */
 	removeFacts(facts) {
+		if (!Array.isArray(facts)){
+			throw TypeError('The argument must be instance of Array')
+		}
 		const cellTable = this.getCells();
-		const primaryKey = this.cellTable.primaryKey;
+		const factPrimaryKey = this.factPrimaryKey;
 		const removedCells = facts.map(fact => {
-			return cellTable.find(cell => cell[primaryKey] === fact[primaryKey])
+			return cellTable.find(cell => cell[factPrimaryKey] === fact[factPrimaryKey])
 		});
 		this.removeCells(removedCells);
 	}
@@ -317,22 +317,36 @@ class Cube {
 	 * @return {Cell[]}
 	 * */
 	getCells() {
-		return this.cellTable.cells;
+		return this.cellTable;
 	}
 	/**
 	 * @public
 	 * @param {Cell[]} cells
+	 * @throw {TypeError}
 	 * */
 	removeCells(cells) {
+		if (!Array.isArray(cells)){
+			throw TypeError('The argument must be instance of Array')
+		}
+		cells.forEach((cell) => {
+			if (!(cell instanceof Cell)){
+				throw TypeError('The list of cells must contain only instances of Cell and EmptyCell')
+			}
+		});
 		SnowflakeBuilder.destroy(this.getCells(), cells, this.dimensionHierarchies, this);
 	}
 	/**
 	 * @public
 	 * @param {string} dimension - dimension from which the member will be found
 	 * @return {Member[]} returns members
+	 * @throw {TypeError}
 	 * */
 	getDimensionMembers(dimension) {
-		return findDimensionTreeByDimension.call(this, dimension).getTreeValue().members;
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be string')
+		}
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
+		return dimensionTree.getTreeValue().members;
 	}
 	/**
 	 * @public
@@ -343,20 +357,29 @@ class Cube {
 	 * @param {object?} cellData
 	 * @throw {InsufficientRollupData}
 	 * */
-	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData) {
-		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
-		if (typeof dimension !== 'string') {
-			throw TypeError(`parameter dimension expects as string: ${dimension}`)
+	addDimensionMember(dimension, customMemberOptions = {}, rollupCoordinatesData = {}, drillDownCoordinatesOptions = {}, cellData = {}) {
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be instance of string')
 		}
+		if (!(
+			isPlainObject(customMemberOptions)
+			&& isPlainObject(rollupCoordinatesData)
+			&& isPlainObject(drillDownCoordinatesOptions)
+			&& isPlainObject(cellData)
+		)){
+			throw TypeError('The arguments after the first must be plain objects')
+		}
+		
+		// todo №1, а если члены с такими ключами уже существуют, нужнен варнинг, потому что, после десериализации член исчезнет, если не будут изменены значения ключевых полей
 		const rollupCoordinates = {};
 		Object.keys(rollupCoordinatesData).forEach(dimension => {
 			const memberData = rollupCoordinatesData[dimension];
 			const memberList = this.getDimensionMembers(dimension);
-			const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+			const dimensionTable = getDimensionTreeByDimension.call(this, dimension).getTreeValue();
 			const { primaryKey } = dimensionTable;
 			const id = memberData[primaryKey];
 			const find = memberList.find(member => {
-				return id === dimensionTable.getMemberId(member)
+				return id === dimensionTable.getMemberPrimaryKey(member)
 			});
 			if (!find) {
 				throw new InsufficientRollupData(dimension, id)
@@ -364,7 +387,7 @@ class Cube {
 				rollupCoordinates[dimension] = find;
 			}
 		});
-		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 		const childDimensionTrees = dimensionTree.getChildTrees();
 		const dimensionTable = dimensionTree.getTreeValue();
 		const { foreignKey } = dimensionTable;
@@ -384,10 +407,10 @@ class Cube {
 
 		let saveMember = dimensionTree.createMember(memberOptions);
 		let saveIdAttribute = foreignKey;
-		dimensionTree.traceUpOrder(tracedDimensionTree => {
+		dimensionTree.traceUpOrder((tracedDimensionTable, tracedDimensionTree) => {
 			if (dimensionTree !== tracedDimensionTree) {
-				const { dimension: parentDimension, foreignKey: parentIdAttribute } = tracedDimensionTree.getTreeValue();
-				const drillDownCoordinatesData = { [ saveIdAttribute]: dimensionTable.getMemberId(saveMember) };
+				const { dimension: parentDimension, foreignKey: parentIdAttribute } = tracedDimensionTable;
+				const drillDownCoordinatesData = { [ saveIdAttribute]: dimensionTable.getMemberPrimaryKey(saveMember) };
 				Object.assign(drillDownCoordinatesData, drillDownCoordinatesOptions[parentDimension]);
 				saveMember = tracedDimensionTree.createMember(drillDownCoordinatesData);
 				saveIdAttribute = parentIdAttribute;
@@ -399,9 +422,16 @@ class Cube {
 	 * @public
 	 * @param {string} dimension - dimension from which the member will be removed
 	 * @param {Member} member - the member will be removed
+	 * throw {TypeError}
 	 * */
 	removeDimensionMember(dimension, member) {
-		const dimensionTree = findDimensionTreeByDimension.call(this, dimension);
+		if (!(typeof dimension === 'string')){
+			throw TypeError('The first argument must be instance of string')
+		}
+		if (!(member instanceof Member)){
+			throw TypeError('The second argument must be instance of Member')
+		}
+		const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
 		const endToBeRemoved = dimensionTree.removeProjectionOntoMember(member);
 		const cellTable = this.getCells();
 		const getRemoveMeasures = (dimension, members) => {
@@ -412,7 +442,7 @@ class Cube {
 			// todo mapFilter похоже
 			cellTable.forEach(cell => {
 				members.forEach(member => {
-					if (cell[foreignKey] == dimensionTable.getMemberId(member)) {
+					if (cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member)) {
 						removedCells.push(cell)
 					}
 				})
@@ -432,19 +462,23 @@ class Cube {
 	/**
 	 * @public
 	 * @param {object|DimensionTree} dimensionHierarchy
+	 * @throw {TypeError}
 	 * */
 	addDimensionHierarchy(dimensionHierarchy) {
 		const dimensionTree = DimensionTree.createDimensionTree(dimensionHierarchy);
 		this.dimensionHierarchies.push(
 			dimensionTree
 		);
-		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.cellTable.primaryKey);
+		SnowflakeBuilder.anotherBuildOne(dimensionTree, this.getCells(), this.getCells(), this.getCells(), this.factPrimaryKey);
 	}
 	/**
 	 * @public
 	 * @param {DimensionTree} dimensionHierarchy
 	 * */
 	removeDimensionHierarchy(dimensionHierarchy) {
+		if (!(dimensionHierarchy instanceof DimensionTree)){
+			throw TypeError('The argument must be instance of DimensionTree')
+		}
 		// first remove members
 		SnowflakeBuilder.destroyDimensionTree(this.getCells(), this.getCells(), dimensionHierarchy, this);
 		// then target dimension hierarchy
@@ -453,21 +487,30 @@ class Cube {
 	/**
 	 * @public
 	 * @return {EmptyCell[]}
+	 * @throw {TypeError}
 	 * */
-	createEmptyCells(cellOptions) {
+	createEmptyCells(cellOptions = {}) {
+		if (!isPlainObject(cellOptions)){
+			throw TypeError('Cell option argument must be a pure object')
+		}
 		const emptyCells = [];
 		const tuples = Cube.cartesian(this);
-		tuples.forEach(combination => {
-			const unique = this.dice(combination).getCells();
+		tuples.forEach(tuple => {
+			const unique = this.dice(tuple).getCells();
 			if (!unique.length) {
-				let foreignKeysCellData = {};
-				Object.keys(combination).forEach(dimension => {
-					const dimensionTable = findDimensionTreeByDimension.call(this, dimension).getTreeValue();
+				const foreignKeysCellData = {};
+				Object.keys(tuple).forEach(dimension => {
+					const dimensionTree = getDimensionTreeByDimension.call(this, dimension);
+					const dimensionTable = dimensionTree.getTreeValue();
 					const { foreignKey } = dimensionTable;
-					foreignKeysCellData[foreignKey] = dimensionTable.getMemberId(combination[dimension])
+					foreignKeysCellData[foreignKey] = dimensionTable.getMemberPrimaryKey(tuple[dimension])
 				});
-				const cellData = {...foreignKeysCellData, ...cellOptions};
-				// todo нужна правеврка на то, что все свойства присутствуют
+				const cellData = {
+					...this.defaultFactOptions,
+					...cellOptions,
+					...foreignKeysCellData,
+				};
+				// todo нужна правеврка на то, что все свойства присутствуют, для этого нужна инф-ия о именах таких полей в схеме
 				const cell = EmptyCell.createEmptyCell(cellData);
 				emptyCells.push(cell);
 			}
@@ -483,6 +526,7 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @param {Cell} cell
 	 * @return {boolean}
 	 * */
 	isEmptyCell(cell) {
@@ -490,37 +534,35 @@ class Cube {
 	}
 	/**
 	 * @public
+	 * @param {EmptyCell[]} emptyCells
 	 * @throw {TypeError}
 	 * */
 	addEmptyCells(emptyCells) {
-		Cube.validateInstance(emptyCells);
+		if (!Array.isArray(emptyCells)){
+			throw TypeError('The argument must be instance of Array')
+		}
+		emptyCells.forEach((emptyCell, index) => {
+			if (!this.isEmptyCell(emptyCell)) {
+				throw TypeError(`Some item in list of argument is not instances of EmptyCell, index: ${index}`)
+			}
+		});
 		[].push.apply(this.getCells(), emptyCells);
 	}
 	/**
 	 * @public
 	 * Filling method for full size of cube
-	 * @param {object?} customCellOptions - properties for empty cells
+	 * @param {object?} cellOptions - properties for empty cells
 	 * */
-	fillEmptyCells(customCellOptions = {}) {
-		const cellOptions = {...this.cellTable.defaultFactOptions, ...customCellOptions};
+	fillEmptyCells(cellOptions) {
+		// todo why here residuals? add test for that
 		if (!residuals(this).length) {
 			const emptyCells = this.createEmptyCells(cellOptions);
 			this.addEmptyCells(emptyCells);
 		}
 	}
 	/**
-	 * @param {EmptyCell[]} emptyCells
-	 * @throw {TypeError}
-	 * */
-	static validateInstance(emptyCells) {
-		emptyCells.forEach(emptyCell => {
-			if (!(emptyCell instanceof EmptyCell)) {
-				throw new TypeError('some item in list of argument is not instances of EmptyCell')
-			}
-		});
-	}
-	/**
-	 *
+	 * Check that the argument is an instance of SubCube
+	 * @return {boolean}
 	 * */
 	isSubCube(){
 		return this instanceof SubCube;
@@ -531,6 +573,9 @@ class Cube {
 	 * @return {Tuple[]}
 	 * */
 	static cartesian(cube) {
+		if (!(cube instanceof Cube)){
+			throw TypeError('The argument must be instance of Cube')
+		}
 		const f = (a, b) => [].concat(...a.map(d => {
 			return b.map(e => {
 				return [].concat(d, e)
@@ -597,7 +642,7 @@ function getHierarchy(hierarchy) {
  * @this {Cube}
  * @return {DimensionTree}
  * */
-function findDimensionTreeByDimension(dimension) {
+function getDimensionTreeByDimension(dimension) {
 	let findDimensionTree;
 	this.dimensionHierarchies.forEach(dimensionTree => {
 		const searchedDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
@@ -605,6 +650,9 @@ function findDimensionTreeByDimension(dimension) {
 			findDimensionTree = dimensionTree.getDimensionTreeByDimension(dimension);
 		}
 	});
+	if (!findDimensionTree) {
+		throw RangeError(`Not existed dimension: ${dimension}`);
+	}
 	return findDimensionTree;
 }
 /**
@@ -627,7 +675,7 @@ function denormalize(cells = this.getCells(), forSave = true) {
 	if (forSave) {
 		data.forEach((data, index) => {
 			if (cells[index] instanceof EmptyCell) {
-				delete data[this.cellTable.primaryKey];
+				delete data[this.factPrimaryKey];
 			}
 		})
 	}
@@ -663,6 +711,12 @@ function unfilled(cube) {
 		}
 	});
 	return unfilled;
+}
+
+function validateFactData(factPrimaryKey, factData){
+	if (!factData.hasOwnProperty(factPrimaryKey)) {
+		throw new NotFoundFactId(factPrimaryKey)
+	}
 }
 
 export default Cube

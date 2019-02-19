@@ -9,7 +9,6 @@ export default () => {
 	it('should define isExternal', () => { expect(Tree.prototype.isExternal).toBeDefined(); });
 	it('should define isRoot', () => { expect(Tree.prototype.isRoot).toBeDefined(); });
 	it('should define getRoot', () => { expect(Tree.prototype.getRoot).toBeDefined(); });
-	it('should define searchTreeByTreeValue', () => { expect(Tree.prototype.searchTreeByTreeValue).toBeDefined(); });
 	it('should define traceUpOrder', () => { expect(Tree.prototype.traceUpOrder).toBeDefined(); });
 	it('should define tracePostOrder', () => { expect(Tree.prototype.tracePostOrder).toBeDefined(); });
 
@@ -122,16 +121,16 @@ export default () => {
 	it('should correctly work method traceUpOrder (A walk to root from current tree, the current tree and root entered to the chain)',() => {
 		const order = [];
 		const lastTree = tree.getChildTrees()[0].getChildTrees()[0];
-		lastTree.traceUpOrder(tree => {
-			order.push(tree.getTreeValue())
+		lastTree.traceUpOrder((tracedTreeValue, tracedTree) => {
+			order.push(tracedTreeValue)
 		});
 		isEqualObjects(order, [100, 10, 1])
 	});
 
 	it('should correctly work method tracePostOrder (A walk in which the children are traversed before their respective parents are traversed)',() => {
 		const order = [];
-		tree.tracePostOrder((treeValue, tree) => {
-			order.push(treeValue)
+		tree.tracePostOrder(tracedTreeValue => {
+			order.push(tracedTreeValue)
 		});
 		isEqualObjects(order, [100, 101, 10, 201, 20, 1])
 	})

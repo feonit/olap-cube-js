@@ -1,4 +1,9 @@
 ## Change Log
+*0.16.0*
+- Change renamed `primaryKey` to `factPrimaryKey`
+- Change `defaultFactOptions` and `factPrimaryKey` moved to cube, no factTable structure anymore, look readme [Custom facts](/README.md/#custom-facts) section
+- Remove excess `Cube.create` method
+
 *0.15.2*
 - Added umd/esm builds, jump from webpack to rollup
 
