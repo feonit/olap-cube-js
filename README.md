@@ -571,17 +571,19 @@ It may be that the dimension member may content additional properties from the f
 ```js
 let facts = [{ id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein', countryBirth: 'Germany' }]
 let dimensionHierarchies = [
-   {
-       dimensionTable: {
-           dimension: 'user',
-           keyProps: ['nikname'],
-           otherProps: ['name', 'surname']
-       },
-       dimensionTable: {
-           dimension: 'country',
-           keyProps: ['countryBirth'],
-       }
-   }
+    {
+        dimensionTable: {
+            dimension: 'country',
+            keyProps: ['countryBirth'],
+        }
+    },
+    {
+        dimensionTable: {
+            dimension: 'user',
+            keyProps: ['nikname'],
+            otherProps: ['name', 'surname']
+        }
+    }
 ]
 let cube = new Cube({dimensionHierarchies})
 cube.addFacts(facts);
@@ -664,11 +666,7 @@ cube.addDimensionMember('user')
 ### Custom facts
 Like custom members, some times need make custom facts
 ```js
-let factTable = {
-    facts: [
-        { saleId: 1, saleCount: 1 }
-    ]
-};
+let facts = [{ saleId: 1, saleCount: 1 }];
 let dimensionHierarchies = [
     {
         dimensionTable: {
@@ -677,22 +675,17 @@ let dimensionHierarchies = [
         }
     }
 ];
-let options = {
-    factPrimaryKey: 'saleId'
-}
-let cube = new Cube({dimensionHierarchies, ...options})
+let cube = new Cube({dimensionHierarchies, factPrimaryKey: 'saleId'})
 cube.addFacts(facts);
 
 ```
 
 ### Default Fact Options
 ```js
-let factTable = {
-    facts: [
-        { id: 1, x: 1, y: 1, isOpen: true },
-        { id: 1, x: 2, y: 2, isOpen: true },
-    ]
-};
+let facts = [
+    { id: 1, x: 1, y: 1, isOpen: true },
+    { id: 1, x: 2, y: 2, isOpen: true },
+];
 let dimensionHierarchies = [
     {
         dimensionTable: {
@@ -707,12 +700,7 @@ let dimensionHierarchies = [
         }
     }
 ];
-let options = {
-    defaultFactOptions: {
-        isOpen: false
-    }
-}
-let cube = new Cube({dimensionHierarchies, ...options});
+let cube = new Cube({dimensionHierarchies, defaultFactOptions: { isOpen: false }});
 cube.addFacts(facts);
 cube.fillEmptyCells();
 cube.addDimensionMember('x', { x: 3 })

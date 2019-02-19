@@ -1,7 +1,7 @@
 angular.module('demo', []).controller('AppController', ['$scope', 'ProductCube', 'factTable', 'dimensionHierarchies', function($scope, ProductCube, factTable, dimensionHierarchies){
 	$scope.dimensionHierarchies = dimensionHierarchies;
 
-	var cube = ProductCube.create(dimensionHierarchies);
+	var cube = new ProductCube({dimensionHierarchies});
 	cube.addFacts(factTable);
 	$scope.cube = cube;
 	window.cube = $scope.cube;
