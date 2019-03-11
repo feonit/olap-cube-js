@@ -12,7 +12,7 @@ import Tuple from './Tuple.js'
 import Space from './Space.js'
 import Cell from './Cell.js'
 import { DEFAULT_FACT_ID_PROP } from './const.js'
-import isPlainObject from "./../node_modules/lodash-es/isPlainObject.js"
+import isPlainObject from "./isPlainObject.js"
 import {NotFoundFactId} from "./errors.js";
 
 /**
