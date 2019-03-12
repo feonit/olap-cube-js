@@ -1,6 +1,24 @@
 /*!
- * Version: "0.16.0"
- * Copyright © 2018 Orlov Leonid. All rights reserved. Contacts: <feonitu@yandex.ru>
+ * Version: "0.16.1"
+ * Copyright © <2018> <Orlov Leonid> Contacts: <feonitu@yandex.ru>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
  *
  */
 class InsufficientRollupData {
@@ -135,21 +153,6 @@ class Member {
 	constructor(data) {
 		Object.assign(this, data);
 	}
-	static create(id, props, data, primaryKey) {
-		if (!(this === Member || Member.isPrototypeOf(this))) {
-			throw Error('this.constructor must be prototype of Member')
-		}
-		const memberData = {};
-		memberData[primaryKey] = id;
-
-		props.forEach(prop => {
-			// исключить идентификатор самой сущности
-			if (prop !== primaryKey) {
-				memberData[prop] = data[prop];
-			}
-		});
-		return new this(memberData)
-	}
 }
 
 const DEFAULT_TEMPLATE_FOREIGN_KEY = '%s_id';
@@ -160,8 +163,244 @@ const DEFAULT_MEMBER_ID_PROP = 'id';
  * Introductory elements. Input elements have values that are manually loaded
  * that is, they are not the result of calculating data
  * */
-class InputMember extends Member {
-	static create(id, memberData, data, primaryKey) {
+class InputMember extends Member {}
+
+/**
+ * The main task is to parse the data array into tables
+ *
+ * is a special case of snowflake dimensionHierarchies
+ * where every dimension is represented by one table even if the dimensions has multiple levels
+ *
+ * snowflaking - normalization process of measurement tables
+ * */
+class SnowflakeBuilder {
+	static anotherBuild(factTable, cells, dimensionsTrees, cellTable, factPrimaryKey) {
+
+		// for each dimension
+		dimensionsTrees.forEach(dimensionTree => {
+			SnowflakeBuilder.anotherBuildOne(dimensionTree, cells, cellTable, factTable, factPrimaryKey);
+		});
+	}
+
+	static anotherBuildOne(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
+		// for each hierarchy and level of dimension
+		dimensionTree.tracePostOrder((dimensionTable, dimensionTree) => {
+			SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey);
+		});
+	}
+
+	static processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
+		const dimensionTable = dimensionTree.getTreeValue();
+		const { dimension, keyProps = [], otherProps = [], members: memberList, foreignKey, primaryKey } = dimensionTable;
+		const childIdAttributes = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().foreignKey);
+		const childDimensions = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension);
+
+		let totalMemberList = [];
+
+		const existMemberCount = memberList.length;
+		const args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, cellTable];
+
+		if (!childIdAttributes.length) {
+			const keyIdMap = SnowflakeBuilder.createKeyIdMap.apply(null, args);
+			totalMemberList = SnowflakeBuilder.createMembersDataByKeyIdMap(keyIdMap, cells, keyProps, otherProps, primaryKey, foreignKey);
+		} else {
+			let entitiesParts = [];
+
+			childIdAttributes.forEach((childIdAttribute, index) => {
+
+				const firstChildDimension = childDimensions[index];
+				const dimensionTable = dimensionTree.getDimensionTreeByDimension(firstChildDimension).getTreeValue(); //here
+				const memberListForFilter = dimensionTable.members;
+
+				entitiesParts = SnowflakeBuilder.mapFilter(childIdAttribute, cells, memberListForFilter, dimensionTable); //here
+
+				let countId = 0;
+
+				entitiesParts.forEach(entitiesPart => {
+					if (entitiesPart.length) {
+
+						let membersData;
+
+						// order only for first child of level
+						if (index === 0){
+							const entitiesArgs = [...args];
+							entitiesArgs[5] = entitiesPart;
+							entitiesArgs.push(countId);
+							const keyIdMap = SnowflakeBuilder.createKeyIdMap.apply(null, entitiesArgs);
+							membersData = SnowflakeBuilder.createMembersDataByKeyIdMap(keyIdMap, entitiesPart, keyProps, otherProps, primaryKey, foreignKey);
+						} else {
+							// then just search target member
+							membersData = entitiesPart.map(part => totalMemberList.find(data => part[foreignKey] === data[primaryKey]));
+						}
+
+						countId = countId + membersData.length;
+
+						const etalon = entitiesPart[0];
+
+						// write data
+						membersData.forEach(member => {
+							member[childIdAttribute] = etalon[childIdAttribute];
+						});
+
+						// clear source
+						entitiesPart.forEach(entityPart => {
+							delete entityPart[childIdAttribute];
+						});
+
+						if (!totalMemberList.length){
+							const totalMemberListCount = totalMemberList.length;
+							const startFrom = existMemberCount + totalMemberListCount;
+
+							membersData.forEach((member, index) => {
+								member[primaryKey] = (startFrom + index + 1);
+							});
+
+							totalMemberList = membersData;
+						} else {
+							membersData.forEach(data => {
+								const find = totalMemberList.find(memberData => memberData[primaryKey] === data[primaryKey]);
+								if (find); else {
+									totalMemberList.push(data);
+								}
+							});
+						}
+					}
+				});
+			});
+		}
+
+		function deleteProps(fact, props, factPrimaryKey) {
+			props.forEach(prop => {
+				if (prop !== factPrimaryKey) {
+					delete fact[prop];
+				}
+			});
+		}
+
+		// только после того как список сформирован, удалаять данные из ячеек
+		cells.forEach(cell => {
+			deleteProps(cell, keyProps, factPrimaryKey);
+			deleteProps(cell, otherProps, factPrimaryKey);
+		});
+
+		totalMemberList.map(data => new Member(data)).forEach(member => {
+			dimensionTable.addMember(member);
+		});
+	}
+
+	/**
+	 * Method filter cells by members of a dimension
+	 * @param {string} foreignKey
+	 * @param {Cell[]} cells
+	 * @param {Member[]} memberList
+	 * @param {DimensionTable} dimensionTable
+	 * @private
+	 * @return {Cell[]}
+	 * */
+	static mapFilter(foreignKey, cells, memberList, dimensionTable) {
+		const cellTables = [];
+		//todo оптимизировать поиск через хеш
+		memberList.forEach(member => {
+			const cellTableFiltered = cells.filter(cell => {
+				return cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member);
+			});
+			cellTables.push(cellTableFiltered);
+		});
+		return cellTables;
+	}
+
+	/**
+	 * The method of analyzing the data array and generating new dimension values
+	 *
+	 * @param {object[]} entitiesPart - Data array to the analysis of values for dimension
+	 * @param {number} startFrom
+	 * @param {string} dimension - The dimension for which members will be created
+	 * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
+	 * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
+	 * @param {Cell} cells
+	 * @param {Cell[]} cellTable
+	 * @return {[]}
+	 * @private
+	 * */
+	static createKeyIdMap(
+		factPrimaryKey,
+		primaryKey,
+		foreignKey,
+		existMemberCount,
+		factTable,
+		entitiesPart,
+		dimension,
+		keyProps = [],
+		otherProps = [],
+		cells,
+		cellTable,
+		// It is recommended that the key field be a simple integer because a key value is meaningless
+		startFrom = 0
+	) {
+		// соотношение созданных id к ключам
+		const keyIdMap = {};
+		const restoredCache = {};
+
+		// need restore cache
+		const existedCells = cellTable.filter(cell => {
+			return cells.indexOf(cell) === -1
+		});
+		existedCells.forEach(cell => {
+			// собрать ключ на основе ключевых значений
+			const fact = factTable.find(fact => fact[factPrimaryKey] === cell[factPrimaryKey]);
+			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, fact);
+			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
+			if (!(surrogateKey in restoredCache)) {
+				restoredCache[surrogateKey] = ++startFrom;
+			}
+		});
+
+		// создания групп по уникальным ключам
+		entitiesPart.forEach(entityPart => {
+
+			// собрать ключ на основе ключевых значений
+			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, entityPart);
+
+			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
+			if (!(surrogateKey in keyIdMap) && !(surrogateKey in restoredCache)) {
+				keyIdMap[surrogateKey] = ++startFrom;
+			}
+
+			// оставить в нормальной форме ссылку на id под сущности
+			const id = keyIdMap[surrogateKey];
+			entityPart[foreignKey] = id;
+		});
+		
+		return keyIdMap;
+	}
+
+	static createMembersDataByKeyIdMap(keyIdMap, entitiesPart, keyProps, otherProps, primaryKey, foreignKey) {
+		const members = [];
+
+		Object.keys(keyIdMap).forEach(key => {
+			const id = keyIdMap[key];
+			const entityPart = entitiesPart.find(entityPart => entityPart[foreignKey] === id);
+			const memberData = SnowflakeBuilder.createMemberData(id, [].concat(keyProps).concat(otherProps), entityPart, primaryKey);
+
+			members.push(memberData);
+		});
+
+		return members;
+	}
+
+	static createMemberData(id, props, data, primaryKey) {
+		const memberData = {};
+		memberData[primaryKey] = id;
+		props.forEach(prop => {
+			// исключить идентификатор самой сущности
+			if (prop !== primaryKey) {
+				memberData[prop] = data[prop];
+			}
+		});
+		return memberData
+	}
+
+	static createInputMember(id, memberData, data, primaryKey) {
 		const defaultValue = null;
 		const defaultData = {};
 
@@ -169,8 +408,92 @@ class InputMember extends Member {
 			defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue;
 		});
 
-		return super.create(id, memberData, defaultData, primaryKey)
+		const createdMemberData = SnowflakeBuilder.createMemberData(id, memberData, defaultData, primaryKey, InputMember);
+		return new InputMember(createdMemberData)
 	}
+
+	static createKeyFromProps(props, obj) {
+		const DIVIDER = ',';
+
+		return props.map(prop => {
+			return obj[prop]
+		}).join(DIVIDER);
+	}
+
+	static destroy(cellTable, removedCells, dimensionHierarchies, cube) {
+		// first remove cells
+		removedCells.forEach(removedCell => {
+			const index = cellTable.indexOf(removedCell);
+			if (index !== -1) {
+				cellTable.splice(index, 1);
+			}
+		});
+		// then remove members
+		removedCells.forEach(fact => {
+			dimensionHierarchies.forEach(dimensionTree => {
+				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube, dimensionTree), SnowflakeBuilder.restoreCell]);
+			});
+		});
+	}
+
+	/**
+	 * Method allows to generate fact tables from cells
+	 * */
+	static denormalize(cellTable, dimensionTrees) {
+		const facts = [];
+		cellTable.forEach(cell => {
+			facts.push({...cell});
+		});
+		facts.forEach(fact => {
+			dimensionTrees.forEach(dimensionTree => {
+				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
+			});
+		});
+
+		return facts;
+	}
+	static restoreCell(member, memberList, dimension, cell, foreignKey, dimensionTable) {
+		const memberCopy = new Member(member);
+		dimensionTable.deleteMemberId(memberCopy);
+		delete cell[foreignKey];
+		Object.assign(cell, memberCopy);
+	}
+	static removeMembers(cube, dimensionTree, member, memberList, dimension, cell, foreignKey) {
+		const dicedCube = cube.dice({ [dimension]: member });
+		const dimensionTable = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue();
+		// last cell was removed at the beginning of the algorithm,
+		// so if the member is no longer used, the projection will be empty
+		if (!dicedCube.getCells().length) {
+			dimensionTable.removeMember(member);
+		}
+	}
+
+	static travers(cellTable, dimensionTree, handlers = () => {}) {
+		const handleDimensionTree = (dimensionTable, cell) => {
+			const { dimension, members: memberList, foreignKey } = dimensionTable;
+			const idValue = cell[foreignKey];
+			const member = memberList.find(member => {
+				return dimensionTable.getMemberPrimaryKey(member) === idValue;
+			});
+			handlers.forEach(handler => {
+				handler(member, memberList, dimension, cell, foreignKey, dimensionTable);
+			});
+		};
+		cellTable.forEach(cell => {
+			dimensionTree.tracePreOrder((tracedDimensionTable, tracedDimensionTree) => {
+				handleDimensionTree(tracedDimensionTable, cell);
+			});
+		});
+	}
+
+	/**
+	 * Method allows to delete dimensionTree from cube,
+	 * the cells will be restored, and the members of the measurement are also deleted
+	 * */
+	static destroyDimensionTree(cellTable, removedCells, dimensionTree, cube) {
+		SnowflakeBuilder.travers(cellTable, dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube, dimensionTree), SnowflakeBuilder.restoreCell]);
+	}
+
 }
 
 /**
@@ -241,7 +564,7 @@ class DimensionTable {
 		const { keyProps, otherProps, members, primaryKey } = this;
 		const keys = keyProps.concat(linkProps).concat(otherProps);
 		const id = DimensionTable.reduceId(members, primaryKey);
-		const member = InputMember.create(id, keys, memberData, primaryKey);
+		const member = SnowflakeBuilder.createInputMember(id, keys, memberData, primaryKey);// todo убрать отсюда
 		this.addMember(member);
 		return member;
 	}
@@ -649,7 +972,8 @@ class DimensionTree extends Tree {
 		if (this.isExternal()) {
 			return members;
 		}
-		const childTree = this.getChildTrees()[0]; // for one child always
+		const childTrees = this.getChildTrees();
+		const childTree = childTrees[0]; // todo not for one child always
 		const childDimensionTable = childTree.getTreeValue();
 		const { members: childMembers } = childDimensionTable;
 		const drillMembers = [];
@@ -717,279 +1041,6 @@ class DimensionHierarchy {
 }
 
 /**
- * The main task is to parse the data array into tables
- *
- * is a special case of snowflake dimensionHierarchies
- * where every dimension is represented by one table even if the dimensions has multiple levels
- *
- * snowflaking - normalization process of measurement tables
- * */
-class SnowflakeBuilder {
-	static anotherBuild(factTable, cells, dimensionsTrees, cellTable, factPrimaryKey) {
-
-		// for each dimension
-		dimensionsTrees.forEach(dimensionTree => {
-			SnowflakeBuilder.anotherBuildOne(dimensionTree, cells, cellTable, factTable, factPrimaryKey);
-		});
-	}
-
-	static anotherBuildOne(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
-		// for each hierarchy and level of dimension
-		dimensionTree.tracePostOrder((dimensionTable, dimensionTree) => {
-			SnowflakeBuilder.processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey);
-		});
-	}
-
-	static processDimension(dimensionTree, cells, cellTable, factTable, factPrimaryKey) {
-		const dimensionTable = dimensionTree.getTreeValue();
-		const { dimension, keyProps = [], otherProps = [], members: memberList, foreignKey, primaryKey } = dimensionTable;
-		const childIdAttributes = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().foreignKey);
-		const childDimensions = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension);
-
-		let members;
-
-		const existMemberCount = memberList.length;
-		const args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, cellTable];
-
-		if (!childIdAttributes.length) {
-			members = SnowflakeBuilder.makeMemberList.apply(null, args);
-		} else {
-			let entitiesParts = [];
-			const dimensionTable = dimensionTree.getDimensionTreeByDimension(childDimensions[0]).getTreeValue();
-			const memberListForFilter = dimensionTable.members;
-			entitiesParts = SnowflakeBuilder.mapFilter(childIdAttributes[0], cells, memberListForFilter, dimensionTable);
-			members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
-		}
-
-		function deleteProps(fact, props, factPrimaryKey) {
-			props.forEach(prop => {
-				if (prop !== factPrimaryKey) {
-					delete fact[prop];
-				}
-			});
-		}
-
-		// только после того как список сформирован, удалаять данные из ячеек
-		cells.forEach(cell => {
-			deleteProps(cell, keyProps, factPrimaryKey);
-			deleteProps(cell, otherProps, factPrimaryKey);
-		});
-
-		members.forEach(member => {
-			dimensionTable.addMember(member);
-		});
-	}
-	/**
-	 * Method filter cells by members of a dimension
-	 * @param {string} foreignKey
-	 * @param {Cell[]} cells
-	 * @param {Member[]} memberList
-	 * @param {DimensionTable} dimensionTable
-	 * @private
-	 * @return {Cell[]}
-	 * */
-	static mapFilter(foreignKey, cells, memberList, dimensionTable) {
-		const cellTables = [];
-		//todo оптимизировать поиск через хеш
-		memberList.forEach(member => {
-			const cellTableFiltered = cells.filter(cell => {
-				return cell[foreignKey] == dimensionTable.getMemberPrimaryKey(member);
-			});
-			cellTables.push(cellTableFiltered);
-		});
-		return cellTables;
-	}
-	/**
-	 * @private
-	 * */
-	static makeMemberListLevel(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, cellTable, childIdAttributes, entitiesParts) {
-		let totalMemberList = [];
-
-		let countId = 0;
-		entitiesParts.forEach(entitiesPart => {
-			if (entitiesPart.length) {
-				const members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, cellTable, countId);
-				countId = countId + members.length;
-
-				const etalon = entitiesPart[0];
-
-				childIdAttributes.forEach(childIdAttribute => {
-
-					members.forEach(member => {
-						member[childIdAttribute] = etalon[childIdAttribute];
-						member[primaryKey] = (existMemberCount + totalMemberList.length + 1);
-						totalMemberList.push(member);
-					});
-
-					entitiesPart.forEach(entityPart => {
-						delete entityPart[childIdAttribute];
-					});
-
-				});
-			}
-		});
-
-		return totalMemberList;
-	}
-
-	/**
-	 * The method of analyzing the data array and generating new dimension values
-	 *
-	 * @param {object[]} entitiesPart - Data array to the analysis of values for dimension
-	 * @param {number} startFrom
-	 * @param {string} dimension - The dimension for which members will be created
-	 * @param {string[]} keyProps - Names of properties whose values will be used to generate a key that will determine the uniqueness of the new member for dimension
-	 * @param {string[]} otherProps - Names of properties whose values will be appended to the dimension member along with the key properties
-	 * @param {Cell} cells
-	 * @param {Cell[]} cellTable
-	 * @return {[]}
-	 * @private
-	 * */
-	static makeMemberList(
-		factPrimaryKey,
-		primaryKey,
-		foreignKey,
-		existMemberCount,
-		factTable,
-		entitiesPart,
-		dimension,
-		keyProps = [],
-		otherProps = [],
-		cells,
-		cellTable,
-		// It is recommended that the key field be a simple integer because a key value is meaningless
-		startFrom = 0
-	) {
-		// соотношение созданных id к ключам
-		const cache = {};
-		const restoredCache = {};
-		const members = [];
-
-		// need restore cache
-		const existedCells = cellTable.filter(cell => {
-			return cells.indexOf(cell) === -1
-		});
-		existedCells.forEach(cell => {
-			// собрать ключ на основе ключевых значений
-			const fact = factTable.find(fact => fact[factPrimaryKey] === cell[factPrimaryKey]);
-			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, fact);
-			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-			if (!(surrogateKey in restoredCache)) {
-				restoredCache[surrogateKey] = ++startFrom;
-			}
-		});
-
-		// создания групп по уникальным ключам
-		entitiesPart.forEach(entityPart => {
-
-			// собрать ключ на основе ключевых значений
-			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, entityPart);
-
-			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-			if (!(surrogateKey in cache) && !(surrogateKey in restoredCache)) {
-				cache[surrogateKey] = ++startFrom;
-			}
-
-			// оставить в нормальной форме ссылку на id под сущности
-			const id = cache[surrogateKey];
-			entityPart[foreignKey] = id;
-		});
-
-		Object.keys(cache).forEach(key => {
-			const id = cache[key];
-			const entityPart = entitiesPart.find(entityPart => entityPart[foreignKey] === id);
-			const member = Member.create(id, [].concat(keyProps).concat(otherProps), entityPart, primaryKey);
-			members.push(member);
-		});
-
-		return members;
-	}
-
-	static createKeyFromProps(props, obj) {
-		const DIVIDER = ',';
-
-		return props.map(prop => {
-			return obj[prop]
-		}).join(DIVIDER);
-	}
-
-	static destroy(cellTable, removedCells, dimensionHierarchies, cube) {
-		// first remove cells
-		removedCells.forEach(removedCell => {
-			const index = cellTable.indexOf(removedCell);
-			if (index !== -1) {
-				cellTable.splice(index, 1);
-			}
-		});
-		// then remove members
-		removedCells.forEach(fact => {
-			dimensionHierarchies.forEach(dimensionTree => {
-				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube, dimensionTree), SnowflakeBuilder.restoreCell]);
-			});
-		});
-	}
-
-	/**
-	 * Method allows to generate fact tables from cells
-	 * */
-	static denormalize(cellTable, dimensionTrees) {
-		const facts = [];
-		cellTable.forEach(cell => {
-			facts.push({...cell});
-		});
-		facts.forEach(fact => {
-			dimensionTrees.forEach(dimensionTree => {
-				SnowflakeBuilder.travers([fact], dimensionTree, [SnowflakeBuilder.restoreCell]);
-			});
-		});
-
-		return facts;
-	}
-	static restoreCell(member, memberList, dimension, cell, foreignKey, dimensionTable) {
-		const memberCopy = new Member(member);
-		dimensionTable.deleteMemberId(memberCopy);
-		delete cell[foreignKey];
-		Object.assign(cell, memberCopy);
-	}
-	static removeMembers(cube, dimensionTree, member, memberList, dimension, cell, foreignKey) {
-		const dicedCube = cube.dice({ [dimension]: member });
-		const dimensionTable = dimensionTree.getDimensionTreeByDimension(dimension).getTreeValue();
-		// last cell was removed at the beginning of the algorithm,
-		// so if the member is no longer used, the projection will be empty
-		if (!dicedCube.getCells().length) {
-			dimensionTable.removeMember(member);
-		}
-	}
-
-	static travers(cellTable, dimensionTree, handlers = () => {}) {
-		const handleDimensionTree = (dimensionTable, cell) => {
-			const { dimension, members: memberList, foreignKey } = dimensionTable;
-			const idValue = cell[foreignKey];
-			const member = memberList.find(member => {
-				return dimensionTable.getMemberPrimaryKey(member) === idValue;
-			});
-			handlers.forEach(handler => {
-				handler(member, memberList, dimension, cell, foreignKey, dimensionTable);
-			});
-		};
-		cellTable.forEach(cell => {
-			dimensionTree.tracePreOrder((tracedDimensionTable, tracedDimensionTree) => {
-				handleDimensionTree(tracedDimensionTable, cell);
-			});
-		});
-	}
-
-	/**
-	 * Method allows to delete dimensionTree from cube,
-	 * the cells will be restored, and the members of the measurement are also deleted
-	 * */
-	static destroyDimensionTree(cellTable, removedCells, dimensionTree, cube) {
-		SnowflakeBuilder.travers(cellTable, dimensionTree, [SnowflakeBuilder.removeMembers.bind(this, cube, dimensionTree), SnowflakeBuilder.restoreCell]);
-	}
-
-}
-
-/**
  * The cell is identified by a tuple
  * tuples can uniquely identify every cell in the cube
  * Tuple is an ordered collection of one or more members from different dimensions
@@ -1025,171 +1076,52 @@ class Space {
 	}
 }
 
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-/** Built-in value references. */
-var Symbol = root.Symbol;
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
+const toString = Object.prototype.toString;
 
 /**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString = objectProto.toString;
-
-/** Built-in value references. */
-var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
-
-/**
- * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the raw `toStringTag`.
- */
-function getRawTag(value) {
-  var isOwn = hasOwnProperty.call(value, symToStringTag),
-      tag = value[symToStringTag];
-
-  try {
-    value[symToStringTag] = undefined;
-  } catch (e) {}
-
-  var result = nativeObjectToString.call(value);
-  {
-    if (isOwn) {
-      value[symToStringTag] = tag;
-    } else {
-      delete value[symToStringTag];
-    }
-  }
-  return result;
-}
-
-/** Used for built-in method references. */
-var objectProto$1 = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString$1 = objectProto$1.toString;
-
-/**
- * Converts `value` to a string using `Object.prototype.toString`.
- *
- * @private
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- */
-function objectToString(value) {
-  return nativeObjectToString$1.call(value);
-}
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]',
-    undefinedTag = '[object Undefined]';
-
-/** Built-in value references. */
-var symToStringTag$1 = Symbol ? Symbol.toStringTag : undefined;
-
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
+ * Gets the `toStringTag` of `value`.
  *
  * @private
  * @param {*} value The value to query.
  * @returns {string} Returns the `toStringTag`.
  */
-function baseGetTag(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-  return (symToStringTag$1 && symToStringTag$1 in Object(value))
-    ? getRawTag(value)
-    : objectToString(value);
+function getTag(value) {
+	if (value == null) {
+		return value === undefined ? '[object Undefined]' : '[object Null]'
+	}
+	return toString.call(value)
 }
-
-/**
- * Creates a unary function that invokes `func` with its argument transformed.
- *
- * @private
- * @param {Function} func The function to wrap.
- * @param {Function} transform The argument transform.
- * @returns {Function} Returns the new function.
- */
-function overArg(func, transform) {
-  return function(arg) {
-    return func(transform(arg));
-  };
-}
-
-/** Built-in value references. */
-var getPrototype = overArg(Object.getPrototypeOf, Object);
 
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
  *
- * @static
- * @memberOf _
  * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
  * @example
  *
- * _.isObjectLike({});
+ * isObjectLike({})
  * // => true
  *
- * _.isObjectLike([1, 2, 3]);
+ * isObjectLike([1, 2, 3])
  * // => true
  *
- * _.isObjectLike(_.noop);
+ * isObjectLike(Function)
  * // => false
  *
- * _.isObjectLike(null);
+ * isObjectLike(null)
  * // => false
  */
 function isObjectLike(value) {
-  return value != null && typeof value == 'object';
+	return typeof value == 'object' && value !== null
 }
-
-/** `Object#toString` result references. */
-var objectTag = '[object Object]';
-
-/** Used for built-in method references. */
-var funcProto = Function.prototype,
-    objectProto$2 = Object.prototype;
-
-/** Used to resolve the decompiled source of functions. */
-var funcToString = funcProto.toString;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty$1 = objectProto$2.hasOwnProperty;
-
-/** Used to infer the `Object` constructor. */
-var objectCtorString = funcToString.call(Object);
 
 /**
  * Checks if `value` is a plain object, that is, an object created by the
  * `Object` constructor or one with a `[[Prototype]]` of `null`.
  *
- * @static
- * @memberOf _
  * @since 0.8.0
  * @category Lang
  * @param {*} value The value to check.
@@ -1197,32 +1129,33 @@ var objectCtorString = funcToString.call(Object);
  * @example
  *
  * function Foo() {
- *   this.a = 1;
+ *   this.a = 1
  * }
  *
- * _.isPlainObject(new Foo);
+ * isPlainObject(new Foo)
  * // => false
  *
- * _.isPlainObject([1, 2, 3]);
+ * isPlainObject([1, 2, 3])
  * // => false
  *
- * _.isPlainObject({ 'x': 0, 'y': 0 });
+ * isPlainObject({ 'x': 0, 'y': 0 })
  * // => true
  *
- * _.isPlainObject(Object.create(null));
+ * isPlainObject(Object.create(null))
  * // => true
  */
 function isPlainObject(value) {
-  if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
-    return false;
-  }
-  var proto = getPrototype(value);
-  if (proto === null) {
-    return true;
-  }
-  var Ctor = hasOwnProperty$1.call(proto, 'constructor') && proto.constructor;
-  return typeof Ctor == 'function' && Ctor instanceof Ctor &&
-    funcToString.call(Ctor) == objectCtorString;
+	if (!isObjectLike(value) || getTag(value) != '[object Object]') {
+		return false
+	}
+	if (Object.getPrototypeOf(value) === null) {
+		return true
+	}
+	let proto = value;
+	while (Object.getPrototypeOf(proto) !== null) {
+		proto = Object.getPrototypeOf(proto);
+	}
+	return Object.getPrototypeOf(value) === proto
 }
 
 /**
