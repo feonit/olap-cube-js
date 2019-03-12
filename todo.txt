@@ -5,7 +5,6 @@ API
 - Update method addMember without rollup options (then more than one member will be added)
 - think about inversion of levels in the reverse order, the inversion must be compatible with multiple hierarchies
 - members must have refs to categories data (in createMember method?)
-- try make for hierarchy: {Year, Qr, Month, Day}, {Год, Weak, Day}.
 - remove from addDimensionMember fill method, check and write test that all is correct
 - new api, add variety for determine tuple from set argument, {product: {id: 1}} => {product: 1} => [1]
 - may be need update member structure to {id: <number>, attributes: {...}}

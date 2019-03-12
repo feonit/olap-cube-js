@@ -114,4 +114,150 @@ export default () => {
 			debug = isEqualObjects(cellTable, expectedMeasure)
 		});
 	});
+
+	it('multiple hierarchy must work', () => {
+		const dimensionHierarchiesData = [
+			{
+				dimensionTable: {
+					dimension: 'product',
+					keyProps: ['product']
+				},
+				level: [
+					{
+						dimensionTable: {
+							dimension: 'discount',
+							keyProps: ['discount']
+						}
+					},
+					{
+						dimensionTable: {
+							dimension: 'matter',
+							keyProps: ['matter']
+						}
+					}
+				]
+			}
+		];
+
+		const facts = [
+			{id: 1, product: 'milk', matter: 'liquid', discount: 10, price: 50},
+			{id: 2, product: 'bread', matter: 'solid', discount: 10, price: 60},
+			{id: 3, product: 'potato', matter: 'solid', discount: 10, price: 70},
+			{id: 4, product: 'apple', matter: 'solid', discount: 20, price: 80},
+		];
+
+		const cells = facts.map(fact => new Cell(fact));
+		const cellTable = cells;
+		const dimensionHierarchies = dimensionHierarchiesData.map(dimensionTreeData => DimensionTree.createDimensionTree(dimensionTreeData));
+		SnowflakeBuilder.anotherBuild(facts, cells, dimensionHierarchies, cellTable);
+
+		const products = [
+			{id: 1, product: 'milk', matter_id: 1, discount_id: 1},
+			{id: 2, product: 'bread', matter_id: 2, discount_id: 1},
+			{id: 3, product: 'potato', matter_id: 2, discount_id: 1},
+			{id: 4, product: 'apple', matter_id: 2, discount_id: 2},
+		];
+
+		const discount = [
+			{id: 1, discount: 10},
+			{id: 2, discount: 20},
+		];
+
+		const matter = [
+			{id: 1, matter: 'liquid'},
+			{id: 2, matter: 'solid'},
+		];
+
+		expect(debug = isEqualObjects(dimensionHierarchies[0].dimensionTable.members, products)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[0].dimensionTable.members, discount)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[1].dimensionTable.members, matter)).toBe(true)
+	});
+
+	it('multiple hierarchy with multiple levels must work', () => {
+		const dimensionHierarchiesData = [
+			{
+				dimensionTable: {
+					dimension: 'product',
+					keyProps: ['product']
+				},
+				level: [
+					{
+						dimensionTable: {
+							dimension: 'discount',
+							keyProps: ['discount']
+						},
+						level: [
+							{
+								dimensionTable: {
+									dimension: 'stage',
+									keyProps: ['stage']
+								},
+							}
+						]
+					},
+					{
+						dimensionTable: {
+							dimension: 'matter',
+							keyProps: ['matter']
+						},
+						level: [
+							{
+								dimensionTable: {
+									dimension: 'pack',
+									keyProps: ['pack']
+								},
+							}
+						]
+					}
+				]
+			}
+		];
+
+		const facts = [
+			{id: 1, product: 'milk', matter: 'liquid', pack: true, discount: 10, stage: 'minimum', price: 50},
+			{id: 2, product: 'bread', matter: 'solid', pack: false, discount: 10, stage: 'minimum', price: 60},
+			{id: 3, product: 'potato', matter: 'solid', pack: false, discount: 20, stage: 'minimum', price: 70},
+			{id: 4, product: 'apple', matter: 'dry', pack: true, discount: 90, stage: 'maximum', price: 80},
+		];
+
+		const cells = facts.map(fact => new Cell(fact));
+		const cellTable = cells;
+		const dimensionHierarchies = dimensionHierarchiesData.map(dimensionTreeData => DimensionTree.createDimensionTree(dimensionTreeData));
+		SnowflakeBuilder.anotherBuild(facts, cells, dimensionHierarchies, cellTable);
+
+		const products = [
+			{id: 1, product: 'milk', matter_id: 1, discount_id: 1},
+			{id: 2, product: 'bread', matter_id: 3, discount_id: 1},
+			{id: 3, product: 'potato', matter_id: 3, discount_id: 2},
+			{id: 4, product: 'apple', matter_id: 2, discount_id: 3},
+		];
+
+		const discount = [
+			{id: 1, discount: 10, stage_id: 1},
+			{id: 2, discount: 20, stage_id: 1},
+			{id: 3, discount: 90, stage_id: 2},
+		];
+
+		const matter = [
+			{id: 1, matter: 'liquid', pack_id: 1},
+			{id: 2, matter: 'dry', pack_id: 1},
+			{id: 3, matter: 'solid', pack_id: 2},
+		];
+
+		const pack = [
+			{id: 1, pack: true},
+			{id: 2, pack: false},
+		];
+
+		const stage = [
+			{id: 1, stage: 'minimum'},
+			{id: 2, stage: 'maximum'},
+		];
+
+		expect(debug = isEqualObjects(dimensionHierarchies[0].dimensionTable.members, products)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[0].dimensionTable.members, discount)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[0].level[0].dimensionTable.members, stage)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[1].dimensionTable.members, matter)).toBe(true)
+		expect(debug = isEqualObjects(dimensionHierarchies[0].level[1].level[0].dimensionTable.members, pack)).toBe(true)
+	});
 };

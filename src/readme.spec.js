@@ -269,4 +269,48 @@ export default () => {
 		debug = isEqualObjects(groupMember, { ID: 1, group: 'Administrators' });
 		debug = isEqualObjects(cell, { id: 1, USER_ID: 1 });
 	});
+
+	it('Multiple hierarchies', () => {
+		let dimensionHierarchies = [
+			{
+				dimensionTable: {
+					dimension: 'products',
+					keyProps: ['product']
+				},
+				level: [
+					{
+						dimensionTable: {
+							dimension: 'discounts',
+							keyProps: ['discount']
+						}
+					},
+					{
+						dimensionTable: {
+							dimension: 'categories',
+							keyProps: ['category']
+						}
+					}
+				]
+			}
+		]
+		let facts = [
+			{id: 1, product: 'TV', discount: 5, category: 'electronics'},
+			{id: 2, product: 'milk', discount: 10, category: 'food'},
+		];
+		let cube = new Cube({dimensionHierarchies});
+		cube.addFacts(facts);
+
+		const products = [
+			{id: 1, product: 'TV', discounts_id: 1, categories_id: 1},
+			{id: 2, product: 'milk', discounts_id: 2, categories_id: 2},
+		];
+
+		const cells = [
+			{id: 1, products_id: 1},
+			{id: 2, products_id: 2},
+		];
+
+		debug = isEqualObjects(cube.getDimensionMembers('products'), products);
+		debug = isEqualObjects(cube.getCells(), cells);
+	})
 };

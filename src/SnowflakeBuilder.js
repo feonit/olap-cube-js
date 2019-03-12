@@ -1,4 +1,5 @@
 import Member from './Member.js'
+import InputMember from "./InputMember.js";
 
 /**
  * The main task is to parse the data array into tables
@@ -30,19 +31,80 @@ export default class SnowflakeBuilder {
 		const childIdAttributes = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().foreignKey);
 		const childDimensions = dimensionTree.getChildTrees().map(dimensionTree => dimensionTree.getTreeValue().dimension);
 
-		let members;
+		let totalMemberList = [];
 
 		const existMemberCount = memberList.length;
 		const args = [factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, cells, dimension, keyProps, otherProps, cells, cellTable];
 
 		if (!childIdAttributes.length) {
-			members = SnowflakeBuilder.makeMemberList.apply(null, args);
+			const keyIdMap = SnowflakeBuilder.createKeyIdMap.apply(null, args);
+			totalMemberList = SnowflakeBuilder.createMembersDataByKeyIdMap(keyIdMap, cells, keyProps, otherProps, primaryKey, foreignKey);
 		} else {
 			let entitiesParts = [];
-			const dimensionTable = dimensionTree.getDimensionTreeByDimension(childDimensions[0]).getTreeValue();
-			const memberListForFilter = dimensionTable.members;
-			entitiesParts = SnowflakeBuilder.mapFilter(childIdAttributes[0], cells, memberListForFilter, dimensionTable);
-			members = SnowflakeBuilder.makeMemberListLevel.apply(null, args.concat([childIdAttributes, entitiesParts]));
+
+			childIdAttributes.forEach((childIdAttribute, index) => {
+
+				const firstChildDimension = childDimensions[index];
+				const dimensionTable = dimensionTree.getDimensionTreeByDimension(firstChildDimension).getTreeValue(); //here
+				const memberListForFilter = dimensionTable.members;
+
+				entitiesParts = SnowflakeBuilder.mapFilter(childIdAttribute, cells, memberListForFilter, dimensionTable); //here
+
+				let countId = 0;
+
+				entitiesParts.forEach(entitiesPart => {
+					if (entitiesPart.length) {
+
+						let membersData;
+
+						// order only for first child of level
+						if (index === 0){
+							const entitiesArgs = [...args];
+							entitiesArgs[5] = entitiesPart;
+							entitiesArgs.push(countId);
+							const keyIdMap = SnowflakeBuilder.createKeyIdMap.apply(null, entitiesArgs);
+							membersData = SnowflakeBuilder.createMembersDataByKeyIdMap(keyIdMap, entitiesPart, keyProps, otherProps, primaryKey, foreignKey);
+						} else {
+							// then just search target member
+							membersData = entitiesPart.map(part => totalMemberList.find(data => part[foreignKey] === data[primaryKey]))
+						}
+
+						countId = countId + membersData.length;
+
+						const etalon = entitiesPart[0];
+
+						// write data
+						membersData.forEach(member => {
+							member[childIdAttribute] = etalon[childIdAttribute];
+						});
+
+						// clear source
+						entitiesPart.forEach(entityPart => {
+							delete entityPart[childIdAttribute];
+						});
+
+						if (!totalMemberList.length){
+							const totalMemberListCount = totalMemberList.length;
+							const startFrom = existMemberCount + totalMemberListCount;
+
+							membersData.forEach((member, index) => {
+								member[primaryKey] = (startFrom + index + 1);
+							});
+
+							totalMemberList = membersData
+						} else {
+							membersData.forEach(data => {
+								const find = totalMemberList.find(memberData => memberData[primaryKey] === data[primaryKey]);
+								if (find){
+									// Object.assign(find, data)
+								} else {
+									totalMemberList.push(data);
+								}
+							});
+						}
+					}
+				});
+			})
 		}
 
 		function deleteProps(fact, props, factPrimaryKey) {
@@ -59,10 +121,11 @@ export default class SnowflakeBuilder {
 			deleteProps(cell, otherProps, factPrimaryKey);
 		});
 
-		members.forEach(member => {
+		totalMemberList.map(data => new Member(data)).forEach(member => {
 			dimensionTable.addMember(member)
 		});
 	}
+
 	/**
 	 * Method filter cells by members of a dimension
 	 * @param {string} foreignKey
@@ -83,38 +146,6 @@ export default class SnowflakeBuilder {
 		});
 		return cellTables;
 	}
-	/**
-	 * @private
-	 * */
-	static makeMemberListLevel(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, whatIsIt, dimension, keyProps, otherProps, cells, cellTable, childIdAttributes, entitiesParts) {
-		let totalMemberList = [];
-
-		let countId = 0;
-		entitiesParts.forEach(entitiesPart => {
-			if (entitiesPart.length) {
-				const members = SnowflakeBuilder.makeMemberList(factPrimaryKey, primaryKey, foreignKey, existMemberCount, factTable, entitiesPart, dimension, keyProps, otherProps, cells, cellTable, countId);
-				countId = countId + members.length;
-
-				const etalon = entitiesPart[0];
-
-				childIdAttributes.forEach(childIdAttribute => {
-
-					members.forEach(member => {
-						member[childIdAttribute] = etalon[childIdAttribute];
-						member[primaryKey] = (existMemberCount + totalMemberList.length + 1);
-						totalMemberList.push(member)
-					});
-
-					entitiesPart.forEach(entityPart => {
-						delete entityPart[childIdAttribute];
-					})
-
-				});
-			}
-		});
-
-		return totalMemberList;
-	}
 
 	/**
 	 * The method of analyzing the data array and generating new dimension values
@@ -129,7 +160,7 @@ export default class SnowflakeBuilder {
 	 * @return {[]}
 	 * @private
 	 * */
-	static makeMemberList(
+	static createKeyIdMap(
 		factPrimaryKey,
 		primaryKey,
 		foreignKey,
@@ -145,9 +176,8 @@ export default class SnowflakeBuilder {
 		startFrom = 0
 	) {
 		// соотношение созданных id к ключам
-		const cache = {};
+		const keyIdMap = {};
 		const restoredCache = {};
-		const members = [];
 
 		// need restore cache
 		const existedCells = cellTable.filter(cell => {
@@ -170,23 +200,54 @@ export default class SnowflakeBuilder {
 			const surrogateKey = SnowflakeBuilder.createKeyFromProps(keyProps, entityPart);
 
 			// если ключ уникальный создается подсущность и назначается ей присваивается уникальный id (уникальность достигается простым счетчиком)
-			if (!(surrogateKey in cache) && !(surrogateKey in restoredCache)) {
-				cache[surrogateKey] = ++startFrom;
+			if (!(surrogateKey in keyIdMap) && !(surrogateKey in restoredCache)) {
+				keyIdMap[surrogateKey] = ++startFrom;
 			}
 
 			// оставить в нормальной форме ссылку на id под сущности
-			const id = cache[surrogateKey];
+			const id = keyIdMap[surrogateKey];
 			entityPart[foreignKey] = id;
 		});
+		
+		return keyIdMap;
+	}
 
-		Object.keys(cache).forEach(key => {
-			const id = cache[key];
+	static createMembersDataByKeyIdMap(keyIdMap, entitiesPart, keyProps, otherProps, primaryKey, foreignKey) {
+		const members = [];
+
+		Object.keys(keyIdMap).forEach(key => {
+			const id = keyIdMap[key];
 			const entityPart = entitiesPart.find(entityPart => entityPart[foreignKey] === id);
-			const member = Member.create(id, [].concat(keyProps).concat(otherProps), entityPart, primaryKey);
-			members.push(member);
+			const memberData = SnowflakeBuilder.createMemberData(id, [].concat(keyProps).concat(otherProps), entityPart, primaryKey);
+
+			members.push(memberData);
 		});
 
 		return members;
+	}
+
+	static createMemberData(id, props, data, primaryKey) {
+		const memberData = {};
+		memberData[primaryKey] = id;
+		props.forEach(prop => {
+			// исключить идентификатор самой сущности
+			if (prop !== primaryKey) {
+				memberData[prop] = data[prop]
+			}
+		});
+		return memberData
+	}
+
+	static createInputMember(id, memberData, data, primaryKey) {
+		const defaultValue = null;
+		const defaultData = {};
+
+		memberData.forEach(propName => {
+			defaultData[propName] = data.hasOwnProperty(propName) ? data[propName] : defaultValue
+		});
+
+		const createdMemberData = SnowflakeBuilder.createMemberData(id, memberData, defaultData, primaryKey, InputMember);
+		return new InputMember(createdMemberData)
 	}
 
 	static createKeyFromProps(props, obj) {

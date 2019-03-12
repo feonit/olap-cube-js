@@ -259,7 +259,8 @@ export default class DimensionTree extends Tree {
 		if (this.isExternal()) {
 			return members;
 		}
-		const childTree = this.getChildTrees()[0]; // for one child always
+		const childTrees = this.getChildTrees();
+		const childTree = childTrees[0]; // todo not for one child always
 		const childDimensionTable = childTree.getTreeValue();
 		const { members: childMembers } = childDimensionTable;
 		const drillMembers = [];

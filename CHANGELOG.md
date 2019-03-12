@@ -1,4 +1,8 @@
 ## Change Log
+
+*0.16.1*
+Added support for multiple hierarchies
+
 *0.16.0*
 - Change renamed `primaryKey` to `factPrimaryKey`
 - Change `defaultFactOptions` and `factPrimaryKey` moved to cube, no factTable structure anymore, look readme [Custom facts](/README.md/#custom-facts) section
