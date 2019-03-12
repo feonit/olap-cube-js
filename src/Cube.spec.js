@@ -142,5 +142,4 @@ export default () => {
 		expect(debug = (cube instanceof CustomCube)).toBe(true)
 		expect(debug = (cube instanceof Cube)).toBe(true)
 	});
-
 };

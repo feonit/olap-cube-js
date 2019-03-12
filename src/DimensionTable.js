@@ -1,6 +1,6 @@
 import Member from './Member.js'
 import {DEFAULT_MEMBER_ID_PROP, DEFAULT_TEMPLATE_FOREIGN_KEY} from './const.js'
-import InputMember from './InputMember.js'
+import SnowflakeBuilder from "./SnowflakeBuilder.js";
 
 /**
  * Dimension is a dimension of a cube. A dimension is a primary organizer of measure and attribute information in a cube
@@ -70,7 +70,7 @@ export default class DimensionTable {
 		const { keyProps, otherProps, members, primaryKey } = this;
 		const keys = keyProps.concat(linkProps).concat(otherProps);
 		const id = DimensionTable.reduceId(members, primaryKey);
-		const member = InputMember.create(id, keys, memberData, primaryKey);
+		const member = SnowflakeBuilder.createInputMember(id, keys, memberData, primaryKey);// todo убрать отсюда
 		this.addMember(member);
 		return member;
 	}

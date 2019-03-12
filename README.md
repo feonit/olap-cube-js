@@ -41,6 +41,7 @@ This solution is a means for extracting and replenishing data, which together wi
   - [Removing facts](#removing-facts)
   - [Added dimension hierarchy](#added-dimension-hierarchy)
   - [Removing dimension hierarchy](#removing-dimension-hierarchy)
+  - [Multiple hierarchies](#multiple-hierarchies)
   - [Filling empty cells](#filling-empty-cells)
   - [Removing empty cells](#removing-empty-cells)
   - [Drill-up members](#drill-up-members)
@@ -71,6 +72,7 @@ This solution is a means for extracting and replenishing data, which together wi
 - [Surrogate key][8] is internally generated as unique identifier for dimension member (used composite dimension keys)
 - The ability to edit data
 - Filling - solution for [Typical Multidimensional Problem: missing values][9]
+- Multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
 
 ## Getting Started
 
@@ -489,6 +491,57 @@ Returns the result back to the addition of the hierarchy
 ```js
 cube.removeDimensionHierarchy(cube.dimensionHierarchies[0])
 ```
+### Multiple hierarchies
+```js
+let dimensionHierarchies = [
+	{
+        dimensionTable: {
+            dimension: 'products',
+            keyProps: ['product']
+        },
+        level: [
+            {
+                dimensionTable: {
+                    dimension: 'discounts',
+                    keyProps: ['discount']
+                }
+            },
+            {
+                dimensionTable: {
+                    dimension: 'categories',
+                    keyProps: ['category']
+                }
+            }
+        ]
+    }
+]
+let facts = [
+	{id: 1, product: 'TV', discount: 5, category: 'electronics'},
+	{id: 2, product: 'milk', discount: 10, category: 'food'},
+]
+let cube = new Cube({dimensionHierarchies});
+cube.addFacts(facts);
+cube.getDimensionMembers('product')
+```
+return:
+```js
+[
+	{id: 1, product: 'TV', discounts_id: 1, categories_id: 1},
+	{id: 2, product: 'milk', discounts_id: 2, categories_id: 2},
+]
+```
+or:
+```js
+cube.getCells()
+```
+return:
+```js
+[
+	{id: 1, products_id: 1},
+	{id: 2, products_id: 2},
+]
+```
+
 
 ### Filling empty cells
 Fills the fact table with all possible missing combinations. For example, for a table, such data will represent empty cells
@@ -723,7 +776,7 @@ The project is on stage of developing API.
 In future versions:
 
 Perhaps
-- Add unbalanced, ragged hierarchies, multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
+- Add unbalanced, ragged hierarchies
 - Add calculated members
 - Add MDX query language
 - Add Speed tests
