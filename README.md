@@ -92,40 +92,40 @@ npm install olap-cube-js
 
 // This is an array of data from server
 let facts = [
-    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-    { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
-    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
+  { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+  { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+  { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+  { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 
 // This is the data schema we need to obtain
 let dimensionHierarchies = [
-    {
-        dimensionTable: {
-            dimension: 'regions',
-            keyProps: ['region'],
-        }
-    },
-    {
-        dimensionTable: {
-            dimension: 'date',
-            keyProps: ['year', 'month']
-        }
-    },  
-    {
-        dimensionTable: {
-            dimension: 'products',
-            keyProps: ['product'],
-        },
-        level: [
-            {
-                dimensionTable: {
-                    dimension: 'categories',
-                    keyProps: ['category']
-                }
-            }
-        ]
+  {
+    dimensionTable: {
+      dimension: 'regions',
+      keyProps: ['region'],
     }
+  },
+  {
+    dimensionTable: {
+      dimension: 'date',
+      keyProps: ['year', 'month']
+    }
+  },  
+  {
+    dimensionTable: {
+      dimension: 'products',
+      keyProps: ['product'],
+    },
+    level: [
+      {
+        dimensionTable: {
+          dimension: 'categories',
+          keyProps: ['category']
+        }
+      }
+    ]
+  }
 ];
 
 // We send it all to the constructor
@@ -137,67 +137,67 @@ Now the cube will represent the structure below:
 
 ```js
 let structure = {
-    dimensionHierarchies: [
+  dimensionHierarchies: [
+    {
+      dimensionTable: {
+        dimension: 'regions',
+        keyProps: ['region'],
+        members: [
+          { id: 1, region: 'North' },
+          { id: 2, region: 'South' },
+          { id: 3, region: 'West' }
+        ],
+        otherProps: []
+      },
+      level: []
+    },
+    {
+      dimensionTable: {
+        dimension: 'date',
+        keyProps: ['year', 'month'],
+        members: [
+          { id: 1, year: 2017, month: 'January' },
+          { id: 2, year: 2017, month: 'April' },
+          { id: 3, year: 2018, month: 'April' }
+        ],
+        otherProps: []
+      },
+      level: []
+    },
+    {
+      dimensionTable: {
+        dimension: 'products',
+        keyProps: ['product'],
+        members: [
+          { id: 1, product: 'Product 1', categories_id: 1 },
+          { id: 2, product: 'Product 2', categories_id: 1 },
+          { id: 3, product: 'Product 3', categories_id: 2 },
+          { id: 4, product: 'Product 1', categories_id: 2 },
+        ],
+        otherProps: []
+      },
+      level: [
         {
-            dimensionTable: {
-                dimension: 'regions',
-                keyProps: ['region'],
-                members: [
-                    { id: 1, region: 'North' },
-                    { id: 2, region: 'South' },
-                    { id: 3, region: 'West' }
-                ],
-                otherProps: []
-            },
-            level: []
-        },
-        {
-            dimensionTable: {
-                dimension: 'date',
-                keyProps: ['year', 'month'],
-                members: [
-                    { id: 1, year: 2017, month: 'January' },
-                    { id: 2, year: 2017, month: 'April' },
-                    { id: 3, year: 2018, month: 'April' }
-                ],
-                otherProps: []
-            },
-            level: []
-        },
-        {
-            dimensionTable: {
-                dimension: 'products',
-                keyProps: ['product'],
-                members: [
-                    { id: 1, product: 'Product 1', categories_id: 1 },
-                    { id: 2, product: 'Product 2', categories_id: 1 },
-                    { id: 3, product: 'Product 3', categories_id: 2 },
-                    { id: 4, product: 'Product 1', categories_id: 2 },
-                ],
-                otherProps: []
-            },
-            level: [
-                {
-                    dimensionTable: {
-                        dimension: 'categories',
-                        keyProps: ['category'],
-                        members: [
-                            { id: 1, category: 'Category 1' },
-                            { id: 2, category: 'Category 2' },
-                        ],
-                        otherProps: []
-                    },
-                    level: []
-                }
-            ]
+          dimensionTable: {
+            dimension: 'categories',
+            keyProps: ['category'],
+            members: [
+              { id: 1, category: 'Category 1' },
+              { id: 2, category: 'Category 2' },
+            ],
+            otherProps: []
+          },
+          level: []
         }
-    ],
-    cellTable: [
-        { id: 1, regions_id: 1, date_id: 1, products_id: 1, value: 737 },
-        { id: 2, regions_id: 2, date_id: 2, products_id: 2, value: 155 },
-        { id: 3, regions_id: 3, date_id: 3, products_id: 3, value: 112 },
-        { id: 4, regions_id: 3, date_id: 3, products_id: 4, value: 319 },
-    ]
+      ]
+    }
+  ],
+  cellTable: [
+    { id: 1, regions_id: 1, date_id: 1, products_id: 1, value: 737 },
+    { id: 2, regions_id: 2, date_id: 2, products_id: 2, value: 155 },
+    { id: 3, regions_id: 3, date_id: 3, products_id: 3, value: 112 },
+    { id: 4, regions_id: 3, date_id: 3, products_id: 4, value: 319 },
+  ]
 };
 ```
 
@@ -252,7 +252,7 @@ cube.dice(set).getCells()
 return:
 ```js
 [
-    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
+  { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 }
 ]
 ```
 execute:
@@ -262,7 +262,7 @@ cube.dice(set).getFacts()
 return:
 ```js
 [
-    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
+  { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 }
 ]
 ```
 
@@ -278,8 +278,8 @@ cube.dice(subSet).getCells()
 return:
 ```js
 [
-    { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
-    { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+  { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+  { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
 ]
 ```
 execute:
@@ -289,8 +289,8 @@ cube.dice(subSet).getFacts()
 return:
 ```js
 [
-    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
+  { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+  { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
 ##### Emptyset <br/>
@@ -307,10 +307,10 @@ cube.getCells()
 return:
 ```js
 [
-    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
-    { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
-    { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
-    { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
+  { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+  { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+  { id: 3, value: 112, regions_id: 3, date_id: 3, products_id: 3 },
+  { id: 4, value: 319, regions_id: 3, date_id: 3, products_id: 4 },
 ]
 ```
 execute:
@@ -322,10 +322,10 @@ cube.getFacts()
 return:
 ```js
 [
-    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-    { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
-    { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
-    { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
+  { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+  { id: 2, region: 'South', year: 2017, month: 'April', product: 'Product 2', category: 'Category 1', value: 155 },
+  { id: 3, region: 'West',  year: 2018, month: 'April', product: 'Product 3', category: 'Category 2', value: 112 },
+  { id: 4, region: 'West',  year: 2018, month: 'April', product: 'Product 1', category: 'Category 2', value: 319 },
 ]
 ```
 ##### Multiset <br/>
@@ -340,8 +340,8 @@ cube.dice(multiSet).getCells()
 return:
 ```js
 [
-    { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
-    { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
+  { id: 1, value: 737, regions_id: 1, date_id: 1, products_id: 1 },
+  { id: 2, value: 155, regions_id: 2, date_id: 2, products_id: 2 },
 ]
 ```
 execute:
@@ -351,8 +351,8 @@ cube.dice(multiSet).getFacts()
 return:
 ```js
 [
-    { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
-    { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
+  { id: 1, region: 'North', year: 2017, month: 'January', product: 'Product 1', category: 'Category 1', value: 737 },
+  { id: 2, region: 'South', year: 2017, month: 'April',   product: 'Product 2', category: 'Category 1', value: 155 },
 ]
 ```
 ### Access to members of the dimensions
@@ -366,10 +366,10 @@ cube.getDimensionMembers('products')
 return:
 ```js
 [
-    { id: 1, product: 'Product 1', categories_id: 1 },
-    { id: 2, product: 'Product 2', categories_id: 1 },
-    { id: 3, product: 'Product 3', categories_id: 2 },
-    { id: 4, product: 'Product 1', categories_id: 2 },
+  { id: 1, product: 'Product 1', categories_id: 1 },
+  { id: 2, product: 'Product 2', categories_id: 1 },
+  { id: 3, product: 'Product 3', categories_id: 2 },
+  { id: 4, product: 'Product 1', categories_id: 2 },
 ]
 ```
 ##### SubSet <br/>
@@ -381,8 +381,8 @@ cube.dice({ categories: { id: 1 } }).getDimensionMembers('products')
 return:
 ```js
 [
-    { id: 1, product: 'Product 1', categories_id: 1 },
-    { id: 2, product: 'Product 2', categories_id: 1 },
+  { id: 1, product: 'Product 1', categories_id: 1 },
+  { id: 2, product: 'Product 2', categories_id: 1 },
 ]
 ```
 Other example:
@@ -392,8 +392,8 @@ cube.dice({ categories: { id: 1 } }).getDimensionMembers('regions')
 return:
 ```js
 [
-    { id: 1, region: 'North' },
-    { id: 2, region: 'South' },
+  { id: 1, region: 'North' },
+  { id: 2, region: 'South' },
 ]
 ```
 
@@ -404,9 +404,9 @@ cube.dice({ regions: [{ id: 2 }, { id: 3 }] }).getDimensionMembers('products')
 return:
 ```js
 [
-    { id: 2, product: 'Product 2', categories_id: 1 },
-    { id: 3, product: 'Product 3', categories_id: 2 },
-    { id: 4, product: 'Product 1', categories_id: 2 },
+  { id: 2, product: 'Product 2', categories_id: 1 },
+  { id: 3, product: 'Product 3', categories_id: 2 },
+  { id: 4, product: 'Product 1', categories_id: 2 },
 ]
 ```
 
@@ -425,7 +425,7 @@ member['region'] = 'East';
 > const memberFromSubcube = subCube.getDimensionMembers('regions').find(({id}) => id === 1)
 > memberFromCube === memberFromSubcube // true
 > ````
-
+  
 ### Adding dimension members
 ```js
 let member = { product: 'Product 3' }
@@ -441,7 +441,7 @@ cube.removeDimensionMember('products', member)
 ### Adding facts
 ```js
 let facts = [
-    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+  { id: 3, region: 'South', product: 'Product 3', value: 30 }
 ]
 cube.addFacts(facts)
 ```
@@ -449,7 +449,7 @@ cube.addFacts(facts)
 ### Removing facts
 ```js
 let facts = [
-    { id: 3, region: 'South', product: 'Product 3', value: 30 }
+  { id: 3, region: 'South', product: 'Product 3', value: 30 }
 ]
 cube.removeFacts(facts)
 ```
@@ -457,32 +457,32 @@ cube.removeFacts(facts)
 ### Added dimension hierarchy
 ```js
 let facts = [
-    { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
-    { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
+  { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
+  { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 ];
 let cube = new Cube();
 cube.addFacts(facts);
 cube.addDimensionHierarchy({
-    dimensionTable: {
-        dimension: 'product',
-        keyProps: ['product']
-    },
-    level: [
-        {
-            dimensionTable: {
-                dimension: 'mark',
-                keyProps: ['mark']
-            },
-        }
-    ]
+  dimensionTable: {
+    dimension: 'product',
+    keyProps: ['product']
+  },
+  level: [
+    {
+      dimensionTable: {
+        dimension: 'mark',
+        keyProps: ['mark']
+      },
+    }
+  ]
 })
 console.log(cube.getCells())
 ```
 return:
 ```js
 [
-    { id: 1, product_id: 1, country: 'China', count: 2 },
-    { id: 1, product_id: 2, country: 'Niderland', count: 3 }
+  { id: 1, product_id: 1, country: 'China', count: 2 },
+  { id: 1, product_id: 2, country: 'Niderland', count: 3 }
 ]
 ```
 
@@ -493,31 +493,30 @@ cube.removeDimensionHierarchy(cube.dimensionHierarchies[0])
 ```
 ### Multiple hierarchies
 ```js
-let dimensionHierarchies = [
-	{
-        dimensionTable: {
-            dimension: 'products',
-            keyProps: ['product']
-        },
-        level: [
-            {
-                dimensionTable: {
-                    dimension: 'discounts',
-                    keyProps: ['discount']
-                }
-            },
-            {
-                dimensionTable: {
-                    dimension: 'categories',
-                    keyProps: ['category']
-                }
-            }
-        ]
+let dimensionHierarchies = [{
+  dimensionTable: {
+    dimension: 'products',
+    keyProps: ['product']
+  },
+  level: [
+    {
+      dimensionTable: {
+        dimension: 'discounts',
+        keyProps: ['discount']
+      }
+    },
+    {
+      dimensionTable: {
+        dimension: 'categories',
+        keyProps: ['category']
+      }
     }
-]
+  ]
+}]
+
 let facts = [
-	{id: 1, product: 'TV', discount: 5, category: 'electronics'},
-	{id: 2, product: 'milk', discount: 10, category: 'food'},
+  {id: 1, product: 'TV', discount: 5, category: 'electronics'},
+  {id: 2, product: 'milk', discount: 10, category: 'food'},
 ]
 let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
@@ -526,8 +525,8 @@ cube.getDimensionMembers('product')
 return:
 ```js
 [
-	{id: 1, product: 'TV', discounts_id: 1, categories_id: 1},
-	{id: 2, product: 'milk', discounts_id: 2, categories_id: 2},
+  {id: 1, product: 'TV', discounts_id: 1, categories_id: 1},
+  {id: 2, product: 'milk', discounts_id: 2, categories_id: 2},
 ]
 ```
 or:
@@ -537,8 +536,8 @@ cube.getCells()
 return:
 ```js
 [
-	{id: 1, products_id: 1},
-	{id: 2, products_id: 2},
+  {id: 1, products_id: 1},
+  {id: 2, products_id: 2},
 ]
 ```
 
@@ -547,19 +546,17 @@ return:
 Fills the fact table with all possible missing combinations. For example, for a table, such data will represent empty cells
 
 ```js
-let dimensionHierarchies = [
-     {
-         dimension: 'regions',
-         keyProps: ['region']
-     },{
-         dimension: 'products',
-         keyProps: ['product']
-     }
- ];
+let dimensionHierarchies = [{
+  dimension: 'regions',
+  keyProps: ['region']
+},{
+  dimension: 'products',
+  keyProps: ['product']
+}];
 
 let facts = [
-    { id: 1, region: 'North', product: 'Product 1', value: 10 },
-    { id: 2, region: 'South', product: 'Product 2', value: 20 }
+  { id: 1, region: 'North', product: 'Product 1', value: 10 },
+  { id: 2, region: 'South', product: 'Product 2', value: 20 }
 ];
 let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
@@ -580,10 +577,10 @@ let factsFilled = cube.getFacts()
 factsFilled will be:
 ```js
 [
-    { id: 1, region: 'North', product: 'Product 1', value: 10 },
-    { id: 2, region: 'South', product: 'Product 2', value: 20 },
-    { region: 'North', product: 'Product 2', value: 0 },
-    { region: 'South', product: 'Product 1', value: 0 }
+  { id: 1, region: 'North', product: 'Product 1', value: 10 },
+  { id: 2, region: 'South', product: 'Product 2', value: 20 },
+  { region: 'North', product: 'Product 2', value: 0 },
+  { region: 'South', product: 'Product 1', value: 0 }
 ]
 ```
 
@@ -624,19 +621,19 @@ It may be that the dimension member may content additional properties from the f
 ```js
 let facts = [{ id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein', countryBirth: 'Germany' }]
 let dimensionHierarchies = [
-    {
-        dimensionTable: {
-            dimension: 'country',
-            keyProps: ['countryBirth'],
-        }
-    },
-    {
-        dimensionTable: {
-            dimension: 'user',
-            keyProps: ['nikname'],
-            otherProps: ['name', 'surname']
-        }
+  {
+    dimensionTable: {
+      dimension: 'country',
+      keyProps: ['countryBirth'],
     }
+  },
+  {
+    dimensionTable: {
+      dimension: 'user',
+      keyProps: ['nikname'],
+      otherProps: ['name', 'surname']
+    }
+  }
 ]
 let cube = new Cube({dimensionHierarchies})
 cube.addFacts(facts);
@@ -645,7 +642,7 @@ let members = cube.getDimensionMembers('user')
 return:
 ```js
 [
-    { id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein' }
+  { id: 1, nikname: 'Monkey', name: 'Albert', surname: 'Einstein' }
 ]
 ```
 
@@ -653,23 +650,23 @@ return:
 ```js
 let facts = [{ id: 1, nikname: 'Monkey', group: 'Administrators' }];
 let dimensionHierarchies = [
-    {
+  {
+    dimensionTable: {
+      dimension: 'user',
+      keyProps: ['nikname'],
+      foreignKey: 'USER_ID'
+    },
+    level: [
+      {
         dimensionTable: {
-            dimension: 'user',
-            keyProps: ['nikname'],
-            foreignKey: 'USER_ID'
-        },
-        level: [
-            {
-                dimensionTable: {
-                    dimension: 'group',
-                    keyProps: ['group'],
-                    primaryKey: 'ID',
-                    foreignKey: 'GROUP_ID'
-                }
-            }
-        ]
-    }
+          dimension: 'group',
+          keyProps: ['group'],
+          primaryKey: 'ID',
+          foreignKey: 'GROUP_ID'
+        }
+      }
+    ]
+  }
 ];
 let cube = new Cube({dimensionHierarchies});
 cube.addFacts(facts);
@@ -703,15 +700,15 @@ return:
 ### Default Member Options
 ```js
 let dimensionHierarchies = [
-    {
-        dimensionTable: {
-            dimension: 'user',
-            keyProps: ['nikname'],
-            defaultMemberOptions: {
-                nikname: 'anonymous'
-            }
-        }
+  {
+    dimensionTable: {
+      dimension: 'user',
+      keyProps: ['nikname'],
+      defaultMemberOptions: {
+        nikname: 'anonymous'
+      }
     }
+  }
 ];
 let cube = new Cube({dimensionHierarchies})
 cube.addDimensionMember('user')
@@ -721,12 +718,12 @@ Like custom members, some times need make custom facts
 ```js
 let facts = [{ saleId: 1, saleCount: 1 }];
 let dimensionHierarchies = [
-    {
-        dimensionTable: {
-            dimension: 'saleCount',
-            keyProps: ['saleCount']
-        }
+  {
+    dimensionTable: {
+      dimension: 'saleCount',
+      keyProps: ['saleCount']
     }
+  }
 ];
 let cube = new Cube({dimensionHierarchies, factPrimaryKey: 'saleId'})
 cube.addFacts(facts);
@@ -736,22 +733,22 @@ cube.addFacts(facts);
 ### Default Fact Options
 ```js
 let facts = [
-    { id: 1, x: 1, y: 1, isOpen: true },
-    { id: 1, x: 2, y: 2, isOpen: true },
+  { id: 1, x: 1, y: 1, isOpen: true },
+  { id: 1, x: 2, y: 2, isOpen: true },
 ];
 let dimensionHierarchies = [
-    {
-        dimensionTable: {
-            dimension: 'x',
-            keyProps: ['x']
-        }
-    },
-    {
-        dimensionTable: {
-            dimension: 'y',
-            keyProps: ['y']
-        }
+  {
+    dimensionTable: {
+      dimension: 'x',
+      keyProps: ['x']
     }
+  },
+  {
+    dimensionTable: {
+      dimension: 'y',
+      keyProps: ['y']
+    }
+  }
 ];
 let cube = new Cube({dimensionHierarchies, defaultFactOptions: { isOpen: false }});
 cube.addFacts(facts);
