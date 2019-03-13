@@ -204,7 +204,7 @@ let structure = {
 [set]: https://en.wikipedia.org/wiki/Set_(mathematics)
 [subset]: https://en.wikipedia.org/wiki/Subset
 [emptyset]: https://en.wikipedia.org/wiki/Empty_set
-[nultiset]: https://en.wikipedia.org/wiki/Multiset
+[multiset]: https://en.wikipedia.org/wiki/Multiset
 [12]: https://en.wikipedia.org/wiki/Set_(mathematics)#Unions
 
 ### Sets
@@ -213,7 +213,7 @@ A set is a collection of distinct objects.
 Set provides a specialized syntax for getting and manipulating the multidimensional data stored in OLAP cubes.
 Access to the elements of the OLAP-cube can be carried out several types of sets
 
-##### Types of sets: [Set][set], [Subset][subset], [Emptyset][emptyset], [Multiset][nultiset]
+##### Types of sets: [Set][set], [Subset][subset], [Emptyset][emptyset], [Multiset][multiset]
 ***Set***, that type determines one element:
 <br/>
 ***w : ( x , y , z ) → w<sub>xyz</sub>*** ,
@@ -226,7 +226,7 @@ Access to the elements of the OLAP-cube can be carried out several types of sets
 <br/>
 ***W : () → W = { w<sub>x1 y1 z1</sub> , w<sub>x1 y1 z2</sub> , … , w<sub>xn yn zn</sub> }*** ,
 
-***Emptyset***, that type determines union of elements:
+***Multiset***, that type determines union of elements:
 <br/>
 ***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>x1 y1</sub> , W<sub>xn yn</sub> } = { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z2</sub>*** .
 <br/>
