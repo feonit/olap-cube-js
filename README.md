@@ -66,13 +66,12 @@ This solution is a means for extracting and replenishing data, which together wi
 - Tree structure for representing hierarchical data
 - [Balanced][4] hierarchies
 - Multi-level hierarchies
-- Each cube [dimension][3] contains one hierarchies
+- Multiple hierarchies (each cube [dimension][3] can contains more then one hierarchies) 
 - Dynamic [fact table][2]
-- OLAP data is typically stored in a [snowflake schema][1]
+- Relationships between dimension tables in the form of [snowflake schema][1]
 - [Surrogate key][8] is internally generated as unique identifier for dimension member (used composite dimension keys)
 - The ability to edit data
 - Filling - solution for [Typical Multidimensional Problem: missing values][9]
-- Multiple hierarchies (each cube dimension can contains more then one hierarchies, dimension with both fiscal and calendar years is one classic example)
 
 ## Getting Started
 
