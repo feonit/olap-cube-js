@@ -220,7 +220,7 @@ Access to the elements of the OLAP-cube can be carried out several types of sets
 
 ***Subset***, that type determines several elements:
 <br/>
-***W : ( x , y ) → W = { w<sub>z1</sub> , w<sub>z2</sub> , … , w<sub>zn</sub> }*** ,
+***W : ( x , y ) → W = { w<sub>z1</sub> , w<sub>z2</sub> , … , w<sub>zn</sub> }<sub>xy</sub>*** ,
 
 ***Emptyset***, that type determines all elements:
 <br/>
@@ -228,8 +228,9 @@ Access to the elements of the OLAP-cube can be carried out several types of sets
 
 ***Multiset***, that type determines union of elements:
 <br/>
-***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>x1 y1</sub> , W<sub>xn yn</sub> } = { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , w<sub>xn yn</sub> }<sub>z2</sub>*** .
+***W : ({ z<sub>1</sub> , z<sub>2</sub> }) → W = { W<sub>z1</sub> , W<sub>z2</sub> } = { w<sub>x1 y1</sub> , ... , w<sub>xn yn</sub> }<sub>z1</sub> ∪ { w<sub>x1 y1</sub> , ... , w<sub>xn yn</sub> }<sub>z2</sub>***
 <br/>
+
 Now using different types of sets, you can access the elements of the cube
 
 ## API
