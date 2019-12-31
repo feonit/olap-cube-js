@@ -458,7 +458,7 @@ cube.removeFacts(facts)
 ```js
 let facts = [
   { id: 1, product: 'TV', mark: 'Sony', country: 'China', count: 2 },
-  { id: 1, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
+  { id: 2, product: 'TV', mark: 'Samsung', country: 'Niderland', count: 3 }
 ];
 let cube = new Cube();
 cube.addFacts(facts);
@@ -482,7 +482,7 @@ return:
 ```js
 [
   { id: 1, product_id: 1, country: 'China', count: 2 },
-  { id: 1, product_id: 2, country: 'Niderland', count: 3 }
+  { id: 2, product_id: 2, country: 'Niderland', count: 3 }
 ]
 ```
 
